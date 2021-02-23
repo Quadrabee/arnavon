@@ -8,7 +8,7 @@ import MemoryQueue from '../../src/queue/drivers/memory';
 chai.should();
 chai.use(sinonChai);
 
-describe.only('Queue', () => {
+describe('Queue', () => {
 
   // Tests for the abstract class public contract
 

@@ -1,4 +1,4 @@
-import { Consumer } from '../../src/consumer';
+import Consumer from '../../src/consumer';
 import { expect } from 'chai';
 
 describe('Consumer', () => {

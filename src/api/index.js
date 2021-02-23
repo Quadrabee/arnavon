@@ -3,7 +3,6 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import promBundle from 'express-prom-bundle';
 import logger from '../logger';
-import { AWFMError } from '../robust';
 
 export default () => {
   const app = express();
