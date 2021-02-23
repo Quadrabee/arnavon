@@ -1,7 +1,7 @@
 {
-  "name": "jobs-api",
+  "name": "arnavon",
   "version": "0.0.1",
-  "description": "REST api for jobs scheduling/queueing.",
+  "description": "Framework on top of RabbitMQ for easing up the development of producer/consumer/job queues.",
   "main": "src/index.js",
   "scripts": {
     "start:server": "babel-node bin/server",
