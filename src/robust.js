@@ -14,7 +14,7 @@ const inspect = (t) => {
     return 'undefined';
   }
   if (t === null) {
-    return null;
+    return 'null';
   }
   if (t.constructor) {
     return t.constructor.name;
