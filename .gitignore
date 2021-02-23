@@ -5,3 +5,4 @@ tests/test-results.xml
 coverage
 Dockerfile.*
 rspec.xml
+dist
