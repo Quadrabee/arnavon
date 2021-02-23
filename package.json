@@ -1,8 +1,8 @@
 {
-  "name": "arnavon",
-  "version": "0.0.1",
+  "name": "@quadrabee/arnavon",
+  "version": "0.0.2",
   "description": "Framework on top of RabbitMQ for easing up the development of producer/consumer/job queues.",
-  "main": "src/index.js",
+  "main": "index.js",
   "scripts": {
     "start:server": "babel-node bin/server",
     "start:consumer": "babel-node bin/consumer",
@@ -12,7 +12,8 @@
     "test:watch": "mocha --require @babel/register --recursive --watch tests",
     "lint": "eslint src tests *.js .eslintrc.js",
     "lint:fix": "eslint --fix src tests *.js .eslintrc.js",
-    "build": "babel ./src --out-dir ./dist --source-maps --copy-files"
+    "build": "babel ./src --out-dir ./dist --source-maps --copy-files",
+    "prepare": "npm run build"
   },
   "author": "Louis Lambeau <llambeau@quadrabee.com>",
   "license": "ISC",
