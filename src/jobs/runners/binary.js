@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import JobRunner from '../runner';
+import JobResult from '../result';
 import { inspect } from '../../robust';
 import { spawn } from 'child_process';
-import { stdout } from 'process';
 
 export default class BinaryRunner extends JobRunner {
 
@@ -50,16 +50,6 @@ export default class BinaryRunner extends JobRunner {
       });
 
       process.on('close', (code, signal) => {
-        if (code !== null && code > 0) {
-          console.log(`child process failed with code ${code}`);
-          return reject(code);
-        }
-
-        if (signal !== null) {
-          console.log(`child process failed because of signal ${signal}`);
-          return reject(signal);
-        }
-
         // Check if maybe we were passed JSON
         try {
           stdoutData = JSON.parse(stdoutData);
@@ -67,7 +57,17 @@ export default class BinaryRunner extends JobRunner {
           // nope, it wasn't
         }
 
-        return resolve(stdoutData);
+        if (code !== null && code > 0) {
+          console.log(`child process failed with code ${code}`);
+          return reject(JobResult.fail(new Error(`Process exited with code ${code}`), stdoutData));
+        }
+
+        if (signal !== null) {
+          console.log(`child process failed because of signal ${signal}`);
+          return reject(JobResult.fail(new Error(`Process killed by ${signal}`), stdoutData));
+        }
+
+        return resolve(JobResult.success(stdoutData));
       });
 
       // Write payload on stdin

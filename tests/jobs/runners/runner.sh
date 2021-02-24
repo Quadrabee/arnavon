@@ -8,7 +8,7 @@ if [ "$command" = "printargs" ]; then
   exit
 fi
 
-## prints arguments received and exit 0
+## prints json and exit 0
 if [ "$command" = "json" ]; then
   echo '{ "foo": "bar", "sub": { "baz": 42 } }'
   exit
@@ -25,6 +25,12 @@ fi
 
 ## fails with exit code > 1
 if [ "$command" = "fail" ]; then
+  exit 10
+fi
+
+## prints json and exit code > 1
+if [ "$command" = "failjson" ]; then
+  echo '{ "foo": "bar", "sub": { "baz": 42 } }'
   exit 10
 fi
 

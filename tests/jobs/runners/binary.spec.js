@@ -1,4 +1,5 @@
 import BinaryRunner from '../../../src/jobs/runners/binary';
+import JobResult from '../../../src/jobs/result';
 import { expect } from 'chai';
 
 describe('BinaryRunner', () => {
@@ -50,11 +51,12 @@ describe('BinaryRunner', () => {
       expect(p).to.be.an.instanceOf(Promise);
     });
 
-    it('returns a promise resolving the stdout of the process', (done) => {
+    it('returns a promise resolving a JobResult including the stdout of the process', (done) => {
       const runner = new BinaryRunner({ path: testBinary });
       const p = runner._run(job);
       p.then((output) => {
-        expect(output).to.equal('Hello World!\n');
+        expect(output).to.be.an.instanceof(JobResult);
+        expect(output.result).to.equal('Hello World!\n');
         done();
       }).catch(done);
     });
@@ -63,7 +65,8 @@ describe('BinaryRunner', () => {
       const runner = new BinaryRunner({ path: testBinary, args: ['printargs', 42, 'foo', 'bar'] });
       const p = runner._run(job);
       p.then((output) => {
-        expect(output).to.equal('printargs 42 foo bar\n');
+        expect(output).to.be.an.instanceof(JobResult);
+        expect(output.result).to.equal('printargs 42 foo bar\n');
         done();
       }).catch(done);
     });
@@ -72,18 +75,33 @@ describe('BinaryRunner', () => {
       const runner = new BinaryRunner({ path: testBinary, args: 'echo' });
       const p = runner._run('this is the job payload');
       p.then((output) => {
-        expect(output).to.equal('this is the job payload');
+        expect(output).to.be.an.instanceof(JobResult);
+        expect(output.result).to.equal('this is the job payload');
         done();
       }).catch(done);
     });
 
-    it('parses the binary\'s output as JSON when possible', (done) => {
+    it('parses the binary\'s output as JSON when possible (success)', (done) => {
       const runner = new BinaryRunner({ path: testBinary, args: ['json'] });
       const p = runner._run(job);
       p.then((output) => {
-        expect(output).to.deep.equal({ foo: 'bar', sub: { baz: 42 } });
+        expect(output).to.be.an.instanceof(JobResult);
+        expect(output.success).to.equal(true);
+        expect(output.result).to.deep.equal({ foo: 'bar', sub: { baz: 42 } });
         done();
       }).catch(done);
+    });
+
+    it('parses the binary\'s output as JSON when possible (errors)', (done) => {
+      const runner = new BinaryRunner({ path: testBinary, args: ['failjson'] });
+      const p = runner._run(job);
+      p.then(() => {
+        done(new Error('should not have resolved the promise'));
+      }).catch((output) => {
+        expect(output.success).to.equal(false);
+        expect(output.result).to.deep.equal({ foo: 'bar', sub: { baz: 42 } });
+        done();
+      });
     });
 
     it('waits for the process to finish before resolving the promise', (done) => {
@@ -104,7 +122,9 @@ describe('BinaryRunner', () => {
       const p = runner._run(job);
       p.then(() => {
         done('Shouldn\'t have resolved the promise');
-      }).catch(() => {
+      }).catch((output) => {
+        expect(output.success).to.equal(false);
+        expect(output.error.message).to.match(/Process exited with code/);
         done();
       });
     });
@@ -113,12 +133,18 @@ describe('BinaryRunner', () => {
       // our 'segfault' command ... segfaults :)
       const runner = new BinaryRunner({ path: testBinary, args: 'segfault' });
       const p = runner._run(job);
-      p.then((output) => {
+      p.then(() => {
         done('Shouldn\'t have resolved the promise');
-      }).catch(() => {
+      }).catch((output) => {
+        expect(output).to.be.an.instanceof(JobResult);
+        expect(output.success).to.equal(false);
+        expect(output.error.message).to.match(/Process killed by SIGSEGV/);
         done();
       });
     });
+
+    it.skip('gets every line printed on stderr and forwards to logger');
+    it.skip('parses every line printed on stderr when possible and forwards to logger');
 
   });
 });
