@@ -1,7 +1,15 @@
 import Job from './job';
-import JobProcessor from './processor';
+import JobDispatcher from './dispatcher';
+import JobPayload from './payload';
+import JobResult from './result';
+import JobRunner from './runner';
+import JobValidator from './validator';
 
 export {
   Job,
-  JobProcessor
+  JobDispatcher,
+  JobPayload,
+  JobResult,
+  JobRunner,
+  JobValidator
 };

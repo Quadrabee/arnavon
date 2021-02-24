@@ -13,7 +13,7 @@ jobs:
     async: true
     worker:
       type: binary
-      binary:
+      config:
         path: /path/to/binary
 
   - id: send-password-reset
@@ -35,6 +35,6 @@ jobs:
     async: false
     worker:
       type: nodejs
-      nodejs:
-        import: 'workers/sendPasswordReset'
+      config:
+        module: 'workers/sendPasswordReset'
 
