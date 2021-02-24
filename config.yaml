@@ -24,8 +24,8 @@ jobs:
     async: true
     worker:
       type: nodejs
-      nodejs:
-        import: 'workers/sendPasswordReset'
+      config:
+        module: 'workers/sendPasswordReset'
 
   - id: slack-alert
     schema: |
