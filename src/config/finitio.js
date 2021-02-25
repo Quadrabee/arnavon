@@ -17,7 +17,7 @@ try {
   throw new Error(`Invalid finitio schema: ${err.message}`);
 }
 
-const dressFromFile = (path, type, world) => {
+const dressFromFile = (path, type, baseSystem) => {
   let config;
   if (/.*\.ya?ml/.test(path)) {
     config = YAML.parse(fs.readFileSync(path).toString());
@@ -25,7 +25,7 @@ const dressFromFile = (path, type, world) => {
     config = require(path);
   }
   try {
-    config = type.dress(config, world);
+    config = type.dress(config, baseSystem);
   } catch (err) {
     throw DataValidationError.fromFinitioError(`Invalid data for type ${type.name}:`, err);
   }
@@ -33,7 +33,7 @@ const dressFromFile = (path, type, world) => {
 };
 
 const decoratedType = (type) => {
-  type.dressFromFile = (path) => dressFromFile(path, type);
+  type.dressFromFile = (path, baseSystem) => dressFromFile(path, type, baseSystem);
   return type;
 };
 

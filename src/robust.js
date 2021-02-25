@@ -2,6 +2,7 @@ class AWFMError extends Error {}
 
 class DataValidationError extends Error {
   static fromFinitioError(msg, err) {
+    console.error(err);
     const details = err.rootCausesCache.map(e => {
       return `${e.message} (${e.location})`;
     }).join('\n');

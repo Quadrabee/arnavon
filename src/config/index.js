@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import Finitio from './finitio';
+import types from './finitio';
+import Finitio from 'finitio';
 
 export default class ArnavonConfig {
   constructor(data) {
@@ -21,6 +22,13 @@ export default class ArnavonConfig {
       throw err;
     }
 
-    return new ArnavonConfig(Finitio.ArnavonConfig.dressFromFile(fpath));
+    // check if a schema.fio is present in same folder as config, if so use it as base finitio system
+    let baseSystem;
+    const folder = path.dirname(fpath);
+    const schemaPath = path.join(folder, 'schema.fio');
+    if (fs.existsSync(schemaPath)) {
+      baseSystem = Finitio.system(fs.readFileSync(schemaPath).toString());
+    }
+    return new ArnavonConfig(types.ArnavonConfig.dressFromFile(fpath, baseSystem));
   }
 }

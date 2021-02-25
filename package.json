@@ -7,7 +7,7 @@
     "start:server": "babel-node bin/server",
     "start:consumer": "babel-node bin/consumer",
     "start:api": "babel-node src/api.js",
-    "test": "mocha --reporter=mocha-junit-reporter --require @babel/register --recursive --reporter-options mochaFile=tests/test-results.xml tests",
+    "test": "mocha --require @babel/register --recursive tests",
     "test:coverage": "nyc --reporter=cobertura mocha --require @babel/register --recursive tests",
     "test:watch": "mocha --require @babel/register --recursive --watch tests",
     "lint": "eslint src tests *.js .eslintrc.js",

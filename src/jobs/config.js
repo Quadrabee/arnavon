@@ -31,8 +31,8 @@ export default class JobConfig {
   /**
    * Used by finitio to dress
    */
-  static json(data, world) {
-    return new JobConfig(data);
+  static json(data, baseSystem) {
+    return new JobConfig(data, baseSystem);
   }
 }
 
