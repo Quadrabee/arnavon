@@ -4,12 +4,14 @@ import { inspect } from '../robust';
 export default class JobConfig {
 
   #schema;
+  #system;
 
   /**
    * Constructs a new JobConfig object
    * @param {Object} cfg: a configuration object with valid `id` and `schema`
+   * @param {Finitio.System} system: an existing finitio system the inputSchema should inherit from
    */
-  constructor(cfg) {
+  constructor(cfg, system) {
     if (!cfg) {
       throw new Error(`Config object expected, got ${inspect(cfg)}`);
     }
@@ -21,16 +23,20 @@ export default class JobConfig {
     if (!cfg.schema) {
       throw new Error(`Finitio schema expected, got ${inspect(cfg.schema)}`);
     }
-    this.#schema = ensureSchema(cfg.schema);
+
+    this.#schema = ensureSchema(cfg.schema, system);
   }
 }
 
 // Private utils
-function ensureSchema(schema) {
+function ensureSchema(schema, parentSystem) {
+  if (!parentSystem) {
+    parentSystem = Finitio.system('@import finitio/data');
+  }
   let system;
   if (typeof schema === 'string') {
     try {
-      system = Finitio.system(schema);
+      system = parentSystem.subsystem(schema);
     } catch (err) {
       throw new Error(`Invalid finitio system: ${err.message}`);
     }

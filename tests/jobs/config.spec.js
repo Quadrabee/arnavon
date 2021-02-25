@@ -1,6 +1,12 @@
 import Finitio from 'finitio';
 import JobConfig from '../../src/jobs/config';
 import { expect } from 'chai';
+import sinon from 'sinon';
+import chai from 'chai';
+import sinonChai from 'sinon-chai';
+
+chai.should();
+chai.use(sinonChai);
 
 describe('JobConfig', () => {
 
@@ -49,7 +55,7 @@ describe('JobConfig', () => {
       `)).to.not.throw();
     });
 
-    it('accepts a instanciated finitio schema', () => {
+    it('accepts an instanciated finitio schema', () => {
       const schema = Finitio.system(`
         {
           name: .String
@@ -57,6 +63,32 @@ describe('JobConfig', () => {
       `);
       // correct
       expect(() => new JobConfig({ id: 'foo', schema })).to.not.throw();
+    });
+
+    it('uses a default parent system importing finitio/data', () => {
+      // Using String instead of .String
+      const schema = `
+        {
+          name: String
+        }
+      `;
+      // correct
+      expect(() => new JobConfig({ id: 'foo', schema })).to.not.throw();
+    });
+
+    it('creates a subsystem if a parent system is passed', () => {
+      const system = Finitio.system(`
+        ID = .String
+      `);
+      const spy = sinon.spy(system, 'subsystem');
+      const schema = `
+      {
+        id: ID
+      }
+      `;
+      // correct
+      const jobConfig = new JobConfig({ id: 'foo', schema }, system);
+      expect(spy).to.be.calledOnceWith(schema);
     });
 
     it('returns clear errors when the schema (string) is invalid', () => {
