@@ -10,13 +10,13 @@ chai.use(sinonChai);
 
 describe('JobConfig', () => {
 
-  const jobSchema = `
+  const jobSchema = Finitio.system(`
   @import finitio/data
   {
     id   : String
     name : String
   }
-  `;
+  `);
 
   it('exports a class', () => {
     expect(JobConfig).to.be.a.instanceof(Function);
@@ -31,7 +31,7 @@ describe('JobConfig', () => {
     });
 
     it('expects a job id', () => {
-      const test = (id) => () => new JobConfig({ id, schema: jobSchema });
+      const test = (id) => () => new JobConfig({ id, inputSchema: jobSchema });
       expect(test(null)).to.throw(/Valid job id expected, got/);
       expect(test(undefined)).to.throw(/Valid job id expected, got/);
       expect(test({})).to.throw(/Valid job id expected, got/);
@@ -40,10 +40,10 @@ describe('JobConfig', () => {
     });
 
     it('expects a valid finitio schema (string)', () => {
-      const test = (schema) => () => new JobConfig({ id: 'foo-bar', schema });
-      expect(test(undefined)).to.throw(/Finitio schema expected, got/);
-      expect(test(null)).to.throw(/Finitio schema expected, got/);
-      expect(test({})).to.throw(/Finitio schema expected, got/);
+      const test = (schema) => () => new JobConfig({ id: 'foo-bar', inputSchema: schema });
+      expect(test(undefined)).to.throw(/Finitio inputSchema expected, got/);
+      expect(test(null)).to.throw(/Finitio inputSchema expected, got/);
+      expect(test({})).to.throw(/Finitio inputSchema expected, got/);
       // correct
       expect(test(`
         .
@@ -62,7 +62,7 @@ describe('JobConfig', () => {
         }
       `);
       // correct
-      expect(() => new JobConfig({ id: 'foo', schema })).to.not.throw();
+      expect(() => new JobConfig({ id: 'foo', inputSchema: schema })).to.not.throw();
     });
 
     it('uses a default parent system importing finitio/data', () => {
@@ -73,7 +73,7 @@ describe('JobConfig', () => {
         }
       `;
       // correct
-      expect(() => new JobConfig({ id: 'foo', schema })).to.not.throw();
+      expect(() => new JobConfig({ id: 'foo', inputSchema: schema })).to.not.throw();
     });
 
     it('creates a subsystem if a parent system is passed', () => {
@@ -87,12 +87,12 @@ describe('JobConfig', () => {
       }
       `;
       // correct
-      const jobConfig = new JobConfig({ id: 'foo', schema }, system);
+      const jobConfig = new JobConfig({ id: 'foo', inputSchema: schema }, system);
       expect(spy).to.be.calledOnceWith(schema);
     });
 
     it('returns clear errors when the schema (string) is invalid', () => {
-      const test = (schema) => () => new JobConfig({ id: 'foo', schema });
+      const test = (schema) => () => new JobConfig({ id: 'foo', inputSchema: schema });
       expect(test('foo bar baz')).to.throw(/Invalid finitio system:/);
     });
   });

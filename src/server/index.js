@@ -23,7 +23,7 @@ export default class Server {
         if (err) {
           return reject(err);
         }
-        logger.info('REST API listening at http://localhost:3000');
+        logger.info(`REST API listening at http://0.0.0.0:${port}`);
         return resolve();
       });
     });

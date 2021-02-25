@@ -3,7 +3,6 @@ import { inspect } from '../robust';
 
 export default class JobConfig {
 
-  #schema;
   #system;
 
   /**
@@ -20,11 +19,20 @@ export default class JobConfig {
       throw new Error(`Valid job id expected, got ${cfg.id}`);
     }
 
-    if (!cfg.schema) {
-      throw new Error(`Finitio schema expected, got ${inspect(cfg.schema)}`);
+    if (!cfg.inputSchema) {
+      throw new Error(`Finitio inputSchema expected, got ${inspect(cfg.inputSchema)}`);
     }
 
-    this.#schema = ensureSchema(cfg.schema, system);
+    Object.assign(this, cfg, {
+      inputSchema: ensureSchema(cfg.inputSchema, system)
+    });
+  }
+
+  /**
+   * Used by finitio to dress
+   */
+  static json(data, world) {
+    return new JobConfig(data);
   }
 }
 
@@ -45,7 +53,7 @@ function ensureSchema(schema, parentSystem) {
   }
 
   if (!(system instanceof Finitio.System)) {
-    throw new Error(`Finitio schema expected, got ${inspect(schema)}`);
+    throw new Error(`Finitio inputSchema expected, got ${inspect(schema)}`);
   }
 
   return system;

@@ -3,16 +3,21 @@ import Finitio from 'finitio';
 import YAML from 'yaml';
 import { DataValidationError } from '../robust';
 import schema from './schema.fio';
+import JobConfig from '../jobs/config';
+
+const baseWorld = {
+  JobConfig
+};
 
 let system;
 try {
-  system = Finitio.system(schema);
+  system = Finitio.system(schema, { JsTypes: baseWorld });
 } catch (err) {
   console.error(err);
   throw new Error(`Invalid finitio schema: ${err.message}`);
 }
 
-const dressFromFile = (path, type) => {
+const dressFromFile = (path, type, world) => {
   let config;
   if (/.*\.ya?ml/.test(path)) {
     config = YAML.parse(fs.readFileSync(path).toString());
@@ -20,7 +25,7 @@ const dressFromFile = (path, type) => {
     config = require(path);
   }
   try {
-    config = type.dress(config);
+    config = type.dress(config, world);
   } catch (err) {
     throw DataValidationError.fromFinitioError(`Invalid data for type ${type.name}:`, err);
   }

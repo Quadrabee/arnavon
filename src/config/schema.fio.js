@@ -13,7 +13,7 @@ QueueConfig = {
 
 Job.ID = String(s | /[a-z]+[a-z_-]+/.test(s))
 
-Job.Config = {
+Job.Config = .JobConfig <json> {
   id          : Job.ID
   inputSchema : String
 }
