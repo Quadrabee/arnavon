@@ -1,6 +1,6 @@
 {
   "name": "@quadrabee/arnavon",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Framework on top of RabbitMQ for easing up the development of producer/consumer/job queues.",
   "main": "index.js",
   "scripts": {
