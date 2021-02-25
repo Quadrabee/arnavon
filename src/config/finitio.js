@@ -1,17 +1,15 @@
 import fs from 'fs';
-import path from 'path';
 import Finitio from 'finitio';
 import YAML from 'yaml';
-import { AWFWError, DataValidationError } from '../robust';
-
-const schema = fs.readFileSync(path.join(__dirname, 'schema.fio')).toString();
+import { DataValidationError } from '../robust';
+import schema from './schema.fio';
 
 let system;
 try {
   system = Finitio.system(schema);
 } catch (err) {
   console.error(err);
-  throw new AWFWError(`Invalid finitio schema: ${err.message}`);
+  throw new Error(`Invalid finitio schema: ${err.message}`);
 }
 
 const dressFromFile = (path, type) => {

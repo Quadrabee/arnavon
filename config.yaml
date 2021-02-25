@@ -1,40 +1,24 @@
 queue:
   driver: amqp
-  amqp:
+  config:
     url: amqp://rabbit:rabbit@rabbitmq
     exchange: jobs
 
 jobs:
   - id: send-casting-invitation
-    schema: |
+    inputSchema: |
       {
 
       }
-    async: true
-    worker:
-      type: binary
-      config:
-        path: /path/to/binary
 
   - id: send-password-reset
-    schema: |
+    inputSchema: |
       {
 
       }
-    async: true
-    worker:
-      type: nodejs
-      config:
-        module: 'workers/sendPasswordReset'
 
   - id: slack-alert
-    schema: |
+    inputSchema: |
       {
 
       }
-    async: false
-    worker:
-      type: nodejs
-      config:
-        module: 'workers/sendPasswordReset'
-

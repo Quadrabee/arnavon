@@ -1,10 +1,10 @@
 import createApi from '../../api';
 
-export default ({ config, processor }) => {
+export default ({ config, dispatcher }) => {
   const api = createApi();
 
   api.post('/jobs/:id', (req, res) => {
-    processor.schedule(req.params.id, req.body)
+    dispatcher.dispatch(req.params.id, req.body)
       .then(() => {
         return res.send(204);
       });

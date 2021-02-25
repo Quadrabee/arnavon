@@ -2,19 +2,19 @@ import Config from '../config';
 import Queue from '../queue';
 import createApi from './rest';
 import logger from '../logger';
-import { JobProcessor } from '../jobs';
+import { JobDispatcher } from '../jobs';
 
 export default class Server {
 
   #config;
   #queue;
   #api;
-  #processor;
+  #dispatcher;
   constructor(config, queue) {
     this.#config = config;
     this.#queue = queue;
-    this.#processor = new JobProcessor(config, queue);
-    this.#api = createApi({ config, processor: this.#processor });
+    this.#dispatcher = new JobDispatcher(config, queue);
+    this.#api = createApi({ config, dispatcher: this.#dispatcher });
   }
 
   _startApi() {
