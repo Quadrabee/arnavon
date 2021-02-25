@@ -39,9 +39,9 @@ if [ "$command" = "segfault" ]; then
   a() { a; }; a
 fi
 
-## sleep 1 second and exits 0
+## sleep 0.2 second and exits 0
 if [ "$command" = "sleep" ]; then
-  sleep 1
+  sleep 0.1
   exit
 fi
 

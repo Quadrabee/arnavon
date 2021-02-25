@@ -105,13 +105,13 @@ describe('BinaryRunner', () => {
     });
 
     it('waits for the process to finish before resolving the promise', (done) => {
-      // our 'wait' command wait at least 1 second before quitting
+      // our 'wait' command wait at least 0.1 second before quitting
       const runner = new BinaryRunner({ path: testBinary, args: 'sleep' });
       const start = Date.now();
       const p = runner._run(job);
       p.then(() => {
         const elapsed = Date.now() - start;
-        expect(elapsed).to.be.greaterThan(900); // 900 miliseconds
+        expect(elapsed).to.be.greaterThan(100); // 900 miliseconds
         done();
       }).catch(done);
     });
