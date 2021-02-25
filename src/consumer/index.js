@@ -9,20 +9,19 @@ export default class Consumer {
   #queue;
   #config;
   #api;
-  constructor(config, queue) {
-    this.#queue = queue;
+  constructor(config) {
     this.#config = config;
-
+    this.#queue = Queue.create(config.queue);
     this.#api = createApi();
   }
 
-  _startApi() {
+  _startApi(port) {
     return new Promise((resolve, reject) => {
-      this.#api.listen(3000, (err) => {
+      this.#api.listen(port, (err) => {
         if (err) {
           return reject(err);
         }
-        logger.info('Consumer API listening at http://localhost:3000');
+        logger.info(`Consumer API listening at http://0.0.0.0:${port}`);
         return resolve();
       });
     });
@@ -40,42 +39,13 @@ export default class Consumer {
     });
   }
 
-  startConsumer() {
-    this._startApi()
+  start(port) {
+    this._startApi(port)
       .then(() => this._connectQueue())
-      .then(() => this._startConsuming());
-  }
-
-  static create(jobId) {
-    const config = Config.load();
-    const jobDef = config.jobs.find(j => j.id === jobId);
-    if (!jobDef) {
-      throw new AWFMError(`Unknown job: ${jobId}`);
-    }
-    const queue = Queue.create(config.queue, jobId);
-    return new Consumer(jobDef, queue);
+      .then(() => this._startConsuming())
+      .catch((err) => {
+        console.error(err);
+        process.exit(10);
+      });
   }
 }
-
-// // Create the queue client and expose on requests
-// const queue = Queue.create();
-
-// queue.connect().then((queue) => {
-
-//   // if the connection is severed => quit
-//   queue.on('error', (err) => {
-//     console.error(err);
-//     process.exit(-1);
-//   });
-
-//   queue.consume((msg) => {
-//     console.log('Processor\'s logic', msg);
-//     return Promise.resolve();
-//   });
-
-// });
-
-// process.on('unhandledRejection', error => {
-//   console.log('unhandledRejection', error);
-//   process.exit(-1);
-// });

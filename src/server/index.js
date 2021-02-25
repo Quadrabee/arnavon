@@ -33,14 +33,12 @@ export default class Server {
     return this.#queue.connect();
   }
 
-  startServer(port = 3000) {
+  start(port = 3000) {
     this._connectQueue()
-      .then(() => this._startApi(port));
-  }
-
-  static create() {
-    const config = Config.load();
-    const queue = Queue.create(config.queue);
-    return new Server(config, queue);
+      .then(() => this._startApi(port))
+      .catch((err) => {
+        console.error(err);
+        process.exit(10);
+      });
   }
 }
