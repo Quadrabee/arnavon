@@ -17,9 +17,9 @@ export default class Server {
     this.#api = createApi({ config, dispatcher: this.#dispatcher });
   }
 
-  _startApi() {
+  _startApi(port) {
     return new Promise((resolve, reject) => {
-      this.#api.listen(3000, (err) => {
+      this.#api.listen(port, (err) => {
         if (err) {
           return reject(err);
         }
@@ -33,9 +33,9 @@ export default class Server {
     return this.#queue.connect();
   }
 
-  startServer() {
+  startServer(port = 3000) {
     this._connectQueue()
-      .then(() => this._startApi());
+      .then(() => this._startApi(port));
   }
 
   static create() {

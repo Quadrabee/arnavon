@@ -1,4 +1,6 @@
-import { Server } from '../src';
+import { Config, Server, Queue } from '../src';
 
-const awfm = Server.create();
-awfm.startServer();
+const config = Config.fromFile();
+const queue = Queue.create(config.queue);
+const server = new Server(config, queue);
+server.startServer();

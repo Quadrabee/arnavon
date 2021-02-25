@@ -1,0 +1,24 @@
+queue:
+  driver: amqp
+  config:
+    url: amqp://rabbit:rabbit@rabbitmq
+    exchange: jobs
+
+jobs:
+  - id: send-casting-invitation
+    inputSchema: |
+      {
+
+      }
+
+  - id: send-password-reset
+    inputSchema: |
+      {
+
+      }
+
+  - id: slack-alert
+    inputSchema: |
+      {
+
+      }
