@@ -10,10 +10,10 @@ export default class Server {
   #queue;
   #api;
   #dispatcher;
-  constructor(config, queue) {
+  constructor(config) {
     this.#config = config;
-    this.#queue = queue;
-    this.#dispatcher = new JobDispatcher(config, queue);
+    this.#queue = Queue.create(config.queue);
+    this.#dispatcher = new JobDispatcher(config, this.#queue);
     this.#api = createApi({ config, dispatcher: this.#dispatcher });
   }
 
