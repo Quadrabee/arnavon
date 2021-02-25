@@ -14,15 +14,13 @@ class Queue extends EventEmitter {
     this.#config = config;
   }
 
-  static create(config, selector) {
+  static create(params) {
     const drivers = require('./drivers').default;
-    const { driver } = config;
+    const { driver, config } = params;
     if (!drivers[driver]) {
       throw new Error(`Unknown queue driver: ${driver}`);
     }
-    // Merge selector into driver params (in case the driver supports it)
-    const params = Object.assign({}, config[driver], { selector });
-    return new drivers[driver](params);
+    return new drivers[driver](config);
   }
 
   // get selector
