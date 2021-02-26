@@ -8,7 +8,7 @@
     "start:consumer": "babel-node bin/consumer",
     "start:api": "babel-node src/api.js",
     "test": "mocha --require @babel/register --recursive tests",
-    "test:coverage": "nyc --reporter=cobertura mocha --require @babel/register --recursive tests",
+    "test:coverage": "nyc --reporter=cobertura --reporter=html mocha --require @babel/register --recursive tests",
     "test:watch": "mocha --require @babel/register --recursive --watch tests",
     "lint": "eslint src tests *.js .eslintrc.js",
     "lint:fix": "eslint --fix src tests *.js .eslintrc.js",
