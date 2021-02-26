@@ -1,12 +1,12 @@
 import createApi from '../../api';
 
-export default ({ config, dispatcher }) => {
+export default (dispatcher) => {
   const api = createApi();
 
   api.post('/jobs/:id', (req, res, next) => {
     dispatcher.dispatch(req.params.id, req.body)
-      .then(() => {
-        return res.send(204);
+      .then((data) => {
+        return res.status(201).send(data);
       })
       .catch(next);
   });

@@ -1,8 +1,13 @@
-class AWFMError extends Error {}
+class ArnavonError extends Error {}
 
-class DataValidationError extends Error {
+class UnknownJobError extends ArnavonError {
+  constructor(jobId) {
+    super(`Unknown job: ${jobId}, no definition found`);
+  }
+}
+
+class DataValidationError extends ArnavonError {
   static fromFinitioError(msg, err) {
-    console.error(err);
     const details = err.rootCausesCache.map(e => {
       return `${e.message} (${e.location})`;
     }).join('\n');
@@ -24,7 +29,8 @@ const inspect = (t) => {
 };
 
 export {
-  AWFMError,
+  ArnavonError,
   DataValidationError,
+  UnknownJobError,
   inspect
 };

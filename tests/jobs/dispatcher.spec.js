@@ -1,6 +1,21 @@
 import JobDispatcher from '../../src/jobs/dispatcher';
-import { expect } from 'chai';
+import ArnavonConfig from '../../src/config';
+import { expect, default as chai } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import { DataValidationError, UnknownJobError } from '../../src/robust';
+import Job from '../../src/jobs/job';
+import MemoryQueue from '../../src/queue/drivers/memory';
+import sinon from 'sinon';
+import sinonChai from 'sinon-chai';
 
+chai.should();
+chai.use(sinonChai);
+chai.use(chaiAsPromised);
+
+/**
+ * TODO: refactor this as it looks more like integration testing than unit testing
+ * due to the lack of mocking of the JobValidators
+ */
 describe('JobDispatcher', () => {
 
   it('exports a class', () => {
@@ -8,13 +23,76 @@ describe('JobDispatcher', () => {
     expect(JobDispatcher.name).to.equal('JobDispatcher');
   });
 
+  let config, dispatcher, queue;
+  beforeEach(() => {
+    config = ArnavonConfig.fromFile('example/config.yaml');
+    queue = new MemoryQueue();
+    dispatcher = new JobDispatcher(config, queue);
+  });
+
   describe('its constructor', () => {
-    it('expects a Config as parameter', () => {
+    it('expects an ArnavonConfig as parameter', () => {
       const test = (cfg) => () => new JobDispatcher(cfg);
-      expect(test()).to.throw(/Config expected, got undefined/);
-      expect(test(null)).to.throw(/Config expected, got null/);
-      expect(test({})).to.throw(/Config expected, got/);
+      expect(test()).to.throw(/ArnavonConfig expected, got undefined/);
+      expect(test(null)).to.throw(/ArnavonConfig expected, got null/);
+      expect(test({})).to.throw(/ArnavonConfig expected, got/);
     });
+    it('returns an instance of dispatcher', () => {
+      const dispatcher = new JobDispatcher(config, queue);
+      expect(dispatcher).to.be.an.instanceof(JobDispatcher);
+    });
+  });
+
+  describe('#dispatch', () => {
+    it('fails for unknown jobs', (done) => {
+      const test = (jobId) => dispatcher.dispatch(jobId, {});
+
+      expect(test()).to.eventually.be.rejectedWith(UnknownJobError);
+      expect(test('')).to.eventually.be.rejectedWith(UnknownJobError);
+      expect(test('foo-bar')).to.eventually.be.rejectedWith(UnknownJobError)
+        .notify(done);
+    });
+
+    it('fails for invalid job payload', (done) => {
+      const test = (jobId, data) => dispatcher.dispatch(jobId, data);
+
+      expect(test('send-slack')).to.eventually.be.rejectedWith(DataValidationError);
+      expect(test('send-slack', {})).to.eventually.be.rejectedWith(DataValidationError);
+
+      const payload = {
+        channel: '#test'
+      };
+      expect(test('send-slack', payload)).to.eventually.be.rejectedWith(DataValidationError)
+        .notify(done);
+    });
+
+    it('returns a Promise', () => {
+      const payload = {
+        channel: '#channel',
+        message: 'foo bar'
+      };
+      const p = dispatcher.dispatch('send-slack', payload);
+      expect(p).to.be.an.instanceof(Promise);
+    });
+
+    it('enqueues validated job on the queue', (done) => {
+      const payload = {
+        channel: '#channel',
+        message: 'foo bar'
+      };
+      const spy = sinon.spy(queue, 'push');
+      dispatcher.dispatch('send-slack', payload)
+        .then(() => {
+          expect(spy).to.be.calledOnce;
+          const [call] = spy.getCalls();
+          const { args: [arg1, arg2] } = call;
+          expect(arg1).to.eql('send-slack');
+          expect(arg2).to.be.an.instanceof(Job);
+          done();
+        })
+        .catch(done);
+    });
+
   });
 
 });
