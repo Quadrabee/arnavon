@@ -3,6 +3,8 @@ import Queue from '../queue';
 import createApi from './rest';
 import logger from '../logger';
 import { JobDispatcher } from '../jobs';
+import { inspect } from '../robust';
+import ArnavonConfig from '../config';
 
 export default class Server {
 
@@ -11,6 +13,9 @@ export default class Server {
   #api;
   #dispatcher;
   constructor(config) {
+    if (!(config instanceof ArnavonConfig)) {
+      throw new Error(`ArnavonConfig expected, got ${inspect(config)}`);
+    }
     this.#config = config;
     this.#queue = Queue.create(config.queue);
     this.#dispatcher = new JobDispatcher(config, this.#queue);

@@ -1,8 +1,8 @@
-import Config from '../config';
 import Queue from '../queue';
 import createApi from '../api';
 import logger from '../logger';
-import { AWFMError } from '../robust';
+import { inspect } from '../robust';
+import ArnavonConfig from '../config';
 
 export default class Consumer {
 
@@ -10,6 +10,9 @@ export default class Consumer {
   #config;
   #api;
   constructor(config) {
+    if (!(config instanceof ArnavonConfig)) {
+      throw new Error(`ArnavonConfig expected, got ${inspect(config)}`);
+    }
     this.#config = config;
     this.#queue = Queue.create(config.queue);
     this.#api = createApi();
