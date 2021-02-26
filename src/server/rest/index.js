@@ -1,6 +1,7 @@
 import createApi from '../../api';
 
 export default (dispatcher) => {
+  console.log('WIth dispatcher', dispatcher);
   const api = createApi();
 
   api.post('/jobs/:id', (req, res, next) => {

@@ -19,7 +19,7 @@ export default class Server {
     this.#config = config;
     this.#queue = Queue.create(config.queue);
     this.#dispatcher = new JobDispatcher(config, this.#queue);
-    this.#api = createApi({ config, dispatcher: this.#dispatcher });
+    this.#api = createApi(this.#dispatcher);
   }
 
   _startApi(port) {
