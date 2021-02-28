@@ -17,7 +17,7 @@ class MemoryQueue extends Queue {
     return Promise.resolve();
   }
 
-  _consume(processor) {
+  _consume(selector, processor) {
     while (this.#queue.length) {
       const { key, data } = this.#queue.shift();
       processor(key, data);

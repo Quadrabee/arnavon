@@ -83,15 +83,32 @@ describe('Queue', () => {
     it ('is a function', () => {
       expect(queue.consume).to.be.an.instanceof(Function);
     });
+    it('expects a selector (String) and consumer (Function) as arguments', () => {
+      const test = (selector, consumer) => () => queue.consume(selector, consumer);
+
+      // invalid selector
+      expect(test(null, () => {})).to.throw(/String selector expected, got/);
+      expect(test(undefined, () => {})).to.throw(/String selector expected, got/);
+      expect(test(() => {}, () => {})).to.throw(/String selector expected, got/);
+      // invalid consumer
+      expect(test('job-id', null)).to.throw(/Consumer callback expected, got/);
+      expect(test('job-id', undefined)).to.throw(/Consumer callback expected, got/);
+      expect(test('job-id,', '')).to.throw(/Consumer callback expected, got/);
+    });
     it('returns a promise', () => {
-      expect(queue.consume()).to.be.an.instanceof(Promise);
+      expect(queue.consume('job-id', () => {})).to.be.an.instanceof(Promise);
     });
     it ('calls the subclass _consume implementation', () => {
       const spy = sinon.stub(queue, '_consume')
         .returns(Promise.resolve());
       const processor = () => {};
-      queue.consume(processor);
+      queue.consume('job-id', processor);
+      // expect calls
       expect(spy).to.be.calledOnce;
+      // the consumer function is decorated, let's help mocha asserting it
+      const call = spy.getCall(0);
+      expect(call.args[0]).to.equal('job-id');
+      expect(call.args[1]).to.be.an.instanceof(Function);
     });
   });
 

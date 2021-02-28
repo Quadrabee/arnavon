@@ -2,21 +2,18 @@ import Queue from '../index';
 import amqplib from 'amqplib';
 import logger from '../../logger';
 
-class AMQPQueue extends Queue {
+class ArnavonQueue extends Queue {
 
   #url;
   #conn;
   #channel;
   #exchange;
-  #selector;
-  // for consumers only
   #queue;
 
   constructor(params) {
     super(params);
     this.#url = params.url;
-    this.#exchange = params.exchange;
-    this.#selector = params.selector;
+    this.#exchange = params.exchange || 'arnavon';
   }
 
   _connect() {
@@ -54,12 +51,12 @@ class AMQPQueue extends Queue {
     return Promise.reject();
   }
 
-  _consume(processor) {
-    logger.info(`${this.constructor.name} assertQueue ${this.#selector}`);
-    this.#channel.assertQueue(this.#selector)
+  _consume(selector, processor) {
+    logger.info(`${this.constructor.name} assertQueue ${selector}`);
+    this.#channel.assertQueue(selector)
       .then((q) => {
         // bind queue to exchange
-        return this.#channel.bindQueue(q.queue, this.#exchange, this.#selector);
+        return this.#channel.bindQueue(q.queue, this.#exchange, selector);
       })
       .then(() => {
         this.#channel.consume(this.#queue, (msg) => {
@@ -89,4 +86,4 @@ class AMQPQueue extends Queue {
 
 }
 
-export default AMQPQueue;
+export default ArnavonQueue;

@@ -1,6 +1,6 @@
 import EventEmitter from 'events';
 import logger from '../logger';
-
+import { inspect } from '../robust';
 /**
  * Queue subclasses are supposed to properly emit the following events:
  *   - close (when the connection is closed)
@@ -47,9 +47,15 @@ class Queue extends EventEmitter {
   }
 
   // subclasses should implement _consumer(processor)
-  consume(processor) {
+  consume(selector, processor) {
+    if (typeof selector !== 'string') {
+      throw new Error(`String selector expected, got ${inspect(selector)}`);
+    }
+    if (!(processor instanceof Function)) {
+      throw new Error(`Consumer callback expected, got ${inspect(processor)}`);
+    }
     logger.info(`${this.constructor.name} - Starting consumption of queue with selector ${this.selector}`);
-    return this._consume((item) => {
+    return this._consume(selector, (item) => {
       logger.info(`${this.constructor.name} - Consuming queue item`, item);
       return processor(item);
     });
