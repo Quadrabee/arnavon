@@ -1,5 +1,6 @@
 import JobDispatcher from '../../src/jobs/dispatcher';
 import ArnavonConfig from '../../src/config';
+import Arnavon from '../../src';
 import { expect, default as chai } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { DataValidationError, UnknownJobError } from '../../src/robust';
@@ -25,6 +26,7 @@ describe('JobDispatcher', () => {
 
   let config, dispatcher, queue;
   beforeEach(() => {
+    Arnavon._reset();
     config = ArnavonConfig.fromFile('example/config.yaml');
     queue = new MemoryQueue();
     dispatcher = new JobDispatcher(config, queue);
@@ -38,12 +40,12 @@ describe('JobDispatcher', () => {
       expect(test({})).to.throw(/ArnavonConfig expected, got/);
     });
     it('returns an instance of dispatcher', () => {
-      const dispatcher = new JobDispatcher(config, queue);
       expect(dispatcher).to.be.an.instanceof(JobDispatcher);
     });
   });
 
   describe('#dispatch', () => {
+
     it('fails for unknown jobs', (done) => {
       const test = (jobId) => dispatcher.dispatch(jobId, {});
 
@@ -51,6 +53,13 @@ describe('JobDispatcher', () => {
       expect(test('')).to.eventually.be.rejectedWith(UnknownJobError);
       expect(test('foo-bar')).to.eventually.be.rejectedWith(UnknownJobError)
         .notify(done);
+    });
+
+    it('increases prometheus counter for unknown jobs', () => {
+      const metric = Arnavon.registry.getSingleMetric('dispatcher_jobs_unknown');
+      const spy = sinon.spy(metric, 'inc');
+      dispatcher.dispatch('unknown-job', {});
+      expect(spy).to.be.calledOnce;
     });
 
     it('fails for invalid job payload', (done) => {
@@ -66,6 +75,13 @@ describe('JobDispatcher', () => {
         .notify(done);
     });
 
+    it('increases prometheus counter for invalid jobs', () => {
+      const metric = Arnavon.registry.getSingleMetric('dispatcher_jobs_invalid');
+      const spy = sinon.spy(metric, 'inc');
+      dispatcher.dispatch('send-slack', {});
+      expect(spy).to.be.calledOnce;
+    });
+
     it('returns a Promise', () => {
       const payload = {
         channel: '#channel',
@@ -73,6 +89,17 @@ describe('JobDispatcher', () => {
       };
       const p = dispatcher.dispatch('send-slack', payload);
       expect(p).to.be.an.instanceof(Promise);
+    });
+
+    it('increases prometheus counter for valid jobs', () => {
+      const payload = {
+        channel: '#channel',
+        message: 'foo bar'
+      };
+      const metric = Arnavon.registry.getSingleMetric('dispatcher_jobs_valid');
+      const spy = sinon.spy(metric, 'inc');
+      dispatcher.dispatch('send-slack', payload);
+      expect(spy).to.be.calledOnce;
     });
 
     it('enqueues validated job on the queue', (done) => {
