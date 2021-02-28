@@ -1,11 +1,13 @@
 import Server from '../../src/server';
 import Config from '../../src/config';
 import { expect } from 'chai';
+import Arnavon from '../../src';
 
 describe('Server', () => {
 
   let config, server;
   beforeEach(() => {
+    Arnavon._reset();
     config = Config.fromFile('example/config.yaml');
     server = new Server(config);
   });
@@ -20,7 +22,7 @@ describe('Server', () => {
     });
 
     it('it works', () => {
-      expect(new Server(config)).to.be.an.instanceof(Server);
+      expect(server).to.be.an.instanceof(Server);
     });
   });
 

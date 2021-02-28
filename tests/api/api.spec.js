@@ -2,10 +2,15 @@ import { version } from '../../package.json';
 import { expect, default as chai } from 'chai';
 import chaiHttp from 'chai-http';
 import createApi from '../../src/api';
+import Arnavon from '../../src';
 
 chai.use(chaiHttp);
 
 describe('createApi', () => {
+
+  beforeEach(() => {
+    Arnavon._reset();
+  });
 
   it('is a helper returning express app', () => {
     expect(createApi).to.be.an.instanceof(Function);

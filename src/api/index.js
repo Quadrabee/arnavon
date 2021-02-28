@@ -3,14 +3,14 @@ import { v4 as uuidv4 } from 'uuid';
 import express from 'express';
 import bodyParser from 'body-parser';
 import promBundle from 'express-prom-bundle';
-import client from 'prom-client';
 import logger from '../logger';
+import Arnavon from '../';
 
 /**
  * Creates an express app, reusing a previous prometheus registry if provided
  * if not, a new one is created
  */
-export default ({ promRegistry, agent = 'arnavon' } = {}) => {
+export default ({ agent = 'arnavon' } = {}) => {
   const app = express();
 
   app.use((req, res, next) => {
@@ -24,7 +24,7 @@ export default ({ promRegistry, agent = 'arnavon' } = {}) => {
   const metricsMiddleware = promBundle({
     includeMethod: true,
     includePath: true,
-    promRegistry: promRegistry || new client.Registry()
+    promRegistry: Arnavon.registry
   });
   app.use(metricsMiddleware);
 

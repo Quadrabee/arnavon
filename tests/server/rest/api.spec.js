@@ -4,6 +4,7 @@ import chaiHttp from 'chai-http';
 import createApiHelper from '../../../src/api';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
+import Arnavon from '../../../src';
 
 chai.should();
 chai.use(sinonChai);
@@ -13,6 +14,7 @@ describe('server/createApi', () => {
 
   let createApi, helperCalled;
   beforeEach(() => {
+    Arnavon._reset();
     helperCalled = false;
     createApi = proxyquire('../../../src/server/rest', {
       '../../api': {
