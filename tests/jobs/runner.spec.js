@@ -1,3 +1,4 @@
+import Arnavon from '../../src';
 import sinon from 'sinon';
 import Runners from '../../src/jobs/runners';
 import JobRunner from '../../src/jobs/runner';
@@ -23,6 +24,7 @@ describe('JobRunner', () => {
 
   let runner;
   beforeEach(() => {
+    Arnavon._reset();
     runner = new TestRunner();
   });
 
@@ -63,6 +65,34 @@ describe('JobRunner', () => {
         .catch(done);
     });
 
+    it('catches errors thrown by #_run() and rejects promises', () => {
+      const job = new Job();
+      runner._run = sinon.stub().throws(new Error('oops'));
+      const res = runner.run(job);
+      return res
+        .then(() => {
+          throw new Error('should not have resolved');
+        })
+        .catch(err => {
+          expect(err).to.match(/oops/);
+        });
+    });
+
+    it('catches errors thrown by #_run() and increment prometheus counter', () => {
+      const metric = Arnavon.registry.getSingleMetric('runner_failed_jobs');
+      const spy = sinon.spy(metric, 'inc');
+      const job = new Job();
+      runner._run = sinon.stub().throws(new Error('oops'));
+      const res = runner.run(job);
+      return res
+        .then(() => {
+          throw new Error('should not have resolved');
+        })
+        .catch(err => {
+          expect(spy).to.be.calledOnce;
+        });
+    });
+
     it('wraps non promise results with a Promise', (done) => {
       const job = new Job();
       runner._run = sinon.stub().returns('foo');
@@ -79,6 +109,7 @@ describe('JobRunner', () => {
   describe('.factor', () => {
 
     beforeEach(() => {
+      Arnavon._reset();
       Runners.register('Test', TestRunner);
     });
 

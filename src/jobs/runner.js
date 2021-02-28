@@ -1,6 +1,13 @@
 import Job from './job';
 import { inspect } from '../robust';
 import runners from './runners';
+import promClient from 'prom-client';
+import Arnavon from '../';
+
+/**
+ * The prometheus counters are shared amongst JobRunner classes
+ * but use labels to distinguist the implementating-class/job
+ */
 
 /**
  * Abstract class JobRunner
@@ -8,6 +15,26 @@ import runners from './runners';
  * for instance: nodejs, binary, ...
  */
 export default class JobRunner {
+
+  /**
+   * Private collection of counters (unknown/invalid/valid jobs)
+   */
+  #counters;
+
+  constructor() {
+    this.#counters = {
+      success: new promClient.Counter({
+        name: 'runner_successful_jobs',
+        help: 'number of successful job runs',
+        registers: [Arnavon.registry]
+      }),
+      failures: new promClient.Counter({
+        name: 'runner_failed_jobs',
+        help: 'number of failed job runs',
+        registers: [Arnavon.registry]
+      })
+    };
+  }
 
   /**
    * Runs a job
@@ -18,12 +45,23 @@ export default class JobRunner {
       throw new Error(`Job expected, got ${inspect(job)}`);
     }
 
-    const result = this._run(job);
-
-    if (result instanceof Promise) {
-      return result;
+    let result;
+    try {
+      result = this._run(job);
+    } catch (err) {
+      this.#counters.failures.inc();
+      return Promise.reject(err);
     }
 
+    if (result instanceof Promise) {
+      return result
+        .then((result) => {
+          this.#counters.success.inc();
+          return result;
+        });
+    }
+
+    this.#counters.success.inc();
     return Promise.resolve(result);
   }
 

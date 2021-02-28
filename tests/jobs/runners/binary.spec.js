@@ -1,8 +1,16 @@
 import BinaryRunner from '../../../src/jobs/runners/binary';
 import JobResult from '../../../src/jobs/result';
 import { expect } from 'chai';
+import Arnavon from '../../../src';
 
 describe('BinaryRunner', () => {
+
+  let job;
+  beforeEach(() => {
+    Arnavon._reset();
+    // since we test _run and not run(), we can pass whatever
+    job = { foo: 'bar' };
+  });
 
   const testBinary = './tests/jobs/runners/runner.sh';
 
@@ -35,12 +43,6 @@ describe('BinaryRunner', () => {
       expect(test(['arg', 12])).to.not.throw();
     });
 
-  });
-
-  let job;
-  beforeEach(() => {
-    // since we test _run and not run(), we can pass whatever
-    job = { foo: 'bar' };
   });
 
   describe('#_run', () => {

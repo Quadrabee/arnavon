@@ -56,7 +56,7 @@ describe('JobDispatcher', () => {
     });
 
     it('increases prometheus counter for unknown jobs', () => {
-      const metric = Arnavon.registry.getSingleMetric('dispatcher_jobs_unknown');
+      const metric = Arnavon.registry.getSingleMetric('dispatcher_unknown_jobs');
       const spy = sinon.spy(metric, 'inc');
       dispatcher.dispatch('unknown-job', {});
       expect(spy).to.be.calledOnce;
@@ -76,7 +76,7 @@ describe('JobDispatcher', () => {
     });
 
     it('increases prometheus counter for invalid jobs', () => {
-      const metric = Arnavon.registry.getSingleMetric('dispatcher_jobs_invalid');
+      const metric = Arnavon.registry.getSingleMetric('dispatcher_invalid_jobs');
       const spy = sinon.spy(metric, 'inc');
       dispatcher.dispatch('send-slack', {});
       expect(spy).to.be.calledOnce;
@@ -96,7 +96,7 @@ describe('JobDispatcher', () => {
         channel: '#channel',
         message: 'foo bar'
       };
-      const metric = Arnavon.registry.getSingleMetric('dispatcher_jobs_valid');
+      const metric = Arnavon.registry.getSingleMetric('dispatcher_valid_jobs');
       const spy = sinon.spy(metric, 'inc');
       dispatcher.dispatch('send-slack', payload);
       expect(spy).to.be.calledOnce;

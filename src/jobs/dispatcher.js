@@ -36,17 +36,17 @@ export default class JobDispatcher {
 
     this.#counters = {
       valid: new promClient.Counter({
-        name: 'dispatcher_jobs_valid',
+        name: 'dispatcher_valid_jobs',
         help: 'number of valid jobs passing through the dispacther',
         registers: [Arnavon.registry]
       }),
       invalid: new promClient.Counter({
-        name: 'dispatcher_jobs_invalid',
+        name: 'dispatcher_invalid_jobs',
         help: 'number of invalid jobs passing through the dispacther',
         registers: [Arnavon.registry]
       }),
       unknown: new promClient.Counter({
-        name: 'dispatcher_jobs_unknown',
+        name: 'dispatcher_unknown_jobs',
         help: 'number of unknown jobs rejected by the  dispacther',
         registers: [Arnavon.registry]
       })

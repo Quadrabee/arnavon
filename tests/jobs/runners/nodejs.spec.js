@@ -1,8 +1,16 @@
 import NodeJSRunner from '../../../src/jobs/runners/nodejs';
 import { expect } from 'chai';
 import Job from '../../../src/jobs/job';
+import Arnavon from '../../../src';
 
 describe('NodeJSRunner', () => {
+
+  let runner, dummy;
+  beforeEach(() => {
+    Arnavon._reset();
+    dummy = require('./dummy.runner');
+    runner = new NodeJSRunner({ module: './tests/jobs/runners/dummy.runner' });
+  });
 
   it('exports a class', () => {
     expect(NodeJSRunner).to.be.an.instanceof(Function);
@@ -22,12 +30,6 @@ describe('NodeJSRunner', () => {
       // correct
       expect(test('./tests/jobs/runners/dummy.runner')).not.to.throw();
     });
-  });
-
-  let runner, dummy;
-  beforeEach(() => {
-    dummy = require('./dummy.runner');
-    runner = new NodeJSRunner({ module: './tests/jobs/runners/dummy.runner' });
   });
 
   describe('#run', () => {
