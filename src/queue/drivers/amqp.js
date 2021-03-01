@@ -9,17 +9,38 @@ class ArnavonQueue extends Queue {
   #channel;
   #exchange;
   #queue;
+  #connectRetries;
 
   constructor(params) {
     super(params);
+    if (!params.url) {
+      throw new Error('AMQP: url parameter required');
+    }
     this.#url = params.url;
     this.#exchange = params.exchange || 'arnavon';
+    this.#connectRetries = params.connectRetries || 10;
   }
 
-  _connect() {
+  _connectWithRetries(attemptsLeft) {
     return amqplib
       // Connect
       .connect(this.#url)
+      .catch((err) => {
+        logger.warn(`Unable to connect to rabbitmq. ${attemptsLeft} attempts left.`);
+        if (attemptsLeft <= 0) {
+          logger.error('Unable to connect to rabbitmq... Giving up.');
+          throw err;
+        }
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(this._connectWithRetries(attemptsLeft - 1));
+          }, 1000);
+        });
+      });
+  }
+
+  _connect() {
+    return this._connectWithRetries(this.#connectRetries)
       .then(conn => {
         this.#conn = conn;
         // Propagate errors
