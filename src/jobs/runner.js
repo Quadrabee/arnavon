@@ -6,8 +6,19 @@ import Arnavon from '../';
 
 /**
  * The prometheus counters are shared amongst JobRunner classes
- * but use labels to distinguist the implementating-class/job
+ * but use labels to distinguish the implementating-class/job
  */
+const ensureCounter = (name, help) => {
+  let metric = Arnavon.registry.getSingleMetric(name);
+  if (!metric) {
+    metric = new promClient.Counter({
+      name,
+      help,
+      registers: [Arnavon.registry]
+    });
+  }
+  return metric;
+};
 
 /**
  * Abstract class JobRunner
@@ -16,24 +27,14 @@ import Arnavon from '../';
  */
 export default class JobRunner {
 
-  /**
-   * Private collection of counters (unknown/invalid/valid jobs)
-   */
-  #counters;
-
   constructor() {
-    this.#counters = {
-      success: new promClient.Counter({
-        name: 'runner_successful_jobs',
-        help: 'number of successful job runs',
-        registers: [Arnavon.registry]
-      }),
-      failures: new promClient.Counter({
-        name: 'runner_failed_jobs',
-        help: 'number of failed job runs',
-        registers: [Arnavon.registry]
-      })
-    };
+    JobRunner.ensureMetrics();
+  }
+
+  static ensureMetrics() {
+    JobRunner.metrics = JobRunner.metrics || {};
+    JobRunner.metrics.success = ensureCounter('runner_successful_jobs', 'number of successful job runs');
+    JobRunner.metrics.failures = ensureCounter('runner_failed_jobs', 'number of failed job runs');
   }
 
   /**
@@ -49,19 +50,23 @@ export default class JobRunner {
     try {
       result = this._run(job);
     } catch (err) {
-      this.#counters.failures.inc();
+      JobRunner.metrics.failures.inc();
       return Promise.reject(err);
     }
 
     if (result instanceof Promise) {
       return result
         .then((result) => {
-          this.#counters.success.inc();
+          JobRunner.metrics.success.inc();
           return result;
+        })
+        .catch((err) => {
+          JobRunner.metrics.failures.inc();
+          throw err;
         });
     }
 
-    this.#counters.success.inc();
+    JobRunner.metrics.success.inc();
     return Promise.resolve(result);
   }
 

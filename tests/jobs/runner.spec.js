@@ -65,6 +65,49 @@ describe('JobRunner', () => {
         .catch(done);
     });
 
+    it('let errors from promises bubble up', () => {
+      const job = new Job();
+      runner._run = sinon.stub().returns(Promise.reject(42));
+      const res = runner.run(job);
+      return res
+        .then((result) => {
+          throw new Error('shouldn\'t have resolved');
+          expect(result).to.equal(42);
+        })
+        .catch((err) => {
+          expect(err).to.equal(42);
+        });
+    });
+
+    it('wraps promises returned and increments failure counter on rejection', () => {
+      const job = new Job();
+      runner._run = sinon.stub().returns(Promise.reject(42));
+      const res = runner.run(job);
+      const metric = Arnavon.registry.getSingleMetric('runner_failed_jobs');
+      const spy = sinon.spy(metric, 'inc');
+
+      return res
+        .then(() => {
+          throw new Error('shouldn\'t have resolved');
+        })
+        .catch(() => {
+          expect(spy).to.have.been.calledOnce;
+        });
+    });
+
+    it('wraps promises returned and increments success counter on resolution', () => {
+      const job = new Job();
+      runner._run = sinon.stub().returns(Promise.resolve(42));
+      const res = runner.run(job);
+      const metric = Arnavon.registry.getSingleMetric('runner_successful_jobs');
+      const spy = sinon.spy(metric, 'inc');
+
+      return res
+        .then(() => {
+          expect(spy).to.have.been.calledOnce;
+        });
+    });
+
     it('catches errors thrown by #_run() and rejects promises', () => {
       const job = new Job();
       runner._run = sinon.stub().throws(new Error('oops'));
@@ -88,7 +131,7 @@ describe('JobRunner', () => {
         .then(() => {
           throw new Error('should not have resolved');
         })
-        .catch(err => {
+        .catch(() => {
           expect(spy).to.be.calledOnce;
         });
     });
@@ -104,6 +147,7 @@ describe('JobRunner', () => {
         })
         .catch(done);
     });
+
   });
 
   describe('.factor', () => {
