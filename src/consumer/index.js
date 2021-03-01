@@ -39,7 +39,7 @@ export default class Consumer {
     logger.info('Consumer starting consumption');
     return Arnavon.queue.consume(this.#config.jobSelector, (_job) => {
       // Convert it back to a job instance
-      const job = new Job(_job);
+      const job = Job.fromJSON(_job);
       return this.#runner.run(job);
     });
   }

@@ -24,6 +24,17 @@ export default class Job {
     });
   }
 
+  toString() {
+    return {
+      meta: this.meta,
+      data: `{${Object.keys(this.payload).join(', ')}}`
+    };
+  }
+
+  static fromJSON(job) {
+    return new Job(job.data, job.meta);
+  }
+
   toJSON() {
     return {
       meta: this.meta,

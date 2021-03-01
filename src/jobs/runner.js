@@ -13,6 +13,7 @@ const ensureCounter = (name, help) => {
     metric = new promClient.Counter({
       name,
       help,
+      labelNames: ['jobId'],
       registers: [Arnavon.registry]
     });
   }
@@ -56,16 +57,16 @@ export default class JobRunner {
     if (result instanceof Promise) {
       return result
         .then((result) => {
-          JobRunner.metrics.success.inc();
+          JobRunner.metrics.success.inc({ jobId: job.meta.jobId });
           return result;
         })
         .catch((err) => {
-          JobRunner.metrics.failures.inc();
+          JobRunner.metrics.failures.inc({ jobId: job.meta.jobId });
           throw err;
         });
     }
 
-    JobRunner.metrics.success.inc();
+    JobRunner.metrics.success.inc({ jobId: job.meta.jobId });
     return Promise.resolve(result);
   }
 

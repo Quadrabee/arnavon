@@ -4,6 +4,7 @@ import Consumer from './consumer';
 import Server from './server';
 import Queue from './queue';
 import promClient from 'prom-client';
+
 import { inspect } from './robust';
 
 /**
@@ -35,6 +36,7 @@ class Arnavon {
   // for test purposes, shouldn't really be used
   static reset() {
     Arnavon.registry = new promClient.Registry();
+    promClient.collectDefaultMetrics({ register: Arnavon.registry });
   }
 }
 

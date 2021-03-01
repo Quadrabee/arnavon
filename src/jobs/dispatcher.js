@@ -29,16 +29,19 @@ export default class JobDispatcher {
       valid: new promClient.Counter({
         name: 'dispatcher_valid_jobs',
         help: 'number of valid jobs passing through the dispacther',
+        labelNames: ['jobId'],
         registers: [Arnavon.registry]
       }),
       invalid: new promClient.Counter({
         name: 'dispatcher_invalid_jobs',
         help: 'number of invalid jobs passing through the dispacther',
+        labelNames: ['jobId'],
         registers: [Arnavon.registry]
       }),
       unknown: new promClient.Counter({
         name: 'dispatcher_unknown_jobs',
         help: 'number of unknown jobs rejected by the  dispacther',
+        labelNames: ['jobId'],
         registers: [Arnavon.registry]
       })
     };
@@ -51,18 +54,18 @@ export default class JobDispatcher {
   dispatch(jobId, data, meta = {}) {
     const validator = this.#validators[jobId];
     if (!validator) {
-      this.#counters.unknown.inc();
+      this.#counters.unknown.inc({ jobId });
       return Promise.reject(new UnknownJobError(jobId));
     }
     let jobPayload;
     try {
       jobPayload = validator.validate(data);
     } catch (err) {
-      this.#counters.invalid.inc();
+      this.#counters.invalid.inc({ jobId });
       return Promise.reject(err);
     }
 
-    this.#counters.valid.inc();
+    this.#counters.valid.inc({ jobId });
     const job = new Job(jobPayload, Object.assign({}, meta, {
       jobId: jobId,
       dispatched: new Date()
