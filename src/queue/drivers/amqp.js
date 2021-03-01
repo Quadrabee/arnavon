@@ -46,7 +46,7 @@ class ArnavonQueue extends Queue {
   _push(key, data) {
     const payload = Buffer.from(JSON.stringify(data));
     return new Promise((resolve, reject) => {
-      return this.#channel.publish(this.#exchange, key, payload, {}, (err, result) => {
+      return this.#channel.publish(this.#exchange, key, payload, {}, (err) => {
         if (err) {
           return reject(err);
         }

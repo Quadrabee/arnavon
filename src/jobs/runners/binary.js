@@ -4,7 +4,6 @@ import JobRunner from '../runner';
 import JobResult from '../result';
 import { inspect } from '../../robust';
 import { spawn } from 'child_process';
-import RunnersFactory from './index';
 
 export default class BinaryRunner extends JobRunner {
 

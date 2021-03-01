@@ -4,7 +4,7 @@ import Consumer from './consumer';
 import Server from './server';
 import Queue from './queue';
 import promClient from 'prom-client';
-import { ArnavonError, inspect } from './robust';
+import { inspect } from './robust';
 
 /**
  * Arnavon uses a singleton pattern for the main "module"

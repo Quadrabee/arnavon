@@ -73,7 +73,7 @@ export default class JobRunner {
    * Implementation specific, should be implemented by subclasses
    * @param {Job} job
    */
-  _run(job) {
+  _run(/* job */) {
     throw new Error('#_run should be implemented by subclasses');
   }
 

@@ -1,7 +1,6 @@
 import Arnavon from '../../';
 import JobRunner from '../runner';
 import { inspect } from '../../robust';
-import RunnersFactory from './index';
 
 export default class NodeJSRunner extends JobRunner {
   #config;
