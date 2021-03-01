@@ -8,6 +8,7 @@ import Job from '../../src/jobs/job';
 import MemoryQueue from '../../src/queue/drivers/memory';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
+import { v4 as uuid } from 'uuid';
 
 chai.should();
 chai.use(sinonChai);
@@ -101,22 +102,47 @@ describe('JobDispatcher', () => {
       expect(spy).to.be.calledOnce;
     });
 
-    it('enqueues validated job on the queue', (done) => {
+    it('enqueues validated job (with metadata) on the queue', () => {
       const payload = {
         channel: '#channel',
         message: 'foo bar'
       };
       const spy = sinon.spy(queue, 'push');
-      dispatcher.dispatch('send-slack', payload)
+      return dispatcher.dispatch('send-slack', payload)
         .then(() => {
           expect(spy).to.be.calledOnce;
           const [call] = spy.getCalls();
           const { args: [arg1, arg2] } = call;
           expect(arg1).to.eql('send-slack');
           expect(arg2).to.be.an.instanceof(Job);
-          done();
-        })
-        .catch(done);
+          expect(arg2.meta.dispatched).to.be.an.instanceof(Date);
+          expect(arg2.meta.jobId).to.equal('send-slack');
+        });
+    });
+
+    it('passes metadata to job before passing on to the queue', () => {
+      const payload = {
+        channel: '#channel',
+        message: 'foo bar'
+      };
+      const metadata = {
+        id: uuid(),
+        scheduled: new Date(),
+        // We should not be able to set that field ourselves
+        jobId: 'foo-bar'
+      };
+      const spy = sinon.spy(queue, 'push');
+      return dispatcher.dispatch('send-slack', payload, metadata)
+        .then(() => {
+          expect(spy).to.be.calledOnce;
+          const [call] = spy.getCalls();
+          const { args: [arg1, arg2] } = call;
+          expect(arg1).to.eql('send-slack');
+          expect(arg2).to.be.an.instanceof(Job);
+          expect(arg2.meta.scheduled).to.equal(metadata.scheduled);
+          expect(arg2.meta.id).to.equal(metadata.id);
+          expect(arg2.meta.jobId).to.equal('send-slack');
+        });
     });
 
   });

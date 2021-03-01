@@ -73,7 +73,10 @@ export default class JobDispatcher {
     }
 
     this.#counters.valid.inc();
-    const job = new Job(jobPayload);
+    const job = new Job(jobPayload, Object.assign({}, meta, {
+      jobId: jobId,
+      dispatched: new Date()
+    }));
     return this.#queue.push(jobId, job);
   }
 
