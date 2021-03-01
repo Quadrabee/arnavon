@@ -152,7 +152,6 @@ describe('JobRunner', () => {
   describe('.factor', () => {
 
     beforeEach(() => {
-      Arnavon._reset();
       Runners.register('Test', TestRunner);
     });
 

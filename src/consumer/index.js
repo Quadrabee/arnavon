@@ -1,20 +1,11 @@
-import Queue from '../queue';
 import createApi from '../api';
 import logger from '../logger';
-import { inspect } from '../robust';
-import ArnavonConfig from '../config';
+import Arnavon from '..';
 
 export default class Consumer {
 
-  #queue;
-  #config;
   #api;
   constructor(config) {
-    if (!(config instanceof ArnavonConfig)) {
-      throw new Error(`ArnavonConfig expected, got ${inspect(config)}`);
-    }
-    this.#config = config;
-    this.#queue = Queue.create(config.queue);
     this.#api = createApi();
   }
 
@@ -31,12 +22,12 @@ export default class Consumer {
   }
 
   _connectQueue() {
-    return this.#queue.connect();
+    return Arnavon.queue.connect();
   }
 
   _startConsuming() {
     logger.info('Consumer starting consumption');
-    this.#queue.consume((job) => {
+    Arnavon.queue.consume((job) => {
       console.log('job job job', job);
       return Promise.resolve();
     });

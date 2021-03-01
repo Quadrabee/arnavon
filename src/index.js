@@ -3,23 +3,33 @@ import Consumer from './consumer';
 import Server from './server';
 import Queue from './queue';
 import promClient from 'prom-client';
+import { inspect } from './robust';
 
 /**
  * Arnavon uses a singleton pattern for the main "module"
  * exposing the prometheus instance, the queue, the config etc
  */
 class Arnavon {
-  constructor() {
-    this._reset();
+  static registry;
+  static queue;
+  static config;
+
+  static init(config) {
+    if (!(config instanceof Config)) {
+      throw new Error(`ArnavonConfig expected, got ${inspect(config)}`);
+    }
+    Arnavon.reset();
+    Arnavon.queue = Queue.create(config.queue);
+    Arnavon.config = config;
   }
 
   // for test purposes, shouldn't really be used
-  _reset() {
-    this.registry = new promClient.Registry();
+  static reset() {
+    Arnavon.registry = new promClient.Registry();
   }
 }
 
-export default new Arnavon();
+export default Arnavon;
 
 export {
   Config,

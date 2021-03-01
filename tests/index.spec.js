@@ -18,12 +18,22 @@ describe('The Arnavon package', () => {
     });
   });
 
-  describe('Arnavon._reset', () => {
+  describe('Arnavon.reset', () => {
     it('allows our tests to reset Arnavon\'s module', () => {
       const registry1 = Arnavon.registry;
-      Arnavon._reset();
+      Arnavon.reset();
       const registry2 = Arnavon.registry;
       expect(registry1 === registry2).to.equal(false);
+    });
+  });
+
+  describe('Arnavon.init', () => {
+    it('expects an ArnavonConfig instance', () => {
+      const test = (c) => () => Arnavon.init(c);
+      expect(test()).to.throw(/ArnavonConfig expected, got/);
+      expect(test(null)).to.throw(/ArnavonConfig expected, got/);
+      expect(test([])).to.throw(/ArnavonConfig expected, got/);
+      expect(test({})).to.throw(/ArnavonConfig expected, got/);
     });
   });
 

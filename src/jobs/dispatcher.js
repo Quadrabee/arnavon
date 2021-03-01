@@ -2,7 +2,6 @@ import Arnavon from '../';
 import promClient from 'prom-client';
 import ArnavonConfig from '../config';
 import JobValidator from './validator';
-import Queue from '../queue';
 import { inspect, UnknownJobError } from '../robust';
 import Job from './job';
 
@@ -13,10 +12,6 @@ export default class JobDispatcher {
    */
   #validators;
   /**
-   * The actual queue (driver) used to enqueue valid jobs
-   */
-  #queue;
-  /**
    * Private collection of counters (unknown/invalid/valid jobs)
    */
   #counters;
@@ -24,14 +19,10 @@ export default class JobDispatcher {
   /**
    * Constructs a new JobDispatcher
    * @param {ArnavonConfig} config a valid config object
-   * @param {*} queue an instance of Queue that will be used to enqueue jobs
    */
-  constructor(config, queue) {
+  constructor(config) {
     if (!(config instanceof ArnavonConfig)) {
       throw new Error(`ArnavonConfig expected, got ${inspect(config)}`);
-    }
-    if (!(queue instanceof Queue)) {
-      throw new Error(`Queue expected, got ${inspect(queue)}`);
     }
 
     this.#counters = {
@@ -51,7 +42,6 @@ export default class JobDispatcher {
         registers: [Arnavon.registry]
       })
     };
-    this.#queue = queue;
     this.#validators = config.jobs.reduce((validators, jobConfig) => {
       validators[jobConfig.id] = new JobValidator(jobConfig.inputSchema);
       return validators;
@@ -77,7 +67,7 @@ export default class JobDispatcher {
       jobId: jobId,
       dispatched: new Date()
     }));
-    return this.#queue.push(jobId, job);
+    return Arnavon.queue.push(jobId, job);
   }
 
 }

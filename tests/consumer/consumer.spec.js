@@ -14,10 +14,6 @@ describe('Consumer', () => {
   });
 
   describe('its constructor', () => {
-    it('expects an ArnavonConfig instance', () => {
-      expect(() => new Consumer()).to.throw(/ArnavonConfig expected/);
-    });
-
     it('it works', () => {
       expect(new Consumer(config)).to.be.an.instanceof(Consumer);
     });

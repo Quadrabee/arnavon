@@ -1,5 +1,5 @@
 import Arnavon from '../src';
 
 beforeEach(() => {
-  Arnavon._reset();
+  Arnavon.reset();
 });

@@ -25,11 +25,11 @@ describe('JobDispatcher', () => {
     expect(JobDispatcher.name).to.equal('JobDispatcher');
   });
 
-  let config, dispatcher, queue;
+  let config, dispatcher;
   beforeEach(() => {
     config = ArnavonConfig.fromFile('example/config.yaml');
-    queue = new MemoryQueue();
-    dispatcher = new JobDispatcher(config, queue);
+    Arnavon.queue = new MemoryQueue();
+    dispatcher = new JobDispatcher(config);
   });
 
   describe('its constructor', () => {
@@ -107,7 +107,7 @@ describe('JobDispatcher', () => {
         channel: '#channel',
         message: 'foo bar'
       };
-      const spy = sinon.spy(queue, 'push');
+      const spy = sinon.spy(Arnavon.queue, 'push');
       return dispatcher.dispatch('send-slack', payload)
         .then(() => {
           expect(spy).to.be.calledOnce;
@@ -131,7 +131,7 @@ describe('JobDispatcher', () => {
         // We should not be able to set that field ourselves
         jobId: 'foo-bar'
       };
-      const spy = sinon.spy(queue, 'push');
+      const spy = sinon.spy(Arnavon.queue, 'push');
       return dispatcher.dispatch('send-slack', payload, metadata)
         .then(() => {
           expect(spy).to.be.calledOnce;

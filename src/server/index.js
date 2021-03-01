@@ -1,5 +1,3 @@
-import Config from '../config';
-import Queue from '../queue';
 import createApi from './rest';
 import logger from '../logger';
 import { JobDispatcher } from '../jobs';
@@ -8,17 +6,13 @@ import ArnavonConfig from '../config';
 
 export default class Server {
 
-  #config;
-  #queue;
   #api;
   #dispatcher;
   constructor(config) {
     if (!(config instanceof ArnavonConfig)) {
       throw new Error(`ArnavonConfig expected, got ${inspect(config)}`);
     }
-    this.#config = config;
-    this.#queue = Queue.create(config.queue);
-    this.#dispatcher = new JobDispatcher(config, this.#queue);
+    this.#dispatcher = new JobDispatcher(config);
     this.#api = createApi(this.#dispatcher);
   }
 
@@ -35,7 +29,7 @@ export default class Server {
   }
 
   _connectQueue() {
-    return this.#queue.connect();
+    return Arnavon.queue.connect();
   }
 
   start(port = 3000) {
