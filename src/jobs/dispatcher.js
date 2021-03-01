@@ -58,7 +58,7 @@ export default class JobDispatcher {
     }, {});
   }
 
-  dispatch(jobId, data) {
+  dispatch(jobId, data, meta = {}) {
     const validator = this.#validators[jobId];
     if (!validator) {
       this.#counters.unknown.inc();
