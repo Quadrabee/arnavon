@@ -24,7 +24,6 @@ describe('JobRunner', () => {
 
   let runner;
   beforeEach(() => {
-    Arnavon._reset();
     runner = new TestRunner();
   });
 

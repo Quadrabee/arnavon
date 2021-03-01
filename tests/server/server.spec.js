@@ -1,13 +1,11 @@
 import Server from '../../src/server';
 import Config from '../../src/config';
 import { expect } from 'chai';
-import Arnavon from '../../src';
 
 describe('Server', () => {
 
   let config, server;
   beforeEach(() => {
-    Arnavon._reset();
     config = Config.fromFile('example/config.yaml');
     server = new Server(config);
   });

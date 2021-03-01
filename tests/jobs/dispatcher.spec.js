@@ -26,7 +26,6 @@ describe('JobDispatcher', () => {
 
   let config, dispatcher, queue;
   beforeEach(() => {
-    Arnavon._reset();
     config = ArnavonConfig.fromFile('example/config.yaml');
     queue = new MemoryQueue();
     dispatcher = new JobDispatcher(config, queue);
