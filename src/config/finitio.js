@@ -4,9 +4,11 @@ import YAML from 'yaml';
 import { DataValidationError } from '../robust';
 import schema from './schema.fio';
 import JobConfig from '../jobs/config';
+import ConsumerConfig from '../consumer/config';
 
 const baseWorld = {
-  JobConfig
+  JobConfig,
+  ConsumerConfig
 };
 
 let system;

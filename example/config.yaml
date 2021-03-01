@@ -9,3 +9,25 @@ jobs:
 
   - id: send-email
     inputSchema: Email.Full
+
+consumers:
+  - id: slack-worker
+    jobSelector: send-slack
+    runner:
+      type: nodejs
+      config:
+        path: slack-worker
+
+  - id: mailer-worker
+    jobSelector: send-email
+    runner:
+      type: nodejs
+      config:
+        path: mailer-worker
+
+  - id: logger
+    jobSelector: '*'
+    runner:
+      type: nodejs
+      config:
+        path: logger
