@@ -1,3 +1,3 @@
 module.exports = (job) => {
-  console.log('MAILING', job);
+  console.log('MAILING', job.toString());
 };
