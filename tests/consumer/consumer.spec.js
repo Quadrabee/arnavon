@@ -92,6 +92,8 @@ describe('Consumer', () => {
       return consumer.start()
         .then(() => {
           expect(spy).to.be.calledOnce;
+          const call = spy.getCall(0);
+          expect(call.args[0]).to.equal('send-slack');
         });
     });
 
