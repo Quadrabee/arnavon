@@ -78,5 +78,3 @@ export default class BinaryRunner extends JobRunner {
     });
   }
 }
-
-RunnersFactory.register('binary', BinaryRunner);

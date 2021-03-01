@@ -1,3 +1,3 @@
-export default (job) => {
-
+module.exports = (job) => {
+  console.log('MAILING', job);
 };

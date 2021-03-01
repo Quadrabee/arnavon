@@ -1,3 +1,6 @@
+import NodeJSRunner from './nodejs';
+import BinaryRunner from './binary';
+
 class RunnersFactory {
   #runners;
   constructor() {
@@ -21,4 +24,8 @@ class RunnersFactory {
   }
 }
 
-export default new RunnersFactory();
+const factory = new RunnersFactory();
+factory.register('nodejs', NodeJSRunner);
+factory.register('binary', BinaryRunner);
+
+export default factory;

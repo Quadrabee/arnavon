@@ -1,6 +1,5 @@
 import Job from './job';
 import { inspect } from '../robust';
-import runners from './runners';
 import promClient from 'prom-client';
 import Arnavon from '../';
 
@@ -79,6 +78,8 @@ export default class JobRunner {
   }
 
   static factor(type, config) {
+    // circular dependency... no choice :(
+    const runners = require('./runners').default;
     return runners.factor(type, config);
   }
 

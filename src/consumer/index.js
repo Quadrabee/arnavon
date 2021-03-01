@@ -3,7 +3,7 @@ import logger from '../logger';
 import ConsumerConfig from './config';
 import { inspect } from '../robust';
 import Arnavon from '..';
-import { JobRunner } from '../jobs';
+import { Job, JobRunner } from '../jobs';
 
 export default class Consumer {
 
@@ -37,8 +37,9 @@ export default class Consumer {
 
   _startConsuming() {
     logger.info('Consumer starting consumption');
-    return Arnavon.queue.consume(this.#config.jobSelector, (job) => {
-      console.log('job job job', job);
+    return Arnavon.queue.consume(this.#config.jobSelector, (_job) => {
+      // Convert it back to a job instance
+      const job = new Job(_job);
       return this.#runner.run(job);
     });
   }

@@ -26,4 +26,3 @@ export default class NodeJSRunner extends JobRunner {
   }
 }
 
-RunnersFactory.register('nodejs', NodeJSRunner);
