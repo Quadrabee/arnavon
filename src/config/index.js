@@ -4,8 +4,9 @@ import types from './finitio';
 import Finitio from 'finitio';
 
 export default class ArnavonConfig {
-  constructor(data) {
+  constructor(data, cwd) {
     Object.assign(this, data);
+    this.cwd = cwd;
   }
 
   static fromFile(fname = 'config.yaml') {
@@ -29,6 +30,6 @@ export default class ArnavonConfig {
     if (fs.existsSync(schemaPath)) {
       baseSystem = Finitio.system(fs.readFileSync(schemaPath).toString());
     }
-    return new ArnavonConfig(types.ArnavonConfig.dressFromFile(fpath, baseSystem));
+    return new ArnavonConfig(types.ArnavonConfig.dressFromFile(fpath, baseSystem), folder);
   }
 }

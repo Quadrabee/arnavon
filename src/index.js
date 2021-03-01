@@ -1,3 +1,4 @@
+import path from 'path';
 import Config from './config';
 import Consumer from './consumer';
 import Server from './server';
@@ -21,6 +22,14 @@ class Arnavon {
     Arnavon.reset();
     Arnavon.queue = Queue.create(config.queue);
     Arnavon.config = config;
+  }
+
+  static cwd() {
+    return Arnavon.config.cwd;
+  }
+
+  static require(fname) {
+    return require(path.join(Arnavon.cwd(), fname));
   }
 
   // for test purposes, shouldn't really be used

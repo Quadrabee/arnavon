@@ -16,18 +16,18 @@ consumers:
     runner:
       type: nodejs
       config:
-        path: slack-worker
+        module: ./slack-worker
 
   - id: mailer-worker
     jobSelector: send-email
     runner:
       type: nodejs
       config:
-        path: mailer-worker
+        module: ./mailer-worker
 
   - id: logger
     jobSelector: '*'
     runner:
       type: nodejs
       config:
-        path: logger
+        module: ./logger

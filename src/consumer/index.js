@@ -3,17 +3,20 @@ import logger from '../logger';
 import ConsumerConfig from './config';
 import { inspect } from '../robust';
 import Arnavon from '..';
+import { JobRunner } from '../jobs';
 
 export default class Consumer {
 
   #api;
   #config;
+  #runner;
   constructor(config) {
     if (!(config instanceof ConsumerConfig)) {
       throw new Error(`ConsumerConfig expected, got ${inspect(config)}`);
     }
     this.#api = createApi();
     this.#config = config;
+    this.#runner = JobRunner.factor(config.runner.type, config.runner.config);
   }
 
   _startApi(port) {
@@ -36,7 +39,7 @@ export default class Consumer {
     logger.info('Consumer starting consumption');
     return Arnavon.queue.consume(this.#config.jobSelector, (job) => {
       console.log('job job job', job);
-      return Promise.resolve();
+      return this.#runner.run(job);
     });
   }
 

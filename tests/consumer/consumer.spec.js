@@ -1,5 +1,4 @@
 import Arnavon from '../../src/';
-import Consumer from '../../src/consumer';
 import Config from '../../src/config';
 import { expect, default as chai } from 'chai';
 import sinon from 'sinon';

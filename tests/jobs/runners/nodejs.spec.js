@@ -1,13 +1,15 @@
 import NodeJSRunner from '../../../src/jobs/runners/nodejs';
 import { expect } from 'chai';
 import Job from '../../../src/jobs/job';
+import Arnavon from '../../../src';
 
 describe('NodeJSRunner', () => {
 
   let runner, dummy;
   beforeEach(() => {
     dummy = require('./dummy.runner');
-    runner = new NodeJSRunner({ module: './tests/jobs/runners/dummy.runner' });
+    Arnavon.cwd = () => __dirname;
+    runner = new NodeJSRunner({ module: './dummy.runner' });
   });
 
   it('exports a class', () => {
@@ -26,7 +28,7 @@ describe('NodeJSRunner', () => {
       expect(test('foo/bar')).to.throw('Module \'foo/bar\' can\'t be loaded');
       expect(test('/tmp/test.js')).to.throw('Module \'/tmp/test.js\' can\'t be loaded');
       // correct
-      expect(test('./tests/jobs/runners/dummy.runner')).not.to.throw();
+      expect(test('./dummy.runner')).not.to.throw();
     });
   });
 

@@ -1,6 +1,7 @@
-import path from 'path';
+import Arnavon from '../../';
 import JobRunner from '../runner';
 import { inspect } from '../../robust';
+import RunnersFactory from './index';
 
 export default class NodeJSRunner extends JobRunner {
   #config;
@@ -14,8 +15,7 @@ export default class NodeJSRunner extends JobRunner {
     }
 
     try {
-      const fpath = path.join(process.cwd(), config.module);
-      this.#module = require(fpath);
+      this.#module = Arnavon.require(config.module);
     } catch (err) {
       throw new Error(`Module '${config.module}' can't be loaded`);
     }
@@ -25,3 +25,5 @@ export default class NodeJSRunner extends JobRunner {
     return this.#module(job);
   }
 }
+
+RunnersFactory.register('nodejs', NodeJSRunner);

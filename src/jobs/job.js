@@ -26,7 +26,8 @@ export default class Job {
 
   toJSON() {
     return {
-      ...this
+      meta: this.meta,
+      data: this.payload
     };
   }
 }
