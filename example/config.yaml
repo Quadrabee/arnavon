@@ -2,7 +2,6 @@ queue:
   driver: amqp
   config:
     url: amqp://rabbit:rabbit@localhost
-    exchange: jobs
 
 jobs:
   - id: send-slack
@@ -10,4 +9,3 @@ jobs:
 
   - id: send-email
     inputSchema: Email.Full
-

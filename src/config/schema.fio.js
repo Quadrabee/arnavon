@@ -2,8 +2,8 @@ export default `
 @import finitio/data
 
 AMQPConfig = {
-  url      : String
-  exchange : String
+  url      :  String
+  exchange :? String
 }
 
 QueueConfig = {
