@@ -67,7 +67,9 @@ export default class JobDispatcher {
       jobId: jobId,
       dispatched: new Date()
     }));
-    return Arnavon.queue.push(jobId, job);
+
+    return Arnavon.queue.push(jobId, job)
+      .then(() => job);
   }
 
 }

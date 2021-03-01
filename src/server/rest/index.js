@@ -5,8 +5,8 @@ export default (dispatcher) => {
 
   api.post('/jobs/:id', (req, res, next) => {
     dispatcher.dispatch(req.params.id, req.body)
-      .then((data) => {
-        return res.status(201).send(data);
+      .then((job) => {
+        return res.status(201).send(job);
       })
       .catch(next);
   });

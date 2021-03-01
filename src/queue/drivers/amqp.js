@@ -26,7 +26,7 @@ class ArnavonQueue extends Queue {
         this.#conn.on('close', (err) => this.emit('close', err));
         this.#conn.on('error', (err) => this.emit('error', err));
         // Create channel
-        return conn.createChannel();
+        return conn.createConfirmChannel();
       })
       .then((channel) => {
         this.#channel = channel;
@@ -44,11 +44,15 @@ class ArnavonQueue extends Queue {
   }
 
   _push(key, data) {
-    const published = this.#channel.publish(this.#exchange, key, Buffer.from(JSON.stringify(data)));
-    if (published) {
-      return Promise.resolve();
-    }
-    return Promise.reject();
+    const payload = Buffer.from(JSON.stringify(data));
+    return new Promise((resolve, reject) => {
+      return this.#channel.publish(this.#exchange, key, payload, {}, (err, result) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(data);
+      });
+    });
   }
 
   _consume(selector, processor) {
