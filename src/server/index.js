@@ -3,6 +3,7 @@ import logger from '../logger';
 import { JobDispatcher } from '../jobs';
 import { inspect } from '../robust';
 import ArnavonConfig from '../config';
+import Arnavon from '../';
 
 export default class Server {
 
@@ -33,8 +34,10 @@ export default class Server {
   }
 
   start(port = 3000) {
-    this._connectQueue()
-      .then(() => this._startApi(port))
+    return this._connectQueue()
+      .then(() => {
+        this._startApi(port);
+      })
       .catch((err) => {
         console.error(err);
         process.exit(10);
