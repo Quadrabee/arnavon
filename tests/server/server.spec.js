@@ -48,7 +48,7 @@ describe('Server', () => {
     });
 
     it('connects to the queue', () => {
-      const spy = sinon.spy(Arnavon.queue, 'connect');
+      const spy = sinon.stub(Arnavon.queue, 'connect').resolves(true);
       server.start();
       expect(spy).to.be.calledOnce;
     });
