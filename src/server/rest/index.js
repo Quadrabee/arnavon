@@ -1,4 +1,5 @@
 import createApi from '../../api';
+import { UnknownJobError } from '../../robust';
 
 export default (dispatcher) => {
   const api = createApi();
@@ -8,7 +9,12 @@ export default (dispatcher) => {
       .then((job) => {
         return res.status(201).send(job);
       })
-      .catch(next);
+      .catch((err) => {
+        if (err instanceof UnknownJobError) {
+          return res.status(404).send({ error: err.message });
+        }
+        next(err);
+      });
   });
 
   api.use((err, req, res, next) => {

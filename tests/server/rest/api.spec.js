@@ -2,6 +2,7 @@ import proxyquire from 'proxyquire';
 import { expect, default as chai } from 'chai';
 import chaiHttp from 'chai-http';
 import createApiHelper from '../../../src/api';
+import { UnknownJobError } from '../../../src/robust';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
@@ -73,6 +74,22 @@ describe('server/createApi', () => {
     // TODO improve the API behaviour in case of errors
     // Additional status code,
     // validation of job ids etc
+
+    it('returns 404 on unknown job errors', (done) => {
+      const jobPayload = {
+        foo: 'bar'
+      };
+      dispatcher.dispatch.returns(Promise.reject(new UnknownJobError('unknown-job')));
+
+      chai.request(api)
+        .post('/jobs/foo-bar')
+        .send(jobPayload)
+        .end((err, res) => {
+          res.should.have.status(404);
+          res.body.should.eql({ error: 'Unknown job: unknown-job, no definition found' });
+          done();
+        });
+    });
 
     it('returns 500 with error on dispatch errors (rejected promises)', (done) => {
       const jobPayload = {
