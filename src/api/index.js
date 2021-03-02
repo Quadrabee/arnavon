@@ -14,9 +14,10 @@ export default ({ agent = 'arnavon' } = {}) => {
   const app = express();
 
   app.use((req, res, next) => {
-    req.log = logger.child({ req_id: uuidv4() }, true);
-    req.log.info({ req });
-    res.on('finish', () => req.log.info({ res }));
+    req.id = uuidv4();
+    req.logger = logger.child({ reqId: req.id }, true);
+    req.logger.info({ req });
+    res.on('finish', () => req.logger.info({ res }));
     next();
   });
 

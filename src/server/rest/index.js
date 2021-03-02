@@ -5,7 +5,7 @@ export default (dispatcher) => {
   const api = createApi();
 
   api.post('/jobs/:id', (req, res, next) => {
-    dispatcher.dispatch(req.params.id, req.body)
+    dispatcher.dispatch(req.params.id, req.body, { id: req.id })
       .then((job) => {
         return res.status(201).send(job);
       })

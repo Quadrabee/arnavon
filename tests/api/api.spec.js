@@ -2,7 +2,13 @@ import { version } from '../../package.json';
 import { expect, default as chai } from 'chai';
 import chaiHttp from 'chai-http';
 import createApi from '../../src/api';
+import logger from '../../src/logger';
+import sinon from 'sinon';
+import sinonChai from 'sinon-chai';
+import { validate } from 'uuid';
 
+chai.should();
+chai.use(sinonChai);
 chai.use(chaiHttp);
 
 describe('createApi', () => {
@@ -104,6 +110,29 @@ describe('createApi', () => {
             params: { id: 'foo' },
             query: { bar: 'baz' }
           });
+          done();
+        });
+    });
+
+    it('decorates the request object with a unique id & with a (child) logger decorated with that reqId', (done) => {
+      const spy = sinon.spy(logger, 'child');
+      let request;
+
+      api.get('/test', (req, res) => {
+        res.sendStatus(200);
+        request = req;
+      });
+
+      chai.request(api)
+        .get('/test')
+        .end((err, res) => {
+          expect(request).to.exist;
+          expect(request.logger).to.exist;
+          expect(spy).to.be.calledOnce;
+          const call = spy.getCall(0);
+          const [{ reqId }] = call.args;
+          expect(validate(reqId)).to.be.true;
+          expect(request.id).to.equal(reqId);
           done();
         });
     });
