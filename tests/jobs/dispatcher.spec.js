@@ -47,7 +47,7 @@ describe('JobDispatcher', () => {
   describe('#dispatch', () => {
 
     it('fails for unknown jobs', (done) => {
-      const test = (jobId) => dispatcher.dispatch(jobId, {});
+      const test = (jobName) => dispatcher.dispatch(jobName, {});
 
       expect(test()).to.eventually.be.rejectedWith(UnknownJobError);
       expect(test('')).to.eventually.be.rejectedWith(UnknownJobError);
@@ -63,7 +63,7 @@ describe('JobDispatcher', () => {
     });
 
     it('fails for invalid job payload', (done) => {
-      const test = (jobId, data) => dispatcher.dispatch(jobId, data);
+      const test = (jobName, data) => dispatcher.dispatch(jobName, data);
 
       expect(test('send-slack')).to.eventually.be.rejectedWith(DataValidationError);
       expect(test('send-slack', {})).to.eventually.be.rejectedWith(DataValidationError);
@@ -116,7 +116,7 @@ describe('JobDispatcher', () => {
           expect(arg1).to.eql('send-slack');
           expect(arg2).to.be.an.instanceof(Job);
           expect(arg2.meta.dispatched).to.be.an.instanceof(Date);
-          expect(arg2.meta.jobId).to.equal('send-slack');
+          expect(arg2.meta.jobName).to.equal('send-slack');
         });
     });
 
@@ -129,7 +129,7 @@ describe('JobDispatcher', () => {
         id: uuid(),
         scheduled: new Date(),
         // We should not be able to set that field ourselves
-        jobId: 'foo-bar'
+        jobName: 'foo-bar'
       };
       const spy = sinon.spy(Arnavon.queue, 'push');
       return dispatcher.dispatch('send-slack', payload, metadata)
@@ -141,7 +141,7 @@ describe('JobDispatcher', () => {
           expect(arg2).to.be.an.instanceof(Job);
           expect(arg2.meta.scheduled).to.equal(metadata.scheduled);
           expect(arg2.meta.id).to.equal(metadata.id);
-          expect(arg2.meta.jobId).to.equal('send-slack');
+          expect(arg2.meta.jobName).to.equal('send-slack');
         });
     });
 

@@ -1,8 +1,8 @@
 class ArnavonError extends Error {}
 
 class UnknownJobError extends ArnavonError {
-  constructor(jobId) {
-    super(`Unknown job: ${jobId}, no definition found`);
+  constructor(jobName) {
+    super(`Unknown job: ${jobName}, no definition found`);
   }
 }
 

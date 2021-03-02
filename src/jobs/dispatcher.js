@@ -29,19 +29,19 @@ export default class JobDispatcher {
       valid: new promClient.Counter({
         name: 'dispatcher_valid_jobs',
         help: 'number of valid jobs passing through the dispacther',
-        labelNames: ['jobId'],
+        labelNames: ['jobName'],
         registers: [Arnavon.registry]
       }),
       invalid: new promClient.Counter({
         name: 'dispatcher_invalid_jobs',
         help: 'number of invalid jobs passing through the dispacther',
-        labelNames: ['jobId'],
+        labelNames: ['jobName'],
         registers: [Arnavon.registry]
       }),
       unknown: new promClient.Counter({
         name: 'dispatcher_unknown_jobs',
         help: 'number of unknown jobs rejected by the  dispacther',
-        labelNames: ['jobId'],
+        labelNames: ['jobName'],
         registers: [Arnavon.registry]
       })
     };
@@ -51,27 +51,27 @@ export default class JobDispatcher {
     }, {});
   }
 
-  dispatch(jobId, data, meta = {}) {
-    const validator = this.#validators[jobId];
+  dispatch(jobName, data, meta = {}) {
+    const validator = this.#validators[jobName];
     if (!validator) {
-      this.#counters.unknown.inc({ jobId });
-      return Promise.reject(new UnknownJobError(jobId));
+      this.#counters.unknown.inc({ jobName });
+      return Promise.reject(new UnknownJobError(jobName));
     }
     let jobPayload;
     try {
       jobPayload = validator.validate(data);
     } catch (err) {
-      this.#counters.invalid.inc({ jobId });
+      this.#counters.invalid.inc({ jobName });
       return Promise.reject(err);
     }
 
-    this.#counters.valid.inc({ jobId });
+    this.#counters.valid.inc({ jobName });
     const job = new Job(jobPayload, Object.assign({}, meta, {
-      jobId: jobId,
+      jobName: jobName,
       dispatched: new Date()
     }));
 
-    return Arnavon.queue.push(jobId, job)
+    return Arnavon.queue.push(jobName, job)
       .then(() => job);
   }
 
