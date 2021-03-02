@@ -15,8 +15,8 @@ export default class JobConfig {
       throw new Error(`Config object expected, got ${inspect(cfg)}`);
     }
 
-    if (!cfg.id || typeof cfg.id !== 'string') {
-      throw new Error(`Valid job id expected, got ${cfg.id}`);
+    if (!cfg.name || typeof cfg.name !== 'string') {
+      throw new Error(`Valid job name expected, got ${cfg.name}`);
     }
 
     if (!cfg.inputSchema) {

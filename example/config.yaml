@@ -4,28 +4,28 @@ queue:
     url: amqp://rabbit:rabbit@localhost
 
 jobs:
-  - id: send-slack
+  - name: send-slack
     inputSchema: SlackMessage
 
-  - id: send-email
+  - name: send-email
     inputSchema: Email.Full
 
 consumers:
-  - id: slack-worker
+  - name: slack-worker
     jobSelector: send-slack
     runner:
       type: nodejs
       config:
         module: ./slack-worker
 
-  - id: mailer-worker
+  - name: mailer-worker
     jobSelector: send-email
     runner:
       type: nodejs
       config:
         module: ./mailer-worker
 
-  - id: logger
+  - name: logger
     jobSelector: '*'
     runner:
       type: nodejs

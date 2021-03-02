@@ -17,11 +17,12 @@ QueueConfig = {
 
 #### JOBS
 
+Job.Name = ID
 Job.ID = ID
 
 Job.Config = .JobConfig <json> {
-  id          : Job.ID
-  inputSchema : String
+  name          : Job.Name
+  inputSchema   : String
 }
 
 #### RUNNERS
@@ -33,13 +34,13 @@ Runner.Config = {
 
 #### CONSUMERS
 
-Consumer.ID = ID
+Consumer.Name = ID
 
 Consumer.Wildcard = String(s | s === "*")
 Consumer.Selector = ID | Consumer.Wildcard
 
 Consumer.Config = .ConsumerConfig <json> {
-  id          : Consumer.ID
+  name        : Consumer.Name
   jobSelector : Consumer.Selector
   runner      : Runner.Config
 }

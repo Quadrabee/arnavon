@@ -46,7 +46,7 @@ export default class JobDispatcher {
       })
     };
     this.#validators = config.jobs.reduce((validators, jobConfig) => {
-      validators[jobConfig.id] = new JobValidator(jobConfig.inputSchema);
+      validators[jobConfig.name] = new JobValidator(jobConfig.inputSchema);
       return validators;
     }, {});
   }
