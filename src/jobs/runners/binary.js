@@ -50,6 +50,7 @@ export default class BinaryRunner extends JobRunner {
       });
 
       process.on('close', (code, signal) => {
+        console.log('process closed', code, signal);
         // Check if maybe we were passed JSON
         try {
           stdoutData = JSON.parse(stdoutData);

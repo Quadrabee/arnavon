@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 command=$1
 
@@ -36,7 +36,7 @@ fi
 
 ## segfaults
 if [ "$command" = "segfault" ]; then
-  a() { a; }; a
+  kill -11 $$
 fi
 
 ## sleep 0.2 second and exits 0
