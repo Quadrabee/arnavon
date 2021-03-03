@@ -21,7 +21,9 @@ export default class NodeJSRunner extends JobRunner {
   }
 
   _run(job) {
-    return this.#module(job);
+    const p = this.#module(job);
+    console.log('pp is', p);
+    return p;
   }
 }
 
