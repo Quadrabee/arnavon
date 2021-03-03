@@ -1,5 +1,5 @@
 import createApi from '../../api';
-import { UnknownJobError } from '../../robust';
+import { UnknownJobError, DataValidationError } from '../../robust';
 
 export default (dispatcher) => {
   const api = createApi();
@@ -12,6 +12,9 @@ export default (dispatcher) => {
       .catch((err) => {
         if (err instanceof UnknownJobError) {
           return res.status(404).send({ error: err.message });
+        }
+        if (err instanceof DataValidationError) {
+          return res.status(400).send({ error: err.message });
         }
         next(err);
       });

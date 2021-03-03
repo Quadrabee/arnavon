@@ -2,7 +2,7 @@ import proxyquire from 'proxyquire';
 import { expect, default as chai } from 'chai';
 import chaiHttp from 'chai-http';
 import createApiHelper from '../../../src/api';
-import { UnknownJobError } from '../../../src/robust';
+import { UnknownJobError, DataValidationError } from '../../../src/robust';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
@@ -104,6 +104,22 @@ describe('server/createApi', () => {
         .end((err, res) => {
           res.should.have.status(404);
           res.body.should.eql({ error: 'Unknown job: unknown-job, no definition found' });
+          done();
+        });
+    });
+
+    it('returns 400 on invalid job payload', (done) => {
+      const jobPayload = {
+        foo: 'bar'
+      };
+      dispatcher.dispatch.returns(Promise.reject(new DataValidationError('invalid-payload')));
+
+      chai.request(api)
+        .post('/jobs/foo-bar')
+        .send(jobPayload)
+        .end((err, res) => {
+          res.should.have.status(400);
+          res.body.should.eql({ error: 'invalid-payload' });
           done();
         });
     });
