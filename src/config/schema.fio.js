@@ -5,14 +5,42 @@ ID = String(s | /[a-z]+[a-z_-]+/.test(s))
 
 #### QUEUE
 
-AMQPConfig = {
+AMQP.Exchange.Type = String(s | s === 'topic')
+
+AMQP.Exchange = {
+  name    :  String
+  type    :? AMQP.Exchange.Type
+  options :? {
+    durable: Boolean
+  }
+}
+
+AMQP.Queue.Binding = {
+  exchange   : String
+  routingKey : String
+}
+
+AMQP.Queue = {
+  name    :  String
+  options :? {
+    durable: Boolean
+  }
+  bindings :? [AMQP.Queue.Binding]
+}
+
+AMQP.Topology = {
+  exchanges :? [AMQP.Exchange]
+  queues    :  [AMQP.Queue]
+}
+
+AMQP.Config = {
   url      :  String
-  exchange :? String
+  topology :? AMQP.Topology
 }
 
 QueueConfig = {
   driver :  String
-  config : AMQPConfig
+  config : AMQP.Config
 }
 
 #### JOBS
