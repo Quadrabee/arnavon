@@ -2,6 +2,31 @@ queue:
   driver: amqp
   config:
     url: amqp://rabbit:rabbit@localhost
+    topology:
+      exchanges:
+        - name: arnavon
+          type: topic
+          options:
+            durable: true
+      queues:
+        - name: send-email
+          options:
+            durable: true
+          bindings:
+            - exchange: arnavon
+              routingKey: send-email
+        - name: send-slack
+          options:
+            durable: true
+          bindings:
+            - exchange: arnavon
+              routingKey: send-slack
+        - name: logger
+          options:
+            durable: true
+          bindings:
+            - exchange: arnavon
+              routingKey: '#'
 
 jobs:
   - name: send-slack

@@ -8,6 +8,7 @@ class ArnavonQueue extends Queue {
   #conn;
   #channel;
   #exchange;
+  #topology;
   #queue;
   #connectRetries;
 
@@ -19,6 +20,35 @@ class ArnavonQueue extends Queue {
     this.#url = params.url;
     this.#exchange = params.exchange || 'arnavon';
     this.#connectRetries = params.connectRetries || 10;
+    this.#topology = params.topology;
+  }
+
+  _installTopology() {
+    const createExchanges = () => {
+      const promises = this.#topology.exchanges.map((ex) => {
+        return this.#channel.assertExchange(ex.name, ex.type, ex.options);
+      });
+      return Promise.all(promises);
+    };
+    const createQueues = () => {
+      const promises = this.#topology.queues.map((q) => {
+        return this.#channel.assertQueue(q.name, q.options);
+      });
+      return Promise.all(promises);
+    };
+    const createBindings = () => {
+      const promises = [];
+      this.#topology.queues.forEach((q) => {
+        const bindings = q.bindings || [];
+        promises.concat(bindings.map((binding) => {
+          return this.#channel.bindQueue(q.name, binding.exchange, binding.routingKey);
+        }));
+      });
+      return Promise.all(promises);
+    };
+    return createExchanges()
+      .then(createQueues)
+      .then(createBindings);
   }
 
   _connectWithRetries(attemptsLeft) {
@@ -51,12 +81,11 @@ class ArnavonQueue extends Queue {
       })
       .then((channel) => {
         this.#channel = channel;
+        // Install topology
         // Propagate errors
         channel.on('close', (err) => this.emit('close', err));
-        // Ensure exchange exists
-        return channel.assertExchange(this.#exchange, 'topic', {
-          durable: true
-        });
+        // Ensure topology exists
+        return this._installTopology();
       })
       .then(() => this)
       .catch((err) => {
