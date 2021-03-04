@@ -1,4 +1,10 @@
-class ArnavonError extends Error {}
+class ArnavonError extends Error {
+  toJSON() {
+    return {
+      error: this.message
+    };
+  }
+}
 
 class UnknownJobError extends ArnavonError {
   constructor(jobName) {
