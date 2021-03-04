@@ -2,7 +2,7 @@ import Arnavon from '../';
 import promClient from 'prom-client';
 import ArnavonConfig from '../config';
 import JobValidator from './validator';
-import { inspect, UnknownJobError } from '../robust';
+import { DataValidationError, inspect, UnknownJobError, InvalidBatch } from '../robust';
 import Job from './job';
 
 export default class JobDispatcher {
@@ -49,6 +49,49 @@ export default class JobDispatcher {
       validators[jobConfig.name] = new JobValidator(jobConfig.inputSchema);
       return validators;
     }, {});
+  }
+
+  dispatchBatch(jobName, data, meta = {}, options = { strict: true }) {
+    const validator = this.#validators[jobName];
+    if (!validator) {
+      this.#counters.unknown.inc({ jobName });
+      return Promise.reject(new UnknownJobError(jobName));
+    }
+    if (!Array.isArray(data)) {
+      return Promise.reject(new DataValidationError(`Array of payloads expected for batches, got ${inspect(data)}`));
+    }
+
+    const valids = [];
+    const invalids = [];
+    data.forEach((payload) => {
+      try {
+        valids.push(validator.validate(payload));
+      } catch (err) {
+        invalids.push(payload);
+      }
+    });
+
+    this.#counters.invalid.inc({ jobName }, invalids.length);
+
+    if (options.strict && invalids.length) {
+      return Promise.reject(new InvalidBatch(`${invalids.length} job payloads are invalid`, invalids, valids));
+    }
+
+    this.#counters.valid.inc({ jobName }, valids.length);
+
+    const batchId = meta.id;
+    const batchMetadata = Object.assign({}, meta);
+    delete batchMetadata.id;
+    const jobs = valids.map((j) => new Job(j, Object.assign({}, batchMetadata, {
+      batchId,
+      jobName: jobName,
+      dispatched: new Date()
+    })));
+
+    const promises = jobs.map(job => Arnavon.queue.push(jobName, job));
+
+    return Promise.all(promises)
+      .then(() => jobs);
   }
 
   dispatch(jobName, data, meta = {}) {

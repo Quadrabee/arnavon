@@ -15,6 +15,22 @@ class DataValidationError extends ArnavonError {
   }
 }
 
+class InvalidBatch extends DataValidationError {
+  constructor(message, invalids, valids) {
+    super(message);
+    this.valids = valids;
+    this.invalids = invalids;
+  }
+
+  toJSON() {
+    return {
+      error: this.message,
+      valids: this.valids,
+      invalids: this.invalids
+    };
+  }
+}
+
 const inspect = (t) => {
   if (t === undefined) {
     return 'undefined';
@@ -32,5 +48,6 @@ export {
   ArnavonError,
   DataValidationError,
   UnknownJobError,
+  InvalidBatch,
   inspect
 };
