@@ -16,7 +16,6 @@ AMQP.Exchange = {
 }
 
 AMQP.Queue.Binding = {
-  exchange   : String
   routingKey : String
 }
 
@@ -29,8 +28,8 @@ AMQP.Queue = {
 }
 
 AMQP.Topology = {
-  exchanges :? [AMQP.Exchange]
-  queues    :  [AMQP.Queue]
+  exchange  : AMQP.Exchange
+  queues    : [AMQP.Queue]
 }
 
 AMQP.Config = {
@@ -39,7 +38,7 @@ AMQP.Config = {
 }
 
 QueueConfig = {
-  driver :  String
+  driver : String
   config : AMQP.Config
 }
 
@@ -49,8 +48,8 @@ Job.Name = ID
 Job.ID = ID
 
 Job.Config = .JobConfig <json> {
-  name          : Job.Name
-  inputSchema   : String
+  name          :  Job.Name
+  inputSchema   :  String
 }
 
 #### RUNNERS
@@ -64,12 +63,9 @@ Runner.Config = {
 
 Consumer.Name = ID
 
-Consumer.Wildcard = String :: { "*", "#" }
-Consumer.Selector = ID | Consumer.Wildcard
-
 Consumer.Config = .ConsumerConfig <json> {
   name        : Consumer.Name
-  jobSelector : Consumer.Selector
+  queue       : String
   runner      : Runner.Config
 }
 

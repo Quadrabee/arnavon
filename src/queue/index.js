@@ -23,11 +23,6 @@ class Queue extends EventEmitter {
     return new drivers[driver](config);
   }
 
-  // get selector
-  get selector() {
-    return (this.#config && this.#config.selector) ? this.#config.selector : '*';
-  }
-
   // subclasses should implement _connect()
   connect() {
     logger.info(`${this.constructor.name} - Connecting to queue`);
@@ -47,15 +42,15 @@ class Queue extends EventEmitter {
   }
 
   // subclasses should implement _consumer(processor)
-  consume(selector, processor) {
-    if (typeof selector !== 'string') {
-      throw new Error(`String selector expected, got ${inspect(selector)}`);
+  consume(queueName, processor) {
+    if (typeof queueName !== 'string') {
+      throw new Error(`String selector expected, got ${inspect(queueName)}`);
     }
     if (!(processor instanceof Function)) {
       throw new Error(`Consumer callback expected, got ${inspect(processor)}`);
     }
-    logger.info(`${this.constructor.name} - Starting consumption of queue with selector ${this.selector}`);
-    return this._consume(selector, (item) => {
+    logger.info(`${this.constructor.name} - Starting consumption of queue ${queueName}`);
+    return this._consume(queueName, (item) => {
       logger.info(`${this.constructor.name} - Consuming queue item`, item);
       return processor(item);
     });

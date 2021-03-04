@@ -18,17 +18,15 @@ class ArnavonQueue extends Queue {
       throw new Error('AMQP: url parameter required');
     }
     this.#url = params.url;
-    this.#exchange = params.exchange || 'arnavon';
     this.#connectRetries = params.connectRetries || 10;
     this.#topology = params.topology;
+    this.#exchange = params.topology.exchange.name || 'arnavon';
   }
 
   _installTopology() {
-    const createExchanges = () => {
-      const promises = this.#topology.exchanges.map((ex) => {
-        return this.#channel.assertExchange(ex.name, ex.type, ex.options);
-      });
-      return Promise.all(promises);
+    const createExchange = () => {
+      const ex = this.#topology.exchange;
+      return this.#channel.assertExchange(ex.name, ex.type, ex.options);
     };
     const createQueues = () => {
       const promises = this.#topology.queues.map((q) => {
@@ -41,12 +39,12 @@ class ArnavonQueue extends Queue {
       this.#topology.queues.forEach((q) => {
         const bindings = q.bindings || [];
         promises.concat(bindings.map((binding) => {
-          return this.#channel.bindQueue(q.name, binding.exchange, binding.routingKey);
+          return this.#channel.bindQueue(q.name, this.#exchange, binding.routingKey);
         }));
       });
       return Promise.all(promises);
     };
-    return createExchanges()
+    return createExchange()
       .then(createQueues)
       .then(createBindings);
   }

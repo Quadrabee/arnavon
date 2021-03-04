@@ -3,30 +3,30 @@ queue:
   config:
     url: amqp://rabbit:rabbit@localhost
     topology:
-      exchanges:
-        - name: arnavon
-          type: topic
-          options:
-            durable: true
+      # For now it is mandatory to use an exchange.
+      # The exchange type can be customized though
+      # & its options as well
+      exchange:
+        name: test-arnavon
+        type: topic
+        options:
+          durable: true
       queues:
         - name: send-email
           options:
             durable: true
           bindings:
-            - exchange: arnavon
-              routingKey: send-email
+            - routingKey: send-email
         - name: send-slack
           options:
             durable: true
           bindings:
-            - exchange: arnavon
-              routingKey: send-slack
+            - routingKey: send-slack
         - name: logger
           options:
             durable: true
           bindings:
-            - exchange: arnavon
-              routingKey: '#'
+            - routingKey: '#'
 
 jobs:
   - name: send-slack
@@ -37,21 +37,21 @@ jobs:
 
 consumers:
   - name: slack-worker
-    jobSelector: send-slack
+    queue: send-slack
     runner:
       type: nodejs
       config:
         module: ./slack-worker
 
   - name: mailer-worker
-    jobSelector: send-email
+    queue: send-email
     runner:
       type: nodejs
       config:
         module: ./mailer-worker
 
   - name: logger
-    jobSelector: '*'
+    queue: logger
     runner:
       type: nodejs
       config:
