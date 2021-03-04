@@ -5,7 +5,7 @@ ID = String(s | /[a-z]+[a-z_-]+/.test(s))
 
 #### QUEUE
 
-AMQP.Exchange.Type = String(s | s === 'topic')
+AMQP.Exchange.Type = String :: { "topic", "direct", "fanout" }
 
 AMQP.Exchange = {
   name    :  String
@@ -55,7 +55,7 @@ Job.Config = .JobConfig <json> {
 
 #### RUNNERS
 
-Runner.Type = String(s | s === "nodejs" || s === "binary")
+Runner.Type = String :: { "nodejs", "binary" }
 Runner.Config = {
   ...
 }
@@ -64,7 +64,7 @@ Runner.Config = {
 
 Consumer.Name = ID
 
-Consumer.Wildcard = String(s | s === "*")
+Consumer.Wildcard = String :: { "*", "#" }
 Consumer.Selector = ID | Consumer.Wildcard
 
 Consumer.Config = .ConsumerConfig <json> {
