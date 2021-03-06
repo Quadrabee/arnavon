@@ -29,7 +29,7 @@ class AmqpQueue extends Queue {
       throw new Error('AmqpQueue: only one exchange can be set as default');
     }
 
-    this.#exchange = defaultExchanges[0];
+    this.#exchange = defaultExchanges[0].name;
   }
 
   _installTopology() {
