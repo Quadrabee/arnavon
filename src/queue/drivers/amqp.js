@@ -92,7 +92,8 @@ class AmqpQueue extends Queue {
         this.#channel = channel;
         // Install topology
         // Propagate errors
-        channel.on('close', (err) => this.emit('close', err));
+        this.#channel.on('close', (err) => this.emit('close', err));
+        this.#channel.on('error', (err) => this.emit('error', err));
         // Ensure topology exists
         return this._installTopology();
       })

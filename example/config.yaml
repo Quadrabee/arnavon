@@ -1,7 +1,7 @@
 queue:
   driver: amqp
   config:
-    url: amqp://rabbit:rabbit@localhost
+    url: amqp://rabbit:rabbit@localhost?heartbeat=10
     topology:
       # One exchange must be tagged as the default
       exchanges:
