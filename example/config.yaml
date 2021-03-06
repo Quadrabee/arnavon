@@ -3,30 +3,36 @@ queue:
   config:
     url: amqp://rabbit:rabbit@localhost
     topology:
-      # For now it is mandatory to use an exchange.
-      # The exchange type can be customized though
-      # & its options as well
-      exchange:
-        name: test-arnavon
-        type: topic
-        options:
-          durable: true
+      # One exchange must be tagged as the default
+      exchanges:
+        - name: test-arnavon
+          default: true
+          type: topic
+          options:
+            durable: true
+        - name: dead-letters
+          type: topic
+          options:
+            durable: true
       queues:
         - name: send-email
           options:
             durable: true
           bindings:
             - routingKey: send-email
+              exchange: test-arnavon
         - name: send-slack
           options:
             durable: true
           bindings:
             - routingKey: send-slack
+              exchange: test-arnavon
         - name: logger
           options:
             durable: true
           bindings:
             - routingKey: '#'
+              exchange: test-arnavon
 
 jobs:
   - name: send-slack

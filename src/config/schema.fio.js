@@ -10,12 +10,14 @@ AMQP.Exchange.Type = String :: { "topic", "direct", "fanout" }
 AMQP.Exchange = {
   name    :  String
   type    :? AMQP.Exchange.Type
+  default :? Boolean
   options :? {
     durable: Boolean
   }
 }
 
 AMQP.Queue.Binding = {
+  exchange   : String
   routingKey : String
 }
 
@@ -28,7 +30,7 @@ AMQP.Queue = {
 }
 
 AMQP.Topology = {
-  exchange  : AMQP.Exchange
+  exchanges : [AMQP.Exchange]
   queues    : [AMQP.Queue]
 }
 

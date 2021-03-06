@@ -2,7 +2,7 @@ import Queue from '../index';
 import amqplib from 'amqplib';
 import logger from '../../logger';
 
-class ArnavonQueue extends Queue {
+class AmqpQueue extends Queue {
 
   #url;
   #conn;
@@ -20,13 +20,24 @@ class ArnavonQueue extends Queue {
     this.#url = params.url;
     this.#connectRetries = params.connectRetries || 10;
     this.#topology = params.topology;
-    this.#exchange = params.topology.exchange.name || 'arnavon';
+    // Which is our default exchange (only can have one)
+    const defaultExchanges = params.topology.exchanges.filter(ex => ex.default === true);
+    if (defaultExchanges.length === 0) {
+      throw new Error('AmqpQueue: one exchange must be set as default');
+    }
+    if (defaultExchanges.length > 1) {
+      throw new Error('AmqpQueue: only one exchange can be set as default');
+    }
+
+    this.#exchange = defaultExchanges[0];
   }
 
   _installTopology() {
-    const createExchange = () => {
-      const ex = this.#topology.exchange;
-      return this.#channel.assertExchange(ex.name, ex.type, ex.options);
+    const createExchanges = () => {
+      const promises = this.#topology.exchanges.map((ex) => {
+        return this.#channel.assertExchange(ex.name, ex.type, ex.options);
+      });
+      return Promise.all(promises);
     };
     const createQueues = () => {
       const promises = this.#topology.queues.map((q) => {
@@ -39,12 +50,12 @@ class ArnavonQueue extends Queue {
       this.#topology.queues.forEach((q) => {
         const bindings = q.bindings || [];
         promises.concat(bindings.map((binding) => {
-          return this.#channel.bindQueue(q.name, this.#exchange, binding.routingKey);
+          return this.#channel.bindQueue(q.name, binding.exchange, binding.routingKey);
         }));
       });
       return Promise.all(promises);
     };
-    return createExchange()
+    return createExchanges()
       .then(createQueues)
       .then(createBindings);
   }
@@ -139,4 +150,4 @@ class ArnavonQueue extends Queue {
 
 }
 
-export default ArnavonQueue;
+export default AmqpQueue;
