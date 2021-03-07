@@ -1,0 +1,91 @@
+---
+description: |-
+  Send an email to someone in an asynchronous way
+
+url: |-
+  /jobs/send-email
+
+method: |-
+  POST
+
+preconditions:
+  - The `from` and `to` emails must be valid email addresses
+
+postconditions:
+  # - The send-email job has been properly enqueued
+  # - The api metrics reflect the job being pushed
+  - The email is (or emails are) eventually sent
+  # - The consumer metrics eventually reflect the mail being sent
+
+input_schema: |-
+  Job.SendEmail|[Job.SendEmail]
+
+output_schema: |-
+  Job.Full|[Job.Full]
+
+error_schema: |-
+  Job.Error
+
+examples:
+
+  - description: |-
+      FOR: the email is eventually sent
+    params:
+      from: arnavon@quadrabee.com
+      to: team@enspirit.be
+      subject: We love queues!
+      text: |
+        I queue
+        You queue
+        She/He/They queue(s)
+        We queue
+        You queue
+        They queue
+    expected:
+      content_type: application/json; charset=utf-8
+      status: 201
+    assert:
+      - 'pathFD("meta", :jobName => "send-email")'
+
+  - description: |-
+      FOR: the emails are eventually sent
+    headers:
+      X-Arnavon-Push-Mode: BATCH
+    params:
+    - from: arnavon@quadrabee.com
+      to: team1@enspirit.be
+      subject: We love queues!
+    - from: arnavon@quadrabee.com
+      to: team2@enspirit.be
+      subject: We love queues!
+    expected:
+      content_type: application/json; charset=utf-8
+      status: 201
+    assert:
+      - 'pathFD("0/meta", :jobName => "send-email")'
+
+counterexamples:
+
+  - description: |-
+      FOR: The `from` email must be valid email addresses
+    params:
+      from: notvalid
+      to: team@enspirit.be
+      subject: We love queues!
+    expected:
+      content_type: application/json; charset=utf-8
+      status: 400
+    assert:
+      - "match(/Invalid Email.Address: .notvalid./)"
+
+  - description: |-
+      FOR: The `to` email must be valid email addresses
+    params:
+      from: arnavon@quadrabee.com
+      to: notvalid
+      subject: We love queues!
+    expected:
+      content_type: application/json; charset=utf-8
+      status: 400
+    assert:
+      - "match(/Invalid Email.Address: .notvalid./)"

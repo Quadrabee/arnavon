@@ -20,6 +20,13 @@ chai.use(chaiAsPromised);
  */
 describe('JobDispatcher', () => {
 
+  const validPayload = {
+    from: 'foo@bar.com',
+    to: 'baz@baz.com',
+    subject: 'foo bar',
+    text: 'baz baz baz'
+  };
+
   it('exports a class', () => {
     expect(JobDispatcher).to.be.a.instanceof(Function);
     expect(JobDispatcher.name).to.equal('JobDispatcher');
@@ -56,7 +63,7 @@ describe('JobDispatcher', () => {
     });
 
     it('expects an array as data parameter', (done) => {
-      const test = (data) => dispatcher.dispatchBatch('send-slack', data);
+      const test = (data) => dispatcher.dispatchBatch('send-email', data);
 
       expect(test()).to.eventually.be.rejectedWith(DataValidationError);
       expect(test('')).to.eventually.be.rejectedWith(DataValidationError);
@@ -73,11 +80,7 @@ describe('JobDispatcher', () => {
     });
 
     it('fails for any invalid job payload when in strict mode', (done) => {
-      const validPayload = {
-        channel: '#channel',
-        message: 'foo bar'
-      };
-      const test = (data) => dispatcher.dispatchBatch('send-slack', data, { strict: true });
+      const test = (data) => dispatcher.dispatchBatch('send-email', data, { strict: true });
       let invalidBatch = [
         validPayload,
         {} // invalid job payload
@@ -87,7 +90,7 @@ describe('JobDispatcher', () => {
       invalidBatch = [
         validPayload,
         {
-          channel: '#test'
+          test: 'foo'
         } // invalid job payload
       ];
       expect(test(invalidBatch)).to.eventually.be.rejectedWith(InvalidBatch)
@@ -95,11 +98,7 @@ describe('JobDispatcher', () => {
     });
 
     it('rejects with a list of success/failures when in non strict mode', () => {
-      const validPayload = {
-        channel: '#channel',
-        message: 'foo bar'
-      };
-      const test = (data) => dispatcher.dispatchBatch('send-slack', data, { strict: false });
+      const test = (data) => dispatcher.dispatchBatch('send-email', data, { strict: false });
 
       const invalidBatch = [
         validPayload,
@@ -121,7 +120,7 @@ describe('JobDispatcher', () => {
       const spy = sinon.spy(metric, 'inc');
       // 3 invalid jobs
       const batch = [{}, {}, {}];
-      dispatcher.dispatchBatch('send-slack', batch);
+      dispatcher.dispatchBatch('send-email', batch);
       expect(spy).to.be.calledOnce;
       // Check it was inc's by 3;
       const { args } = spy.getCall(0);
@@ -129,28 +128,16 @@ describe('JobDispatcher', () => {
     });
 
     it('returns a Promise', () => {
-      const payload = [{
-        channel: '#channel',
-        message: 'foo bar'
-      }, {
-        channel: '#channel',
-        message: 'foo bar baz'
-      }];
-      const p = dispatcher.dispatchBatch('send-slack', payload);
+      const payload = [validPayload, validPayload];
+      const p = dispatcher.dispatchBatch('send-email', payload);
       expect(p).to.be.an.instanceof(Promise);
     });
 
     it('increases prometheus counter for valid jobs', () => {
-      const payload = [{
-        channel: '#channel',
-        message: 'foo bar'
-      }, {
-        channel: '#channel',
-        message: 'foo bar baz'
-      }];
+      const payload = [validPayload, validPayload];
       const metric = Arnavon.registry.getSingleMetric('dispatcher_valid_jobs');
       const spy = sinon.spy(metric, 'inc');
-      dispatcher.dispatchBatch('send-slack', payload);
+      dispatcher.dispatchBatch('send-email', payload);
       expect(spy).to.be.calledOnce;
       // Check it was inc's by 2;
       const { args } = spy.getCall(0);
@@ -158,34 +145,22 @@ describe('JobDispatcher', () => {
     });
 
     it('enqueues validated job (with metadata) on the queue', () => {
-      const payload = [{
-        channel: '#channel',
-        message: 'foo bar'
-      }, {
-        channel: '#channel',
-        message: 'foo bar baz'
-      }];
+      const payload = [validPayload, validPayload];
       const spy = sinon.spy(Arnavon.queue, 'push');
-      return dispatcher.dispatchBatch('send-slack', payload)
+      return dispatcher.dispatchBatch('send-email', payload)
         .then(() => {
           expect(spy).to.be.calledTwice;
           const [call] = spy.getCalls();
           const { args: [arg1, arg2] } = call;
-          expect(arg1).to.eql('send-slack');
+          expect(arg1).to.eql('send-email');
           expect(arg2).to.be.an.instanceof(Job);
           expect(arg2.meta.dispatched).to.be.an.instanceof(Date);
-          expect(arg2.meta.jobName).to.equal('send-slack');
+          expect(arg2.meta.jobName).to.equal('send-email');
         });
     });
 
     it('passes metadata to job before passing on to the queue', () => {
-      const payload = [{
-        channel: '#channel',
-        message: 'foo bar'
-      }, {
-        channel: '#channel',
-        message: 'foo bar baz'
-      }];
+      const payload = [validPayload, validPayload];
       const metadata = {
         id: uuid(),
         scheduled: new Date(),
@@ -193,16 +168,16 @@ describe('JobDispatcher', () => {
         jobName: 'foo-bar'
       };
       const spy = sinon.spy(Arnavon.queue, 'push');
-      return dispatcher.dispatchBatch('send-slack', payload, metadata)
+      return dispatcher.dispatchBatch('send-email', payload, metadata)
         .then(() => {
           expect(spy).to.be.calledTwice;
           const [call] = spy.getCalls();
           const { args: [arg1, arg2] } = call;
-          expect(arg1).to.eql('send-slack');
+          expect(arg1).to.eql('send-email');
           expect(arg2).to.be.an.instanceof(Job);
           expect(arg2.meta.scheduled).to.equal(metadata.scheduled);
           expect(arg2.meta.batchId).to.equal(metadata.id);
-          expect(arg2.meta.jobName).to.equal('send-slack');
+          expect(arg2.meta.jobName).to.equal('send-email');
         });
     });
 
@@ -229,20 +204,20 @@ describe('JobDispatcher', () => {
     it('fails for invalid job payload', (done) => {
       const test = (jobName, data) => dispatcher.dispatch(jobName, data);
 
-      expect(test('send-slack')).to.eventually.be.rejectedWith(DataValidationError);
-      expect(test('send-slack', {})).to.eventually.be.rejectedWith(DataValidationError);
+      expect(test('send-email')).to.eventually.be.rejectedWith(DataValidationError);
+      expect(test('send-email', {})).to.eventually.be.rejectedWith(DataValidationError);
 
       const payload = {
         channel: '#test'
       };
-      expect(test('send-slack', payload)).to.eventually.be.rejectedWith(DataValidationError)
+      expect(test('send-email', payload)).to.eventually.be.rejectedWith(DataValidationError)
         .notify(done);
     });
 
     it('increases prometheus counter for invalid jobs', () => {
       const metric = Arnavon.registry.getSingleMetric('dispatcher_invalid_jobs');
       const spy = sinon.spy(metric, 'inc');
-      dispatcher.dispatch('send-slack', {});
+      dispatcher.dispatch('send-email', {});
       expect(spy).to.be.calledOnce;
     });
 
@@ -251,44 +226,32 @@ describe('JobDispatcher', () => {
         channel: '#channel',
         message: 'foo bar'
       };
-      const p = dispatcher.dispatch('send-slack', payload);
+      const p = dispatcher.dispatch('send-email', payload);
       expect(p).to.be.an.instanceof(Promise);
     });
 
     it('increases prometheus counter for valid jobs', () => {
-      const payload = {
-        channel: '#channel',
-        message: 'foo bar'
-      };
       const metric = Arnavon.registry.getSingleMetric('dispatcher_valid_jobs');
       const spy = sinon.spy(metric, 'inc');
-      dispatcher.dispatch('send-slack', payload);
+      dispatcher.dispatch('send-email', validPayload);
       expect(spy).to.be.calledOnce;
     });
 
     it('enqueues validated job (with metadata) on the queue', () => {
-      const payload = {
-        channel: '#channel',
-        message: 'foo bar'
-      };
       const spy = sinon.spy(Arnavon.queue, 'push');
-      return dispatcher.dispatch('send-slack', payload)
+      return dispatcher.dispatch('send-email', validPayload)
         .then(() => {
           expect(spy).to.be.calledOnce;
           const [call] = spy.getCalls();
           const { args: [arg1, arg2] } = call;
-          expect(arg1).to.eql('send-slack');
+          expect(arg1).to.eql('send-email');
           expect(arg2).to.be.an.instanceof(Job);
           expect(arg2.meta.dispatched).to.be.an.instanceof(Date);
-          expect(arg2.meta.jobName).to.equal('send-slack');
+          expect(arg2.meta.jobName).to.equal('send-email');
         });
     });
 
     it('passes metadata to job before passing on to the queue', () => {
-      const payload = {
-        channel: '#channel',
-        message: 'foo bar'
-      };
       const metadata = {
         id: uuid(),
         scheduled: new Date(),
@@ -296,16 +259,16 @@ describe('JobDispatcher', () => {
         jobName: 'foo-bar'
       };
       const spy = sinon.spy(Arnavon.queue, 'push');
-      return dispatcher.dispatch('send-slack', payload, metadata)
+      return dispatcher.dispatch('send-email', validPayload, metadata)
         .then(() => {
           expect(spy).to.be.calledOnce;
           const [call] = spy.getCalls();
           const { args: [arg1, arg2] } = call;
-          expect(arg1).to.eql('send-slack');
+          expect(arg1).to.eql('send-email');
           expect(arg2).to.be.an.instanceof(Job);
           expect(arg2.meta.scheduled).to.equal(metadata.scheduled);
           expect(arg2.meta.id).to.equal(metadata.id);
-          expect(arg2.meta.jobName).to.equal('send-slack');
+          expect(arg2.meta.jobName).to.equal('send-email');
         });
     });
 

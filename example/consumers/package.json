@@ -1,0 +1,7 @@
+{
+  "name": "consumers",
+  "description": "Example consumers for arnavon",
+  "dependencies": {
+    "nodemailer": "^6.5.0"
+  }
+}

@@ -1,0 +1,50 @@
+version: '3.3'
+
+services:
+
+  api:
+    depends_on:
+      - rabbitmq
+    image: quadrabee/arnavon
+    ports:
+      - 3000:80
+    command: ["api", "-p", "80"]
+    volumes:
+      - ./config.yaml:/arnavon/config.yaml
+      - ./schema.fio:/arnavon/schema.fio
+
+  mailer-worker:
+    depends_on:
+      - rabbitmq
+      - fakesmtp
+    image: quadrabee/arnavon
+    ports:
+      - 3002:80
+    command: ["consumer", "mailer-worker", "-p", "80"]
+    volumes:
+      - ./config.yaml:/arnavon/config.yaml
+      - ./schema.fio:/arnavon/schema.fio
+      - ./consumers:/arnavon/consumers
+
+  fakesmtp:
+    image: reachfive/fake-smtp-server
+    command: ["node", "index.js", "-s", "25", "--debug"]
+    ports:
+      - 1080:1080
+
+  rabbitmq:
+    image: rabbitmq:3.8.11-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbit
+      RABBITMQ_DEFAULT_PASS: rabbit
+
+  webspicy:
+    build: ./webspicy
+    depends_on:
+      - api
+    command: ["tail", "-f", "/dev/null"]
+    volumes:
+      - ./webspicy:/formalspec

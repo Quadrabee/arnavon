@@ -62,7 +62,7 @@ describe('NodeJSRunner', () => {
       resolve();
       return runnerPromise.then(() => {
         expect(dummy.runner.calls).to.have.length(1);
-      })
+      });
     });
   });
 });
