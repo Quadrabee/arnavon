@@ -24,7 +24,9 @@ AMQP.Queue.Binding = {
 AMQP.Queue = {
   name    :  String
   options :? {
-    durable: Boolean
+    durable              :? Boolean
+    deadLetterExchange   :? String
+    deadLetterRoutingKey :? String
   }
   bindings :? [AMQP.Queue.Binding]
 }
