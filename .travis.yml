@@ -33,6 +33,7 @@ jobs:
         on:
           branch: master
           tags: true
+
     - stage: packages
       name: Create and release packages
       script: make package
@@ -40,9 +41,9 @@ jobs:
         provider: releases
         api_key: $GITHUB_TOKEN
         file:
-          - arnavon-linux
-          - arnavon-macos
-          - arnavon-win.exe
+          - pkg/arnavon-linux
+          - pkg/arnavon-macos
+          - pkg/arnavon-win.exe
         skip_cleanup: true
         on:
           tags: true
