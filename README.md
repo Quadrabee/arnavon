@@ -20,7 +20,7 @@ $ npm install -g @quadrabee/arnavon
 $ arnavon COMMAND
 running command...
 $ arnavon (-v|--version|version)
-@quadrabee/arnavon/0.1.17 darwin-x64 node-v12.18.4
+@quadrabee/arnavon/0.1.18 darwin-x64 node-v12.11.1
 $ arnavon --help [COMMAND]
 USAGE
   $ arnavon COMMAND
@@ -29,12 +29,9 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-- [arnavon](#arnavon)
-- [Usage](#usage)
-- [Commands](#commands)
-  - [`arnavon api`](#arnavon-api)
-  - [`arnavon consumer CONSUMERNAME`](#arnavon-consumer-consumername)
-  - [`arnavon help [COMMAND]`](#arnavon-help-command)
+* [`arnavon api`](#arnavon-api)
+* [`arnavon consumer CONSUMERNAME`](#arnavon-consumer-consumername)
+* [`arnavon help [COMMAND]`](#arnavon-help-command)
 
 ## `arnavon api`
 
