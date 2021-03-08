@@ -8,4 +8,6 @@ RUN npm install
 
 COPY . .
 
-ENTRYPOINT ["./bin/run"]
+RUN npm run build && npm install -g .
+
+ENTRYPOINT ["arnavon"]
