@@ -28,7 +28,8 @@
     "prepare": "npm run build",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "oclif-dev manifest && oclif-dev readme",
-    "version": "oclif-dev readme && git add README.md"
+    "version": "oclif-dev readme && git add README.md",
+    "version": "echo $npm_package_version"
   },
   "license": "ISC",
   "devDependencies": {

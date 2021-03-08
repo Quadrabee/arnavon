@@ -1,6 +1,7 @@
-VERSION=0.1.10
+VERSION=$(shell npm run version --silent)
 
 image:
+	echo -${VERSION}
 	docker build --build-arg VERSION=${VERSION} -t quadrabee/arnavon:latest .
 	docker tag quadrabee/arnavon:latest quadrabee/arnavon:${VERSION}
 
