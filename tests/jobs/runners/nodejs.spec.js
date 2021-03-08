@@ -39,7 +39,7 @@ describe('NodeJSRunner', () => {
       expect(test('./dummy.runner')).not.to.throw();
     });
 
-    it.only('supports loading es6 modules', () => {
+    it('supports loading es6 modules', () => {
       const test = new NodeJSRunner({ module: './dummy.runner.es6' });
       expect(test).to.be.an.instanceof(NodeJSRunner);
     });

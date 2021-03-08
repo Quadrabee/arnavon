@@ -15,7 +15,8 @@ export default class NodeJSRunner extends JobRunner {
     }
 
     try {
-      this.#module = Arnavon.require(config.module);
+      const module = Arnavon.require(config.module);
+      this.#module = module.default ? module.default : module;
     } catch (err) {
       throw new Error(`Module '${config.module}' can't be loaded`);
     }
@@ -23,7 +24,6 @@ export default class NodeJSRunner extends JobRunner {
 
   _run(job) {
     const p = this.#module(job);
-    console.log('pp is', p);
     return p;
   }
 }
