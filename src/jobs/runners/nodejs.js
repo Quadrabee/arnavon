@@ -22,7 +22,8 @@ export default class NodeJSRunner extends JobRunner {
     }
   }
 
-  _run(job) {
+  _run(job, context) {
+    context.logger.info(`Calling loaded nodejs module ${this.#config.module}`);
     const p = this.#module(job);
     return p;
   }

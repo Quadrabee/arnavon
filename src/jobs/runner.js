@@ -2,6 +2,7 @@ import Job from './job';
 import { inspect } from '../robust';
 import promClient from 'prom-client';
 import Arnavon from '../';
+import mainLogger from '../logger';
 
 /**
  * The prometheus counters are shared amongst JobRunner classes
@@ -41,31 +42,40 @@ export default class JobRunner {
    * Runs a job
    * @param {Job} job
    */
-  run(job) {
+  run(job, context = {}) {
+    context.logger = context.logger ? context.logger : mainLogger;
+
     if (!(job instanceof Job)) {
+      context.logger.error(`Job expected, got ${inspect(job)}`);
       throw new Error(`Job expected, got ${inspect(job)}`);
     }
 
     let result;
     try {
-      result = this._run(job);
+      context.logger.info(`Running runner implementation ${this.constructor.name}`);
+      result = this._run(job, context);
     } catch (err) {
+      context.logger.error(err, 'Runner failed');
       JobRunner.metrics.failures.inc();
       return Promise.reject(err);
     }
 
     if (result instanceof Promise) {
+      context.logger.info(`Promise detected as result from ${this.constructor.name}`);
       return result
         .then((result) => {
+          context.logger.info({ result }, 'Promise succeeded');
           JobRunner.metrics.success.inc({ jobName: job.meta.jobName });
           return result;
         })
         .catch((err) => {
+          context.logger.error(err, 'Promise failed');
           JobRunner.metrics.failures.inc({ jobName: job.meta.jobName });
           throw err;
         });
     }
 
+    context.logger.info({ result }, `Non-promise detected as result from ${this.constructor.name}`);
     JobRunner.metrics.success.inc({ jobName: job.meta.jobName });
     return Promise.resolve(result);
   }
