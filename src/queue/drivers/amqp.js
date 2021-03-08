@@ -118,7 +118,6 @@ class AmqpQueue extends Queue {
 
   _consume(queueName, processor) {
     this.#channel.consume(queueName, (msg) => {
-      logger.info(`${this.constructor.name}: Decoding queue item`);
       let payload;
       try {
         payload = JSON.parse(msg.content);
@@ -128,7 +127,6 @@ class AmqpQueue extends Queue {
         // Nack with allUpTo=false & requeue=false
         return this.#channel.nack(msg, false, false);
       }
-      logger.info(payload, `${this.constructor.name}: Forwarding queue item to processor`);
       processor(payload)
         .then(() => {
           logger.info(`${this.constructor.name}: Acking item consumption`);

@@ -27,7 +27,7 @@ export default class Job {
   toString() {
     return {
       meta: this.meta,
-      data: `{${Object.keys(this.payload).join(', ')}}`
+      payload: `{${Object.keys(this.payload).join(', ')}}`
     };
   }
 
@@ -38,7 +38,7 @@ export default class Job {
   toJSON() {
     return {
       meta: this.meta,
-      data: this.payload
+      payload: this.payload
     };
   }
 }
