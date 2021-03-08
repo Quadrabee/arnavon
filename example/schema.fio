@@ -11,10 +11,8 @@ Email.Address = String(s | /^[^\s@]+@[^\s@]+$/.test(s) )
 Email.Recipients = Email.Address | [Email.Address]
 
 Email.Full = {
-  title :  String
-  from  :  Email.Address
-  to    :  Email.Recipients
-  cc    :? Email.Recipients
-  bcc   :? Email.Recipients
-  body  :? String
+  from     :  Email.Address
+  to       :  Email.Recipients
+  subject  :  String
+  text     :? String
 }

@@ -1,16 +1,11 @@
 queue:
   driver: amqp
   config:
-    url: amqp://rabbit:rabbit@localhost?heartbeat=10
+    url: amqp://rabbit:rabbit@rabbitmq
     topology:
-      # One exchange must be tagged as the default
       exchanges:
-        - name: test-arnavon
+        - name: example-arnavon
           default: true
-          type: topic
-          options:
-            durable: true
-        - name: dead-letters
           type: topic
           options:
             durable: true
@@ -20,45 +15,16 @@ queue:
             durable: true
           bindings:
             - routingKey: send-email
-              exchange: test-arnavon
-        - name: send-slack
-          options:
-            durable: true
-          bindings:
-            - routingKey: send-slack
-              exchange: test-arnavon
-        - name: logger
-          options:
-            durable: true
-          bindings:
-            - routingKey: '#'
-              exchange: test-arnavon
+              exchange: example-arnavon
 
 jobs:
-  - name: send-slack
-    inputSchema: SlackMessage
-
   - name: send-email
     inputSchema: Email.Full
 
 consumers:
-  - name: slack-worker
-    queue: send-slack
-    runner:
-      type: nodejs
-      config:
-        module: ./slack-worker
-
   - name: mailer-worker
     queue: send-email
     runner:
       type: nodejs
       config:
-        module: ./mailer-worker
-
-  - name: logger
-    queue: logger
-    runner:
-      type: nodejs
-      config:
-        module: ./logger
+        module: ./consumers/mailer-worker

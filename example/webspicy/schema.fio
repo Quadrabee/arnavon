@@ -1,0 +1,50 @@
+@import webspicy/scalars
+
+###
+### Meta system & test suite
+###
+
+Job.ID = String
+Job.Name = String(s | s.length > 0 )
+
+Job.Request = {
+  name : Job.Name
+  ...  : .Object
+}
+
+Job.Meta = {
+  id       : Job.ID
+  jobName  : Job.ID
+  ...
+}
+
+Job.Payload = {
+  ...: .Object
+}|[{
+  ...: .Object
+}]
+
+Job.Full = {
+  meta: Job.Meta
+  data: Job.Payload
+}
+
+Job.Error = {
+  error: String
+}
+
+###
+### Example
+###
+
+# Naive regex for email
+Email.Address = String
+Email.Recipients = Email.Address | [Email.Address]
+
+Job.SendEmail = {
+  from     :  Email.Address
+  to       :  Email.Recipients
+  subject  :  String
+  text     :? String
+}
+

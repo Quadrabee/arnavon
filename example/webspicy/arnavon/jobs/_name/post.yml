@@ -1,0 +1,69 @@
+---
+name: |-
+  Schedule job
+
+url: |-
+  /jobs/{name}
+
+services:
+- method: |-
+    POST
+
+  description: |-
+    Schedule a job to be processed
+
+  preconditions:
+    - The job must match a predefined job configuration
+    - The input data must meet the job input schema
+
+  postconditions:
+    - A job full description is returned
+    - The job has been properly enqueued
+
+  input_schema: |-
+    Job.Request
+
+  output_schema: |-
+    Job.Full
+
+  error_schema: |-
+    Job.Error
+
+  examples:
+
+    - description: |-
+        FOR: A job full description is returned
+      dress_params: false
+      params:
+        name: send-email
+        #
+        from: arnavon@quadrabee.com
+        to: team@enspirit.be
+        subject: We love queues!
+      expected:
+        content_type: application/json; charset=utf-8
+        status: 201
+
+  counterexamples:
+
+    - description: |-
+        FOR: The job must match a predefined job configuration
+      dress_params: false
+      params:
+        name: unexisting-job
+        data: test
+      expected:
+        content_type: application/json; charset=utf-8
+        status: 404
+
+    - description: |-
+        FOR: The input data must meet the job input schema
+      dress_params: false
+      params:
+        name: send-email
+        from: "hello@job.com"
+      expected:
+        content_type: application/json; charset=utf-8
+        status: 400
+      assert:
+        - match /Missing attribute `subject`/

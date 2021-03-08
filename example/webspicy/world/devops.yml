@@ -1,0 +1,6 @@
+---
+rabbitmq:
+  connection_string: amqp://rabbit:rabbit@rabbitmq:5672
+  admin_endpoint: http://rabbit:rabbit@rabbitmq:15672
+fakesmtp:
+  endpoint: http://fakesmtp:1080/api

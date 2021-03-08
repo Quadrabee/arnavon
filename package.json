@@ -1,8 +1,20 @@
 {
   "name": "@quadrabee/arnavon",
-  "version": "0.1.12",
   "description": "Framework on top of RabbitMQ for easing up the development of producer/consumer/job queues.",
-  "main": "index.js",
+  "version": "0.1.12",
+  "author": "Louis Lambeau <llambeau@quadrabee.com>",
+  "main": "dist/index.js",
+  "bin": {
+    "arnavon": "./bin/run"
+  },
+  "files": [
+    "/bin",
+    "/npm-shrinkwrap.json",
+    "/oclif.manifest.json",
+    "/dist",
+    "/src"
+  ],
+  "bugs": "https://github.com/quadrabee/arnavon/issues",
   "scripts": {
     "start:server": "babel-node bin/server",
     "start:consumer": "babel-node bin/consumer",
@@ -13,9 +25,11 @@
     "lint": "eslint src tests *.js .eslintrc.js",
     "lint:fix": "eslint --fix src tests *.js .eslintrc.js",
     "build": "babel ./src --out-dir ./dist --source-maps --copy-files",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "postpack": "rm -f oclif.manifest.json",
+    "prepack": "oclif-dev manifest && oclif-dev readme",
+    "version": "oclif-dev readme && git add README.md"
   },
-  "author": "Louis Lambeau <llambeau@quadrabee.com>",
   "license": "ISC",
   "devDependencies": {
     "@babel/cli": "^7.13.0",
@@ -24,27 +38,46 @@
     "@babel/preset-env": "^7.13.9",
     "@babel/register": "^7.13.8",
     "@enspirit/eslint-config-node": "0.0.8",
+    "@oclif/dev-cli": "^1.26.0",
+    "@oclif/test": "^1.2.8",
     "babel-loader": "^8.2.2",
     "body-parser": "^1.19.0",
     "chai": "^4.3.3",
     "chai-as-promised": "^7.1.1",
     "chai-http": "^4.3.0",
     "eslint": "^7.21.0",
+    "globby": "^10.0.2",
     "mocha": "^8.3.0",
     "mocha-junit-reporter": "^2.0.0",
+    "nodemailer": "^6.5.0",
     "nyc": "^15.1.0",
     "proxyquire": "^2.1.3",
     "sinon": "^9.2.4",
     "sinon-chai": "^3.5.0"
   },
   "dependencies": {
+    "@oclif/command": "^1.8.0",
+    "@oclif/config": "^1.17.0",
+    "@oclif/plugin-help": "^3.2.2",
     "amqplib": "^0.7.0",
     "bunyan": "^1.8.15",
+    "core-js": "^3.9.1",
     "express": "^4.17.1",
     "express-prom-bundle": "^6.3.4",
     "finitio": "^1.3.0",
     "prom-client": "^13.1.0",
+    "regenerator-runtime": "^0.13.7",
     "uuid": "^8.3.2",
     "yaml": "^1.10.0"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "oclif": {
+    "commands": "./dist/cli/commands",
+    "bin": "arnavon",
+    "plugins": [
+      "@oclif/plugin-help"
+    ]
   }
 }
