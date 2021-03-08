@@ -59,20 +59,21 @@ class AmqpQueue extends Queue {
       .then(createBindings);
   }
 
-  _connectWithRetries(attemptsLeft) {
+  _connectWithRetries(attemptsLeft, waitTime = 10) {
     return amqplib
-      // Connect
+    // Connect
       .connect(this.#url)
       .catch((err) => {
-        logger.warn(`Unable to connect to rabbitmq. ${attemptsLeft} attempts left.`);
         if (attemptsLeft <= 0) {
           logger.error('Unable to connect to rabbitmq... Giving up.');
           throw err;
         }
+        logger.warn(`Unable to connect to rabbitmq. ${attemptsLeft} attempts left. Trying again in ${waitTime}ms`);
         return new Promise((resolve) => {
           setTimeout(() => {
-            resolve(this._connectWithRetries(attemptsLeft - 1));
-          }, 1000);
+            // double the reconnect delay every time it fails
+            resolve(this._connectWithRetries(attemptsLeft - 1, waitTime * 2));
+          }, waitTime);
         });
       });
   }
