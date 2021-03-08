@@ -4,10 +4,10 @@ arnavon
 Opiniated producer/consumer framework on top of RabbitMQ.
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
-[![Version](https://img.shields.io/npm/v/@quadrabee/arnavon-cli.svg)](https://npmjs.org/package/@quadrabee/arnavon-cli)
+[![Version](https://img.shields.io/npm/v/@quadrabee/arnavon.svg)](https://npmjs.org/package/@quadrabee/arnavon)
 [![Build Status](https://travis-ci.com/Quadrabee/arnavon.svg?branch=master)](https://travis-ci.com/Quadrabee/arnavon)
-[![Downloads/week](https://img.shields.io/npm/dw/@quadrabee/arnavon-cli.svg)](https://npmjs.org/package/@quadrabee/arnavon-cli)
-[![License](https://img.shields.io/npm/l/@quadrabee/arnavon-cli.svg)](https://github.com/quadrabee/arnavon-cli/blob/master/package.json)
+[![Downloads/week](https://img.shields.io/npm/dw/@quadrabee/arnavon.svg)](https://npmjs.org/package/@quadrabee/arnavon)
+[![License](https://img.shields.io/npm/l/@quadrabee/arnavon.svg)](https://github.com/quadrabee/arnavon/blob/master/package.json)
 
 <!-- toc -->
 * [Usage](#usage)
