@@ -1,3 +1,4 @@
+require('@babel/register');
 import Arnavon from '../../';
 import JobRunner from '../runner';
 import { inspect } from '../../robust';
