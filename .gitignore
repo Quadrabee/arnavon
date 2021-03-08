@@ -7,3 +7,4 @@ Dockerfile.*
 rspec.xml
 dist
 package-lock.json
+pkg/

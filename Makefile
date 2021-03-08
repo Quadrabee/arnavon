@@ -8,3 +8,6 @@ image:
 push:
 	docker push quadrabee/arnavon:${VERSION}
 	docker push quadrabee/arnavon:latest
+
+package:
+	npm run package
