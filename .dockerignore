@@ -1,0 +1,14 @@
+node_modules
+.DS_Store
+.nyc_output/
+tests/test-results.xml
+coverage
+Dockerfile.*
+rspec.xml
+dist
+package-lock.json
+pkg/
+example/
+env/
+tests/
+.travis.yml
