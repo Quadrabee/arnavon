@@ -8,10 +8,10 @@ import mainLogger from '../logger';
  * The prometheus counters are shared amongst JobRunner classes
  * but use labels to distinguish the implementating-class/job
  */
-const ensureCounter = (name, help) => {
+const ensureCounter = (type, name, help) => {
   let metric = Arnavon.registry.getSingleMetric(name);
   if (!metric) {
-    metric = new promClient.Counter({
+    metric = new type({
       name,
       help,
       labelNames: ['jobName'],
@@ -34,8 +34,9 @@ export default class JobRunner {
 
   static ensureMetrics() {
     JobRunner.metrics = JobRunner.metrics || {};
-    JobRunner.metrics.success = ensureCounter('runner_successful_jobs', 'number of successful job runs');
-    JobRunner.metrics.failures = ensureCounter('runner_failed_jobs', 'number of failed job runs');
+    JobRunner.metrics.success = ensureCounter(promClient.Counter, 'runner_successful_jobs', 'number of successful job runs');
+    JobRunner.metrics.failures = ensureCounter(promClient.Counter, 'runner_failed_jobs', 'number of failed job runs');
+    JobRunner.metrics.runTime = ensureCounter(promClient.Histogram, 'runner_job_run_time', 'time spent running jobs');
   }
 
   /**
@@ -50,13 +51,17 @@ export default class JobRunner {
       throw new Error(`Job expected, got ${inspect(job)}`);
     }
 
+    const startTime = (job.meta && job.meta.dequeued) ? job.meta.dequeued : new Date();
+
     let result;
     try {
       context.logger.info(`Running runner implementation ${this.constructor.name}`);
       result = this._run(job, context);
     } catch (err) {
+      const elapsed = (new Date()) - startTime;
       context.logger.error(err, 'Runner failed');
       JobRunner.metrics.failures.inc();
+      JobRunner.metrics.runTime.observe(elapsed, { jobName: job.meta.jobName, success: false });
       return Promise.reject(err);
     }
 
@@ -64,18 +69,24 @@ export default class JobRunner {
       context.logger.info(`Promise detected as result from ${this.constructor.name}`);
       return result
         .then((result) => {
+          const elapsed = (new Date()) - startTime;
           context.logger.info({ result }, 'Promise succeeded');
           JobRunner.metrics.success.inc({ jobName: job.meta.jobName });
+          JobRunner.metrics.runTime.observe(elapsed, { jobName: job.meta.jobName, success: true });
           return result;
         })
         .catch((err) => {
+          const elapsed = (new Date()) - startTime;
           context.logger.error(err, 'Promise failed');
           JobRunner.metrics.failures.inc({ jobName: job.meta.jobName });
+          JobRunner.metrics.runTime.observe(elapsed, { jobName: job.meta.jobName, success: false });
           throw err;
         });
     }
 
+    const elapsed = (new Date()) - startTime;
     context.logger.info({ result }, `Non-promise detected as result from ${this.constructor.name}`);
+    JobRunner.metrics.runTime.observe(elapsed, { jobName: job.meta.jobName, success: false });
     JobRunner.metrics.success.inc({ jobName: job.meta.jobName });
     return Promise.resolve(result);
   }
