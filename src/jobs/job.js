@@ -32,7 +32,7 @@ export default class Job {
   }
 
   static fromJSON(job) {
-    return new Job(job.data, job.meta);
+    return new Job(job.payload, job.meta);
   }
 
   toJSON() {

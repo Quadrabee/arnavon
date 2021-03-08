@@ -8,6 +8,7 @@ const transporter = nodemailer.createTransport({
 });
 
 module.exports = (job) => {
+  console.log('========>', JSON.stringify(job));
   const email = Object.assign({}, job.payload, {
     to: [].concat(job.payload.to).filter(Boolean).join(', ')
   });
