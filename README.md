@@ -5,6 +5,7 @@ Opiniated producer/consumer framework on top of RabbitMQ.
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/@quadrabee/arnavon-cli.svg)](https://npmjs.org/package/@quadrabee/arnavon-cli)
+[![Build Status](https://travis-ci.com/Quadrabee/arnavon.svg?branch=master)](https://travis-ci.com/Quadrabee/arnavon)
 [![Downloads/week](https://img.shields.io/npm/dw/@quadrabee/arnavon-cli.svg)](https://npmjs.org/package/@quadrabee/arnavon-cli)
 [![License](https://img.shields.io/npm/l/@quadrabee/arnavon-cli.svg)](https://github.com/quadrabee/arnavon-cli/blob/master/package.json)
 
@@ -28,9 +29,12 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`arnavon api`](#arnavon-api)
-* [`arnavon consumer CONSUMERNAME`](#arnavon-consumer-consumername)
-* [`arnavon help [COMMAND]`](#arnavon-help-command)
+- [arnavon](#arnavon)
+- [Usage](#usage)
+- [Commands](#commands)
+  - [`arnavon api`](#arnavon-api)
+  - [`arnavon consumer CONSUMERNAME`](#arnavon-consumer-consumername)
+  - [`arnavon help [COMMAND]`](#arnavon-help-command)
 
 ## `arnavon api`
 
