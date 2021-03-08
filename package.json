@@ -83,6 +83,9 @@
     ]
   },
   "pkg": {
-    "scripts": ["bin/**/*.js", "dist/**/*.js"]
+    "scripts": [
+      "bin/**/*.js",
+      "dist/**/*.js"
+    ]
   }
 }
