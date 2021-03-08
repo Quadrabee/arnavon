@@ -25,8 +25,8 @@ Job.Payload = {
 }]
 
 Job.Full = {
-  meta: Job.Meta
-  data: Job.Payload
+  meta    : Job.Meta
+  payload : Job.Payload
 }
 
 Job.Error = {
