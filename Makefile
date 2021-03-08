@@ -18,5 +18,5 @@ push:
 	docker push quadrabee/arnavon:${VERSION}
 	docker push quadrabee/arnavon:latest
 
-package:
+package: node_modules
 	npm run package
