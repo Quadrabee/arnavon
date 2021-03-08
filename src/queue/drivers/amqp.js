@@ -9,7 +9,6 @@ class AmqpQueue extends Queue {
   #channel;
   #exchange;
   #topology;
-  #queue;
   #connectRetries;
 
   constructor(params) {
@@ -116,36 +115,30 @@ class AmqpQueue extends Queue {
     });
   }
 
-  _consume(selector, processor) {
-    logger.info(`${this.constructor.name} assertQueue ${selector}`);
-    this.#channel.assertQueue(selector)
-      .then((q) => {
-        // bind queue to exchange
-        return this.#channel.bindQueue(q.queue, this.#exchange, selector);
-      })
-      .then(() => {
-        this.#channel.consume(this.#queue, (msg) => {
-          logger.info(`${this.constructor.name}: Decoding queue item`);
-          let payload;
-          try {
-            payload = JSON.parse(msg.content);
-          } catch (error) {
-            // TODO expose that kind of error to monitoring
-            logger.error(error, `${this.constructor.name}: Incorrect payload, invalid json`);
-            return this.#channel.nack(msg);
-          }
-          logger.info(payload, `${this.constructor.name}: Forwarding queue item to processor`);
-          processor(payload)
-            .then(() => {
-              logger.info(`${this.constructor.name}: Acking item consumption`);
-              this.#channel.ack(msg);
-            })
-            .catch((err) => {
-              logger.error(err, `${this.constructor.name}: NAcking(!) item consumption`);
-              this.#channel.nack(msg);
-            });
+  _consume(queueName, processor) {
+    this.#channel.consume(queueName, (msg) => {
+      logger.info(`${this.constructor.name}: Decoding queue item`);
+      let payload;
+      try {
+        payload = JSON.parse(msg.content);
+      } catch (error) {
+        // TODO expose that kind of error to monitoring
+        logger.error(error, `${this.constructor.name}: Incorrect payload, invalid json`);
+        // Nack with allUpTo=false & requeue=false
+        return this.#channel.nack(msg, false, false);
+      }
+      logger.info(payload, `${this.constructor.name}: Forwarding queue item to processor`);
+      processor(payload)
+        .then(() => {
+          logger.info(`${this.constructor.name}: Acking item consumption`);
+          this.#channel.ack(msg);
+        })
+        .catch((err) => {
+          logger.error(err, `${this.constructor.name}: NAcking(!) item consumption`);
+          // Nack with allUpTo=false & requeue=false
+          return this.#channel.nack(msg, false, false);
         });
-      })
+    })
       .catch((err) => this.emit('error', err));
   }
 
