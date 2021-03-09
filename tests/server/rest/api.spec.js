@@ -49,7 +49,7 @@ describe('server/createApi', () => {
       api = createApi(dispatcher);
     });
 
-    it('delegates to the dispatcher provided at construction (default mode is single)', (done) => {
+    it('delegates to the dispatcher provided at construction (default push mode is single)', (done) => {
       const jobPayload = {
         foo: 'bar'
       };
@@ -86,7 +86,46 @@ describe('server/createApi', () => {
         .set('X-Arnavon-Push-Mode', 'BATCH')
         .send(jobPayload)
         .end((err, res) => {
-          expect(dispatcher.dispatchBatch).to.be.calledOnceWith('foo-bar', jobPayload);
+          res.should.have.status(201);
+          expect(dispatcher.dispatchBatch).to.be.calledOnce;
+          const { args } = dispatcher.dispatchBatch.getCall(0);
+          expect(args[0]).to.equal('foo-bar');
+          expect(args[1]).to.eql(jobPayload);
+          // default validation mode
+          expect(args[3]).to.eql({ strict: false });
+          done();
+        });
+    });
+
+    it('fails for unknown x-arnavon-batch-input-validation headers', (done) => {
+      chai.request(api)
+        .post('/jobs/foo-bar')
+        .set('X-Arnavon-Batch-Input-Validation', 'FOO-BAR')
+        .send({})
+        .end((err, res) => {
+          res.should.have.status(400);
+          done();
+        });
+    });
+
+    it('delegates to the dispatcher in strict mode if X-Arnavon-Batch-Input-Validation == all-or-nothing', (done) => {
+      const jobPayload = {
+        foo: 'bar'
+      };
+
+      chai.request(api)
+        .post('/jobs/foo-bar')
+        // batch mode
+        .set('X-Arnavon-Push-Mode', 'batch')
+        .set('X-Arnavon-Batch-Input-Validation', 'all-or-nothing')
+        .send(jobPayload)
+        .end((err, res) => {
+          res.should.have.status(201);
+          expect(dispatcher.dispatchBatch).to.be.calledOnce;
+          const { args } = dispatcher.dispatchBatch.getCall(0);
+          expect(args[0]).to.equal('foo-bar');
+          expect(args[1]).to.eql(jobPayload);
+          expect(args[3]).to.eql({ strict: true });
           done();
         });
     });
@@ -102,7 +141,11 @@ describe('server/createApi', () => {
         .set('X-Arnavon-Push-Mode', 'SINGLE')
         .send(jobPayload)
         .end((err, res) => {
-          expect(dispatcher.dispatch).to.be.calledOnceWith('foo-bar', jobPayload);
+          res.should.have.status(201);
+          expect(dispatcher.dispatch).to.be.calledOnce;
+          const { args } = dispatcher.dispatch.getCall(0);
+          expect(args[0]).to.equal('foo-bar');
+          expect(args[1]).to.eql(jobPayload);
           done();
         });
     });
@@ -116,6 +159,7 @@ describe('server/createApi', () => {
         .post('/jobs/foo-bar')
         .send(jobPayload)
         .end((err, res) => {
+          res.should.have.status(201);
           expect(dispatcher.dispatch).to.be.calledOnceWith('foo-bar', jobPayload, { id: staticUuid });
           done();
         });
@@ -132,6 +176,7 @@ describe('server/createApi', () => {
         .set('X-Arnavon-Push-Mode', 'BATCH')
         .send(jobPayload)
         .end((err, res) => {
+          res.should.have.status(201);
           expect(dispatcher.dispatchBatch).to.be.calledOnceWith('foo-bar', jobPayload, { id: staticUuid });
           done();
         });
