@@ -1,6 +1,7 @@
 queue:
   driver: amqp
   config:
+    connectRetries: 20
     url: amqp://rabbit:rabbit@rabbitmq
     topology:
       exchanges:

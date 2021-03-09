@@ -14,7 +14,7 @@ class AnApi
   end
 
   def wait!
-    Webspicy::Support.sooner_or_later(max: 10, raise: true){
+    Webspicy::Support.sooner_or_later(max: 20, raise: true){
       ready?
     } or raise "Timeout: Unable to reach `#{endpoint}` ..."
   end
