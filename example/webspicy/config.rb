@@ -5,7 +5,7 @@ Webspicy::Configuration.new do |c|
   c.before_all do
     devops = c.world.devops
     AnApi.new("#{devops.arnavon_api.endpoint}/version").wait!
-    #AnApi.new("#{devops.mailer_worker.endpoint}/version").wait!
+    #AnApi.new("#{devops.workers.endpoint}/version").wait!
   end
 
   c.postcondition JobEnqueued

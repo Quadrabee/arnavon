@@ -8,7 +8,7 @@ down: consumers/node_modules
 	docker-compose down
 
 test.arnavon: up
-	docker-compose stop mailer-worker
+	docker-compose stop workers
 	docker-compose exec -e RESOURCE=arnavon -e LOG_LEVEL=DEBUG -T webspicy webspicy /formalspec/
 
 test.example: up

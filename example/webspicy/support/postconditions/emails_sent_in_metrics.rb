@@ -5,7 +5,7 @@ class EmailsSentInMetrics
     world = service.config.world
     case descr
     when /The consumer metrics eventually reflect the mail being sent/
-      endp = world.devops.mailer_worker.endpoint
+      endp = world.devops.workers.endpoint
       MetricIncremented.new(endp, "runner_successful_jobs", "send-email"){|tc|
         tc.params.is_a?(Array) ? tc.params.size : 1
       }
