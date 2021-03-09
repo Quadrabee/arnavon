@@ -37,8 +37,9 @@ AMQP.Topology = {
 }
 
 AMQP.Config = {
-  url      :  String
-  topology :? AMQP.Topology
+  url            :  String
+  connectRetries :? Integer
+  topology       :? AMQP.Topology
 }
 
 QueueConfig = {
