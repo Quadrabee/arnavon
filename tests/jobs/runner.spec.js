@@ -75,8 +75,8 @@ describe('JobRunner', () => {
       const res = runner.run(testJob);
       return res
         .then((result) => {
-          throw new Error('shouldn\'t have resolved');
           expect(result).to.equal(42);
+          throw new Error('shouldn\'t have resolved');
         })
         .catch((err) => {
           expect(err).to.equal(42);
