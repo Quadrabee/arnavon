@@ -14,29 +14,40 @@ before_install:
 
 jobs:
   include:
-    - stage: unit-tests
+    - stage: Tests
       name: Unit Tests
       script: make test.unit
 
-    - stage: integration-tests
+    - stage: Tests
       name: Integration Tests
       script: make test.integration
 
-    - stage: image
-      name: Building and pushing container image
+    - stage: Images
+      name: Building and pushing container image with tag latest
+      if: branch = master
       script:
-        - make image
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
       deploy:
         provider: script
-        script: make push
+        script: make push.latest
         on:
           branch: master
+
+    - stage: Images
+      name: Building and pushing container image with custom tag
+      if: tag IS present
+      script:
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+      deploy:
+        provider: script
+        script: make push.tag
+        on:
           tags: true
 
-    - stage: packages
+    - stage: Releases
       name: Create and release packages
       script: make package
+      if: tag IS present
       deploy:
         provider: releases
         api_key: $GITHUB_TOKEN
@@ -44,6 +55,6 @@ jobs:
           - pkg/arnavon-linux
           - pkg/arnavon-macos
           - pkg/arnavon-win.exe
-        skip_cleanup: true
+        cleanup: true
         on:
           tags: true

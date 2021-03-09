@@ -11,8 +11,7 @@ test.integration: image
 	make -C example test.arnavon
 
 image:
-	docker build --build-arg VERSION=${VERSION} -t quadrabee/arnavon:latest .
-	docker tag quadrabee/arnavon:latest quadrabee/arnavon:${VERSION}
+	docker build -t quadrabee/arnavon:latest .
 
 push:
 	docker push quadrabee/arnavon:${VERSION}
@@ -20,3 +19,10 @@ push:
 
 package: node_modules
 	npm run package
+
+push.latest: image
+	docker push quadrabee/arnavon:latest
+
+push.tag: image
+	docker tag quadrabee/arnavon:latest quadrabee/arnavon:${VERSION}
+	docker push quadrabee/arnavon:${VERSION}
