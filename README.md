@@ -1,7 +1,7 @@
 arnavon
 ===========
 
-Opiniated producer/consumer framework on top of RabbitMQ.
+Opinionated producer/consumer framework on top of RabbitMQ.
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/@quadrabee/arnavon.svg)](https://npmjs.org/package/@quadrabee/arnavon)
