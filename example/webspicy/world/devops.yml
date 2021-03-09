@@ -6,3 +6,5 @@ fakesmtp:
   endpoint: http://fakesmtp:1080/api
 arnavon_api:
   endpoint: http://api
+mailer_worker:
+  endpoint: http://mailer-worker

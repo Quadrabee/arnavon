@@ -1,9 +1,9 @@
-class EmailEventuallySent
+class EmailSent
   include Webspicy::Specification::Postcondition
 
   def self.match(service, descr)
     return unless descr =~ /The email is \(or emails are\) eventually sent/
-    EmailEventuallySent.new
+    EmailSent.new
   end
 
   def instrument(tc, client)
