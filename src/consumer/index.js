@@ -8,21 +8,22 @@ import { Job, JobRunner, JobDispatcher } from '../jobs';
 export default class Consumer {
 
   #api;
-  #config;
-  #runner;
+  #configs;
   #dispatcher;
 
-  constructor(config, dispatcher) {
-    if (!(config instanceof ConsumerConfig)) {
-      throw new Error(`ConsumerConfig expected, got ${inspect(config)}`);
-    }
+  constructor(configs, dispatcher) {
+    configs = [].concat(configs);
+    configs.forEach((cfg) => {
+      if (!(cfg instanceof ConsumerConfig)) {
+        throw new Error(`ConsumerConfig expected, got ${inspect(cfg)}`);
+      }
+    });
     if (!(dispatcher instanceof JobDispatcher)) {
       throw new Error(`JobDispatcher expected, got ${inspect(dispatcher)}`);
     }
     this.#api = createApi();
-    this.#config = config;
-    this.#runner = JobRunner.factor(config.runner.type, config.runner.config);
     this.#dispatcher = dispatcher;
+    this.#configs = configs;
   }
 
   _startApi(port) {
@@ -43,13 +44,17 @@ export default class Consumer {
 
   _startConsuming() {
     logger.info('Consumer starting consumption');
-    return Arnavon.queue.consume(this.#config.queue, (_job, context) => {
-      // Convert it back to a job instance
-      const job = Job.fromJSON(_job);
-      // Extend context to include dispatcher
-      const extendedContext = Object.assign({}, context, { dispatcher: this.#dispatcher });
-      return this.#runner.run(job, extendedContext);
+    const processes = this.#configs.map((config) => {
+      const runner = JobRunner.factor(config.runner.type, config.runner.config);
+      return Arnavon.queue.consume(config.queue, (_job, context) => {
+        // Convert it back to a job instance
+        const job = Job.fromJSON(_job);
+        // Extend context to include dispatcher
+        const extendedContext = Object.assign({}, context, { dispatcher: this.#dispatcher });
+        return runner.run(job, extendedContext);
+      });
     });
+    return Promise.all(processes);
   }
 
   start(port = 3000) {

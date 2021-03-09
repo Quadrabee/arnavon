@@ -7,7 +7,7 @@ class ConsumerCommand extends Command {
 
   static args = [{
     name: 'consumerName',
-    required: true,
+    required: false,
     description: 'The name of the consumer to start'
   }]
 
@@ -21,11 +21,20 @@ class ConsumerCommand extends Command {
 
     const dispatcher = new JobDispatcher(config);
 
-    const consumerConfig = config.consumers.find(c => c.name === args.consumerName);
-    if (!consumerConfig) {
-      throw new Error(`No consumer with name '${args.consumerName} found`);
+    let configs = [];
+    if (flags.all) {
+      configs = config.consumers;
+    } else {
+      if (!args.consumerName) {
+        throw new Error('The name of a consumer must be provided');
+      }
+      const consumerConfig = config.consumers.find(c => c.name === args.consumerName);
+      if (!consumerConfig) {
+        throw new Error(`No consumer with name '${args.consumerName} found`);
+      }
+      configs.push(consumerConfig);
     }
-    const consumer = new Consumer(consumerConfig, dispatcher);
+    const consumer = new Consumer(configs, dispatcher);
     consumer.start(port);
   }
 }
@@ -37,7 +46,8 @@ TO BE DOCUMENTED
 
 ConsumerCommand.flags = {
   ...Command.flags,
-  port: flags.integer({ char: 'p', description: 'Port to use for the API exposing prometheus metrics (default 3000)' })
+  port: flags.integer({ char: 'p', description: 'Port to use for the API exposing prometheus metrics (default 3000)' }),
+  all: flags.boolean({ char: 'a', description: 'Start all consumers instead of just one (not recommended, but can be useful in dev)' })
 };
 
 export default ConsumerCommand;

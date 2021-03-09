@@ -13,14 +13,14 @@ services:
       - ./config.yaml:/arnavon/config.yaml
       - ./schema.fio:/arnavon/schema.fio
 
-  mailer-worker:
+  workers:
     depends_on:
       - rabbitmq
       - fakesmtp
     image: quadrabee/arnavon
     ports:
       - 3002:80
-    command: ["consumer", "mailer-worker", "-p", "80"]
+    command: ["consumer", "-p", "80", '--all']
     volumes:
       - ./config.yaml:/arnavon/config.yaml
       - ./schema.fio:/arnavon/schema.fio
