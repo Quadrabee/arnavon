@@ -29,7 +29,7 @@ class EmailsSent
       nil
     else
       email = sooner_or_later do
-        invocation.config.world.fakesmtp.last_email
+        fakesmtp.last_email
       end or raise "Email not sent"
       raise "Unexpected mail From: #{email.from}" unless email.from == tc.params["from"]
       raise "Unexpected mail To: #{email.to.inspect}" unless email.to == [tc.params["to"]]

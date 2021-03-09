@@ -1,3 +1,3 @@
-FROM enspirit/webspicy:0.19-tester
+FROM enspirit/webspicy:tester
 
 RUN gem install bunny
