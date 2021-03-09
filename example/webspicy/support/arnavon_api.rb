@@ -20,7 +20,7 @@ class ArnavonApi
   def wait!
     Webspicy::Support.sooner_or_later(max: 10, raise: true){
       ready?
-    }
+    } or raise "Timeout: Unable to reach Arnavon API..."
   end
 
 end
