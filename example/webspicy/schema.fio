@@ -30,7 +30,9 @@ Job.Full = {
 }
 
 Job.Error = {
-  error: String
+  error    : String
+  valids   :? [{...}]
+  invalids :? [{...}]
 }
 
 ###

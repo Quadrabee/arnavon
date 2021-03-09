@@ -16,14 +16,15 @@ class EmailsSent
 
   def check(invocation)
     tc = invocation.test_case
+    fakesmtp = invocation.config.world.fakesmtp
+    exp_count = tc.metadata[:expected_success_count] || tc.params.size
     if tc.headers["X-Arnavon-Push-Mode"] == "BATCH"
       emails = sooner_or_later do
-        em = invocation.config.world.fakesmtp.emails
-        em.empty? ? nil : em
+        em = fakesmtp.emails
+        em && !em.empty? ? em : nil
       end or raise "Emails not sent"
-      exp = tc.params.size
-      unless exp == emails.size
-        raise "Expected #{exp} mails sent, got `#{emails.size}`"
+      unless exp_count == emails.size
+        raise "Expected #{exp_count} mails sent, got `#{emails.size}`"
       end
       nil
     else

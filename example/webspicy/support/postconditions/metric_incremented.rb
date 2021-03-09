@@ -5,7 +5,7 @@ class MetricIncremented
     @endpoint = endpoint
     @metric = metric
     @job_name = job_name
-    @counter = counter || ->(tc){ 1 }
+    @counter = counter || ->(tc){ tc.metadata[:err_metric_increment] || 1 }
   end
   attr_reader :endpoint, :metric, :job_name, :counter
 
@@ -15,13 +15,24 @@ class MetricIncremented
 
   def check(invocation)
     tc = invocation.test_case
-    was = tc.metadata[memoization_key(tc)]
-    is = 0
+    was, is = tc.metadata[memoization_key(tc)], 0
     increment = counter.call(tc)
-    sooner_or_later do
+    if increment == 0
+      sleep(1)
       is = read_metric(tc)
-      is == was+increment
-    end or raise "Metrics `#{metric}` not incremented: was #{was} is now #{is}"
+      unless is == was
+        raise "Metrics `#{metric}` was not supposed to change"
+      end
+    else
+      sooner_or_later do
+        is = read_metric(tc)
+        is > was
+      end or raise "Metrics `#{metric}` not incremented: was #{was} is now #{is}"
+      unless is == was+increment
+        raise "Metrics `#{metric}` not incremented as expected: expected #{was+increment}, is #{is}"
+      end
+      #puts "#{metric} :: #{was} -> #{is}"
+    end
     nil
   end
 

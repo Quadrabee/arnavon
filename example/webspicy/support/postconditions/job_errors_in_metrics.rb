@@ -1,22 +1,29 @@
-class JobErrorInMetrics
+class JobErrorsInMetrics
   include Webspicy::Specification::Postcondition
+
+  def initialize(job_name = nil)
+    @job_name = job_name
+  end
+  attr_reader :job_name
 
   def self.match(service, descr)
     world = service.config.world
     case descr
-    when /The api metrics reflect the job error/
-      JobErrorInMetrics.new
+    when /The api metrics reflect the job errors?/
+      JobErrorsInMetrics.new
+    when /The api metrics reflect the '(.*?)' job errors?/
+      JobErrorsInMetrics.new($1)
     end
   end
 
   def instrument(tc, client)
-    mi = MetricIncremented.new(endpoint(tc), metric(tc))
+    mi = MetricIncremented.new(endpoint(tc), metric(tc), job_name)
     mi.instrument(tc, client)
   end
 
   def check(invocation)
     tc = invocation.test_case
-    mi = MetricIncremented.new(endpoint(tc), metric(tc))
+    mi = MetricIncremented.new(endpoint(tc), metric(tc), job_name)
     mi.check(invocation)
   end
 

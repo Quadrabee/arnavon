@@ -16,6 +16,12 @@ postconditions:
   - The api metrics reflect the 'send-email' job being pushed
   - The consumer metrics eventually reflect the mail being sent
 
+errconditions:
+  - No email is sent
+  - No 'send-email' job has been enqueued
+  - The job pushed api metrics for 'send-email' stays unchanged
+  - The api metrics reflect the 'send-email' job errors
+
 input_schema: |-
   Job.SendEmail
 
@@ -50,6 +56,9 @@ counterexamples:
 
   - description: |-
       FOR: The `from` email must be valid email addresses
+    metadata:
+      err_metric: dispatcher_invalid_jobs
+      err_metric_increment: 1
     params:
       from: notvalid
       to: team@enspirit.be
@@ -62,6 +71,9 @@ counterexamples:
 
   - description: |-
       FOR: The `to` email must be valid email addresses
+    metadata:
+      err_metric: dispatcher_invalid_jobs
+      err_metric_increment: 1
     params:
       from: arnavon@quadrabee.com
       to: notvalid
