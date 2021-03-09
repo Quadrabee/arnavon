@@ -14,6 +14,10 @@ before_install:
 
 jobs:
   include:
+    - stage: Linting
+      name: Code Linting
+      script: make lint
+
     - stage: Tests
       name: Unit Tests
       script: make test.unit

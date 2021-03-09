@@ -3,6 +3,9 @@ VERSION=$(shell npm run version --silent)
 node_modules:
 	npm install
 
+lint: node_modules
+	npm run lint
+
 test.unit: node_modules
 	npm run test
 
