@@ -28,7 +28,7 @@ jobs:
 
     - stage: Images
       name: Building and pushing container image with tag latest
-      if: branch = master
+      if: branch = master AND type != pull_request
       script:
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
       deploy:
