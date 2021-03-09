@@ -4,7 +4,7 @@ import { expect, default as chai } from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import proxyquire from 'proxyquire';
-import { JobDispatcher } from '../../src/jobs';
+import { Job, JobDispatcher, JobRunner } from '../../src/jobs';
 
 chai.should();
 chai.use(sinonChai);
@@ -102,6 +102,52 @@ describe('Consumer', () => {
           const call = spy.getCall(0);
           expect(call.args[0]).to.equal('send-email');
         });
+    });
+
+    it('factors the adequate job runner according to configuration', () => {
+      Arnavon.queue.connect = sinon.stub().resolves(true);
+      const spy = sinon.stub(JobRunner, 'factor').resolves(true);
+      return consumer.start()
+        .then(() => {
+          expect(spy).to.be.calledOnce;
+          const call = spy.getCall(0);
+          expect(call.args[0]).to.equal('nodejs');
+          spy.restore();
+        });
+    });
+  });
+
+  describe('upon queue message reception', () => {
+    let trigger, runner, jobFactor;
+    beforeEach(() => {
+      runner = {
+        run: sinon.stub().resolves()
+      };
+      const promise = new Promise((resolve, reject) => {
+        trigger = resolve;
+      });
+      jobFactor = sinon.stub(JobRunner, 'factor').returns(runner);
+      Arnavon.queue.consume = (queueName, runnerCb) => {
+        promise.then(runnerCb);
+      };
+    });
+
+    afterEach(() => {
+      jobFactor.restore();
+    });
+
+    it('calls the job runner', () => {
+      Arnavon.queue.connect = sinon.stub().resolves(true);
+      const msg = { foo: 'bar' };
+      const test = consumer.start()
+        .then(() => {
+          expect(runner.run).to.be.calledOnce;
+          const { args } = runner.run.getCall(0);
+          expect(args[0]).to.be.an.instanceof(Job);
+          expect(args[1]).to.eql({ dispatcher });
+        });
+      trigger(msg);
+      return test;
     });
 
   });
