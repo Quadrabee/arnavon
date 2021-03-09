@@ -3,20 +3,26 @@ import logger from '../logger';
 import ConsumerConfig from './config';
 import { inspect } from '../robust';
 import Arnavon from '..';
-import { Job, JobRunner } from '../jobs';
+import { Job, JobRunner, JobDispatcher } from '../jobs';
 
 export default class Consumer {
 
   #api;
   #config;
   #runner;
-  constructor(config) {
+  #dispatcher;
+
+  constructor(config, dispatcher) {
     if (!(config instanceof ConsumerConfig)) {
       throw new Error(`ConsumerConfig expected, got ${inspect(config)}`);
+    }
+    if (!(dispatcher instanceof JobDispatcher)) {
+      throw new Error(`JobDispatcher expected, got ${inspect(dispatcher)}`);
     }
     this.#api = createApi();
     this.#config = config;
     this.#runner = JobRunner.factor(config.runner.type, config.runner.config);
+    this.#dispatcher = dispatcher;
   }
 
   _startApi(port) {
@@ -40,7 +46,9 @@ export default class Consumer {
     return Arnavon.queue.consume(this.#config.queue, (_job, context) => {
       // Convert it back to a job instance
       const job = Job.fromJSON(_job);
-      return this.#runner.run(job, context);
+      // Extend context to include dispatcher
+      const extendedContext = Object.assign({}, context, { dispatcher: this.#dispatcher });
+      return this.#runner.run(job, extendedContext);
     });
   }
 

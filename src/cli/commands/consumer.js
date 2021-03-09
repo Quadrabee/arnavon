@@ -1,6 +1,7 @@
 import Command from '../base';
 import { flags } from '@oclif/command';
 import { Config, Consumer, default as Arnavon } from '../../';
+import { JobDispatcher } from '../../jobs';
 
 class ConsumerCommand extends Command {
 
@@ -17,11 +18,14 @@ class ConsumerCommand extends Command {
 
     const config = Config.fromFile(configPath);
     Arnavon.init(config);
+
+    const dispatcher = new JobDispatcher(config);
+
     const consumerConfig = config.consumers.find(c => c.name === args.consumerName);
     if (!consumerConfig) {
       throw new Error(`No consumer with name '${args.consumerName} found`);
     }
-    const consumer = new Consumer(consumerConfig);
+    const consumer = new Consumer(consumerConfig, dispatcher);
     consumer.start(port);
   }
 }

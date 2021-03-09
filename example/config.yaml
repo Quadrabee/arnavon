@@ -17,10 +17,18 @@ queue:
           bindings:
             - routingKey: send-email
               exchange: example-arnavon
+        - name: log-info
+          options:
+            durable: false
+          bindings:
+            - routingKey: log-info
+              exchange: example-arnavon
 
 jobs:
   - name: send-email
     inputSchema: Email.Full
+  - name: log-info
+    inputSchema: .
 
 consumers:
   - name: mailer-worker
@@ -29,3 +37,9 @@ consumers:
       type: nodejs
       config:
         module: ./consumers/mailer-worker
+  - name: logger
+    queue: log-info
+    runner:
+      type: nodejs
+      config:
+        module: ./consumers/logger

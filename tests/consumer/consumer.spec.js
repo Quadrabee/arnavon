@@ -4,18 +4,20 @@ import { expect, default as chai } from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import proxyquire from 'proxyquire';
+import { JobDispatcher } from '../../src/jobs';
 
 chai.should();
 chai.use(sinonChai);
 
 describe('Consumer', () => {
 
-  let consumer, config, Consumer, listen, processExit;
+  let consumer, config, Consumer, listen, processExit, dispatcher;
   beforeEach(() => {
     const arncfg = Config.fromFile('example/config.yaml');
     config = arncfg.consumers[0];
     listen = sinon.stub().yields();
     processExit = sinon.stub(process, 'exit');
+    dispatcher = new JobDispatcher(arncfg);
     Consumer = proxyquire('../../src/consumer', {
       '../api': {
         default: function() {
@@ -25,7 +27,7 @@ describe('Consumer', () => {
         }
       }
     }).default;
-    consumer = new Consumer(config);
+    consumer = new Consumer(config, dispatcher);
   });
 
   afterEach(() => {
@@ -43,8 +45,14 @@ describe('Consumer', () => {
       expect(test(null)).to.throw(/ConsumerConfig expected, got/);
       expect(test({})).to.throw(/ConsumerConfig expected, got/);
     });
+    it('expects a JobDispatcher as second parameter', () => {
+      const test = (disp) => () => new Consumer(config, disp);
+      expect(test()).to.throw(/JobDispatcher expected, got/);
+      expect(test(null)).to.throw(/JobDispatcher expected, got/);
+      expect(test({})).to.throw(/JobDispatcher expected, got/);
+    });
     it('it works', () => {
-      expect(new Consumer(config)).to.be.an.instanceof(Consumer);
+      expect(new Consumer(config, dispatcher)).to.be.an.instanceof(Consumer);
     });
   });
 
