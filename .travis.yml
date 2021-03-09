@@ -14,19 +14,15 @@ before_install:
 
 jobs:
   include:
-    - stage: Linting
-      name: Code Linting
-      script: make lint
-
     - stage: Tests
-      name: Unit Tests
-      script: make test.unit
+      name: Linting & Unit Tests
+      script: make lint & make test.unit
 
     - stage: Tests
       name: Integration Tests
       script: make test.integration
 
-    - stage: Images
+    - stage: Releases
       name: Building and pushing container image with tag latest
       if: branch = master AND type != pull_request
       script:
@@ -37,7 +33,7 @@ jobs:
         on:
           branch: master
 
-    - stage: Images
+    - stage: Releases
       name: Building and pushing container image with custom tag
       if: tag IS present
       script:
