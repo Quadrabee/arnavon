@@ -13,7 +13,7 @@ class JobEnqueuedInMetrics
       end
     }
     case descr
-    when /The api metrics reflect the '(.*?)' job being pushed/
+    when /The api metrics reflect the '(.*?)' jobs? being pushed/
       MetricIncremented.new(endp, "dispatcher_valid_jobs", $1, &inc)
     when /The api metrics reflect the job being pushed/
       MetricIncremented.new(endp, "dispatcher_valid_jobs", &inc)
