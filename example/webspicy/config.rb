@@ -3,9 +3,18 @@ Webspicy::Configuration.new do |c|
   c.client = Webspicy::HttpClient
 
   c.before_all do
-    c.world.arnavon_api.wait!
+    devops = c.world.devops
+    AnApi.new("#{devops.arnavon_api.endpoint}/version").wait!
+    #AnApi.new("#{devops.mailer_worker.endpoint}/version").wait!
   end
 
   c.postcondition JobEnqueued
-  c.postcondition EmailEventuallySent
+  c.postcondition JobEnqueuedInMetrics
+  c.postcondition EmailsSent
+  c.postcondition EmailsSentInMetrics
+
+  c.errcondition NoEmailSent
+  c.errcondition JobErrorsInMetrics
+  c.errcondition JobEnqueuedMetricUnchanged
+  c.errcondition NoJobEnqueued
 end

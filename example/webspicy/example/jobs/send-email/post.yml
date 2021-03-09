@@ -12,16 +12,21 @@ preconditions:
   - The `from` and `to` emails must be valid email addresses
 
 postconditions:
-  # - The send-email job has been properly enqueued
-  # - The api metrics reflect the job being pushed
-  - The email is (or emails are) eventually sent
-  # - The consumer metrics eventually reflect the mail being sent
+  - The email is eventually sent
+  - The api metrics reflect the 'send-email' job being pushed
+  - The consumer metrics eventually reflect the mail being sent
+
+errconditions:
+  - No email is sent
+  - No 'send-email' job has been enqueued
+  - The job pushed api metrics for 'send-email' stays unchanged
+  - The api metrics reflect the 'send-email' job errors
 
 input_schema: |-
-  Job.SendEmail|[Job.SendEmail]
+  Job.SendEmail
 
 output_schema: |-
-  Job.Full|[Job.Full]
+  Job.Full
 
 error_schema: |-
   Job.Error
@@ -47,27 +52,13 @@ examples:
     assert:
       - 'pathFD("meta", :jobName => "send-email")'
 
-  - description: |-
-      FOR: the emails are eventually sent
-    headers:
-      X-Arnavon-Push-Mode: BATCH
-    params:
-    - from: arnavon@quadrabee.com
-      to: team1@enspirit.be
-      subject: We love queues!
-    - from: arnavon@quadrabee.com
-      to: team2@enspirit.be
-      subject: We love queues!
-    expected:
-      content_type: application/json; charset=utf-8
-      status: 201
-    assert:
-      - 'pathFD("0/meta", :jobName => "send-email")'
-
 counterexamples:
 
   - description: |-
       FOR: The `from` email must be valid email addresses
+    metadata:
+      err_metric: dispatcher_invalid_jobs
+      err_metric_increment: 1
     params:
       from: notvalid
       to: team@enspirit.be
@@ -80,6 +71,9 @@ counterexamples:
 
   - description: |-
       FOR: The `to` email must be valid email addresses
+    metadata:
+      err_metric: dispatcher_invalid_jobs
+      err_metric_increment: 1
     params:
       from: arnavon@quadrabee.com
       to: notvalid

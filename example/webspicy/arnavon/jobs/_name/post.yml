@@ -19,6 +19,10 @@ services:
   postconditions:
     - A job full description is returned
     - The job has been properly enqueued
+    - The api metrics reflect the job being pushed
+
+  errconditions:
+    - The api metrics reflect the job error
 
   input_schema: |-
     Job.Request
@@ -49,6 +53,8 @@ services:
     - description: |-
         FOR: The job must match a predefined job configuration
       dress_params: false
+      metadata:
+        err_metric: dispatcher_unknown_jobs
       params:
         name: unexisting-job
         data: test
@@ -58,6 +64,8 @@ services:
 
     - description: |-
         FOR: The input data must meet the job input schema
+      metadata:
+        err_metric: dispatcher_invalid_jobs
       dress_params: false
       params:
         name: send-email

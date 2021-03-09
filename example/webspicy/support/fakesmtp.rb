@@ -6,7 +6,7 @@ class Fakesmtp
   end
 
   def clear!
-    HTTP.delete("#{endpoint}/emails")
+    res = HTTP.delete("#{endpoint}/emails")
   end
 
   def emails

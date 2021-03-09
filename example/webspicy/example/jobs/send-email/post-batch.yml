@@ -1,0 +1,101 @@
+---
+description: |-
+  Send many emails at once in an asynchronous way
+
+url: |-
+  /jobs/send-email
+
+method: |-
+  POST
+
+preconditions:
+  - The `from` and `to` emails must be valid email addresses
+  - In all-or-nothing mode, all emails must have valid adresses
+
+postconditions:
+  - The emails are eventually sent, for valid jobs at least
+  - The api metrics reflect the 'send-email' jobs being pushed
+  - The consumer metrics eventually reflect the mails being sent
+
+errconditions:
+  - No email is sent
+  - No 'send-email' job has been enqueued
+  - The job pushed api metrics for 'send-email' stays unchanged
+  - The api metrics reflect the 'send-email' job errors
+
+input_schema: |-
+  [Job.SendEmail]
+
+output_schema: |-
+  [Job.Full]
+
+error_schema: |-
+  Job.Error
+
+examples:
+
+  - description: |-
+      FOR: the emails are eventually sent
+    headers:
+      X-Arnavon-Push-Mode: BATCH
+    params:
+    - from: arnavon@quadrabee.com
+      to: team1@enspirit.be
+      subject: We love queues!
+    - from: arnavon@quadrabee.com
+      to: team2@enspirit.be
+      subject: We love queues!
+    expected:
+      content_type: application/json; charset=utf-8
+      status: 201
+    assert:
+      - 'pathFD("0/meta", :jobName => "send-email")'
+
+  - description: |-
+      FOR: The emails are eventually sent, for valid jobs at least
+    metadata:
+      expected_success_count: 1
+      err_metric: dispatcher_invalid_jobs
+      err_metric_increment: 2
+    headers:
+      X-Arnavon-Push-Mode: BATCH
+      X-Arnavon-Batch-Input-Validation: best-effort
+    params:
+    - from: an error
+      to: team1@enspirit.be
+      subject: We love queues!
+    - from: arnavon@quadrabee.com
+      to: another one
+      subject: We love queues!
+    - from: arnavon@quadrabee.com
+      to: team2@enspirit.be
+      subject: We love queues!
+    expected:
+      content_type: application/json; charset=utf-8
+      status: 201
+    assert:
+      - 'pathFD("0/meta", :jobName => "send-email")'
+
+counterexamples:
+
+  - description: |-
+      FOR: In all-or-nothing mode, all emails must have valid adresses
+    metadata:
+      err_metric: dispatcher_invalid_jobs
+      err_metric_increment: 2
+    headers:
+      X-Arnavon-Push-Mode: BATCH
+      X-Arnavon-Batch-Input-Validation: all-or-nothing
+    params:
+    - from: an error
+      to: team1@enspirit.be
+      subject: We love queues!
+    - from: arnavon@quadrabee.com
+      to: another one
+      subject: We love queues!
+    - from: arnavon@quadrabee.com
+      to: team2@enspirit.be
+      subject: We love queues!
+    expected:
+      content_type: application/json; charset=utf-8
+      status: 400
