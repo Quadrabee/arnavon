@@ -31,8 +31,13 @@ export default class Job {
     };
   }
 
-  static fromJSON(job) {
-    return new Job(job.payload, job.meta);
+  static fromJSON(_job) {
+    // TODO: dress with finitio
+    const job = new Job(_job.payload, _job.meta);
+    if (job.meta && job.meta.dispatched) {
+      job.meta.dispatched = new Date(job.meta.dispatched);
+    }
+    return job;
   }
 
   toJSON() {
