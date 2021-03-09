@@ -12,8 +12,12 @@ chai.use(chaiAsPromised);
 
 describe('NodeJSRunner', () => {
 
-  let runner, dummy;
+  let runner, dummy, testJob;
   beforeEach(() => {
+    testJob = new Job({}, {
+      dispatched: new Date(),
+      dequeued: new Date()
+    });
     dummy = require('./dummy.runner');
     Arnavon.cwd = () => __dirname;
     runner = new NodeJSRunner({ module: './dummy.runner' });
@@ -47,21 +51,19 @@ describe('NodeJSRunner', () => {
 
   describe('#run', () => {
     it('should pass the job payload to the node module', () => {
-      const job = new Job();
-      runner.run(job);
+      runner.run(testJob);
       expect(dummy.runner.calls).to.have.length(1);
-      expect(dummy.runner.calls[0]).to.equal(job);
+      expect(dummy.runner.calls[0]).to.equal(testJob);
     });
 
     it('should wait for the runner\'s promise to resolve before resolving', () => {
-      const job = new Job();
       let resolve;
       const p = new Promise((res) => resolve = res);
       dummy.runner.promise = p;
-      const runnerPromise = runner.run(job);
+      const runnerPromise = runner.run(testJob);
       expect(runnerPromise).to.be.an.instanceof(Promise);
       expect(dummy.runner.calls).to.have.length(1);
-      expect(dummy.runner.calls[0]).to.equal(job);
+      expect(dummy.runner.calls[0]).to.equal(testJob);
 
       expect(runnerPromise).to.not.be.fulfilled;
       resolve();

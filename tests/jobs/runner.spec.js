@@ -4,8 +4,17 @@ import Runners from '../../src/jobs/runners';
 import JobRunner from '../../src/jobs/runner';
 import { expect } from 'chai';
 import Job from '../../src/jobs/job';
+import { InvalidRunError } from '../../src/robust';
 
 describe('JobRunner', () => {
+
+  let testJob;
+  beforeEach(() => {
+    testJob = new Job({}, {
+      dispatched: new Date(),
+      dequeued: new Date()
+    });
+  });
 
   it('exports a class', () => {
     expect(JobRunner).to.be.a.instanceof(Function);
@@ -36,26 +45,23 @@ describe('JobRunner', () => {
       expect(test('')).to.throw(/Job expected, got/);
       expect(test({})).to.throw(/Job expected, got/);
       // correct
-      expect(test(new Job())).to.not.throw();
+      expect(test(testJob)).to.not.throw();
     });
 
     it('calls the _run child class implementation', () => {
       const spy = sinon.spy(runner, '_run');
-      const job = new Job();
-      runner.run(job);
-      expect(spy).to.be.calledOnceWith(job);
+      runner.run(testJob);
+      expect(spy).to.be.calledOnceWith(testJob);
     });
 
     it('returns a Promise', () => {
-      const job = new Job();
-      const res = runner.run(job);
+      const res = runner.run(testJob);
       expect(res).to.be.an.instanceof(Promise);
     });
 
     it('wraps promises returned by implementation specific #_run()', (done) => {
-      const job = new Job();
       runner._run = sinon.stub().returns(Promise.resolve(42));
-      const res = runner.run(job);
+      const res = runner.run(testJob);
       res
         .then((result) => {
           expect(result).to.equal(42);
@@ -65,9 +71,8 @@ describe('JobRunner', () => {
     });
 
     it('let errors from promises bubble up', () => {
-      const job = new Job();
       runner._run = sinon.stub().returns(Promise.reject(42));
-      const res = runner.run(job);
+      const res = runner.run(testJob);
       return res
         .then((result) => {
           throw new Error('shouldn\'t have resolved');
@@ -79,9 +84,8 @@ describe('JobRunner', () => {
     });
 
     it('wraps promises returned and increments failure counter on rejection', () => {
-      const job = new Job();
       runner._run = sinon.stub().returns(Promise.reject(42));
-      const res = runner.run(job);
+      const res = runner.run(testJob);
       const metric = Arnavon.registry.getSingleMetric('runner_failed_jobs');
       const spy = sinon.spy(metric, 'inc');
 
@@ -94,26 +98,27 @@ describe('JobRunner', () => {
         });
     });
 
-    it('wraps promises returned and updates prometheus histogram on rejection', () => {
-      const job = new Job();
+    it('wraps promises returned and updates prometheus histograms on rejection', () => {
       runner._run = sinon.stub().returns(Promise.reject(42));
-      const res = runner.run(job);
-      const metric = Arnavon.registry.getSingleMetric('runner_job_run_time');
-      const spy = sinon.spy(metric, 'observe');
+      const res = runner.run(testJob);
+      const leadTime = Arnavon.registry.getSingleMetric('runner_job_lead_time');
+      const spyLeadTime = sinon.spy(leadTime, 'observe');
+      const touchTime = Arnavon.registry.getSingleMetric('runner_job_touch_time');
+      const spyTouchTime = sinon.spy(touchTime, 'observe');
 
       return res
         .then(() => {
           throw new Error('shouldn\'t have resolved');
         })
         .catch(() => {
-          expect(spy).to.have.been.calledOnce;
+          expect(spyTouchTime).to.have.been.calledOnce;
+          expect(spyLeadTime).to.have.been.calledOnce;
         });
     });
 
     it('wraps promises returned and increments success counter on resolution', () => {
-      const job = new Job();
       runner._run = sinon.stub().returns(Promise.resolve(42));
-      const res = runner.run(job);
+      const res = runner.run(testJob);
       const metric = Arnavon.registry.getSingleMetric('runner_successful_jobs');
       const spy = sinon.spy(metric, 'inc');
 
@@ -124,22 +129,23 @@ describe('JobRunner', () => {
     });
 
     it('wraps promises returned and updates prometheus histogram on resolution', () => {
-      const job = new Job();
       runner._run = sinon.stub().returns(Promise.resolve(42));
-      const res = runner.run(job);
-      const metric = Arnavon.registry.getSingleMetric('runner_job_run_time');
-      const spy = sinon.spy(metric, 'observe');
+      const res = runner.run(testJob);
+      const leadTime = Arnavon.registry.getSingleMetric('runner_job_lead_time');
+      const spyLeadTime = sinon.spy(leadTime, 'observe');
+      const touchTime = Arnavon.registry.getSingleMetric('runner_job_touch_time');
+      const spyTouchTime = sinon.spy(touchTime, 'observe');
 
       return res
         .then(() => {
-          expect(spy).to.have.been.calledOnce;
+          expect(spyLeadTime).to.have.been.calledOnce;
+          expect(spyTouchTime).to.have.been.calledOnce;
         });
     });
 
     it('catches errors thrown by #_run() and rejects promises', () => {
-      const job = new Job();
       runner._run = sinon.stub().throws(new Error('oops'));
-      const res = runner.run(job);
+      const res = runner.run(testJob);
       return res
         .then(() => {
           throw new Error('should not have resolved');
@@ -152,9 +158,8 @@ describe('JobRunner', () => {
     it('catches errors thrown by #_run() and increment prometheus counter', () => {
       const metric = Arnavon.registry.getSingleMetric('runner_failed_jobs');
       const spy = sinon.spy(metric, 'inc');
-      const job = new Job();
       runner._run = sinon.stub().throws(new Error('oops'));
-      const res = runner.run(job);
+      const res = runner.run(testJob);
       return res
         .then(() => {
           throw new Error('should not have resolved');
@@ -165,30 +170,32 @@ describe('JobRunner', () => {
     });
 
     it('catches errors thrown by #_run() and update prometheus histogram', () => {
-      const metric = Arnavon.registry.getSingleMetric('runner_job_run_time');
-      const spy = sinon.spy(metric, 'observe');
-      const job = new Job();
+      const leadTime = Arnavon.registry.getSingleMetric('runner_job_lead_time');
+      const spyLeadTime = sinon.spy(leadTime, 'observe');
+      const touchTime = Arnavon.registry.getSingleMetric('runner_job_touch_time');
+      const spyTouchTime = sinon.spy(touchTime, 'observe');
       runner._run = sinon.stub().throws(new Error('oops'));
-      const res = runner.run(job);
+      const res = runner.run(testJob);
       return res
         .then(() => {
           throw new Error('should not have resolved');
         })
         .catch(() => {
-          expect(spy).to.be.calledOnce;
+          expect(spyLeadTime).to.be.calledOnce;
+          expect(spyTouchTime).to.be.calledOnce;
         });
     });
 
-    it('wraps non promise results with a Promise', (done) => {
-      const job = new Job();
+    it('consider non promise results as running error', () => {
       runner._run = sinon.stub().returns('foo');
-      const res = runner.run(job);
-      res
-        .then((result) => {
-          expect(result).to.equal('foo');
-          done();
+      const res = runner.run(testJob);
+      return res
+        .then(() => {
+          throw new Error('should have failed');
         })
-        .catch(done);
+        .catch((err) => {
+          expect(err).to.be.an.instanceof(InvalidRunError);
+        });
     });
 
   });

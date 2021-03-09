@@ -21,6 +21,10 @@ class DataValidationError extends ArnavonError {
   }
 }
 
+class InvalidRunError extends ArnavonError {
+
+}
+
 class InvalidBatch extends DataValidationError {
   constructor(message, invalids, valids) {
     super(message);
@@ -55,5 +59,6 @@ export {
   DataValidationError,
   UnknownJobError,
   InvalidBatch,
+  InvalidRunError,
   inspect
 };

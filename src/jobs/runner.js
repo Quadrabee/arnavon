@@ -1,5 +1,5 @@
 import Job from './job';
-import { inspect } from '../robust';
+import { inspect, InvalidRunError } from '../robust';
 import promClient from 'prom-client';
 import Arnavon from '../';
 import mainLogger from '../logger';
@@ -36,10 +36,15 @@ export default class JobRunner {
     JobRunner.metrics = JobRunner.metrics || {};
     JobRunner.metrics.success = ensureCounter(promClient.Counter, 'runner_successful_jobs', 'number of successful job runs');
     JobRunner.metrics.failures = ensureCounter(promClient.Counter, 'runner_failed_jobs', 'number of failed job runs');
-    JobRunner.metrics.runTime = ensureCounter(
+    JobRunner.metrics.leadTime = ensureCounter(
       promClient.Histogram,
-      'runner_job_run_time',
-      'time spent running jobs',
+      'runner_job_lead_time',
+      'time spent between queueing and end of job execution',
+      ['success']);
+    JobRunner.metrics.touchTime = ensureCounter(
+      promClient.Histogram,
+      'runner_job_touch_time',
+      'time spent on job execution',
       ['success']);
   }
 
@@ -55,44 +60,49 @@ export default class JobRunner {
       throw new Error(`Job expected, got ${inspect(job)}`);
     }
 
-    const startTime = (job.meta && job.meta.dequeued) ? job.meta.dequeued : new Date();
+    const dispatchedTime = job.meta.dispatched;
+    const dequeuedTime = job.meta.dequeued || new Date();
+
+    const updateMetrics = (err = null) => {
+      const leadTime = ((new Date()) - dispatchedTime) / 1000;
+      const touchTime = ((new Date()) - dequeuedTime) / 1000;
+      if (err) {
+        JobRunner.metrics.failures.inc({ jobName: job.meta.jobName });
+      } else {
+        JobRunner.metrics.success.inc({ jobName: job.meta.jobName });
+      }
+      JobRunner.metrics.leadTime.observe({ jobName: job.meta.jobName, success: !err }, leadTime);
+      JobRunner.metrics.touchTime.observe({ jobName: job.meta.jobName, success: !err }, touchTime);
+    };
 
     let result;
     try {
       context.logger.info(`Running runner implementation ${this.constructor.name}`);
       result = this._run(job, context);
     } catch (err) {
-      const elapsed = ((new Date()) - startTime) / 1000;
-      context.logger.error(err, 'Runner failed');
-      JobRunner.metrics.failures.inc();
-      JobRunner.metrics.runTime.observe({ jobName: job.meta.jobName, success: false }, elapsed);
+      context.logger.error(err, `${this.constructor.name} Runner failed`);
+      updateMetrics(err);
       return Promise.reject(err);
     }
 
-    if (result instanceof Promise) {
-      context.logger.info(`Promise detected as result from ${this.constructor.name}`);
-      return result
-        .then((result) => {
-          const elapsed = ((new Date()) - startTime) / 1000;
-          context.logger.info({ result }, 'Promise succeeded');
-          JobRunner.metrics.success.inc({ jobName: job.meta.jobName });
-          JobRunner.metrics.runTime.observe({ jobName: job.meta.jobName, success: true }, elapsed);
-          return result;
-        })
-        .catch((err) => {
-          const elapsed = ((new Date()) - startTime) / 1000;
-          context.logger.error(err, 'Promise failed');
-          JobRunner.metrics.failures.inc({ jobName: job.meta.jobName });
-          JobRunner.metrics.runTime.observe({ jobName: job.meta.jobName, success: false }, elapsed);
-          throw err;
-        });
+    if (!(result instanceof Promise)) {
+      const error = new InvalidRunError(`The ${this.constructor.name} runner didn't return a Promise. Got ${inspect(result)}`);
+      context.logger.error(error, `${this.constructor.name} Runner failed`);
+      updateMetrics(error);
+      return Promise.reject(error);
     }
 
-    const elapsed = ((new Date()) - startTime) / 1000;
-    context.logger.info({ result }, `Non-promise detected as result from ${this.constructor.name}`);
-    JobRunner.metrics.runTime.observe({ jobName: job.meta.jobName, success: false }, elapsed);
-    JobRunner.metrics.success.inc({ jobName: job.meta.jobName });
-    return Promise.resolve(result);
+    return result
+      .then((result) => {
+        context.logger.info({ result }, `${this.constructor.name} run succeeded`);
+        updateMetrics();
+        return result;
+      })
+      .catch((err) => {
+        context.logger.error(err, `${this.constructor.name} Runner failed`);
+        updateMetrics(err);
+        throw err;
+      });
   }
 
   /**
