@@ -11,7 +11,7 @@ class RabbitQueue
   end
 
   def message_ready(job_name)
-    q = bunny.create_channel.queue(job_name, durable: true)
+    q = bunny.create_channel.queue(job_name, passive: true)
     q.message_count
   end
 

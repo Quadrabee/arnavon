@@ -10,10 +10,15 @@ queue:
           type: topic
           options:
             durable: true
+        - name: dead-letters
+          type: topic
+          options:
+            durable: true
       queues:
         - name: send-email
           options:
             durable: true
+            deadLetterExchange: dead-letters
           bindings:
             - routingKey: send-email
               exchange: example-arnavon
@@ -23,6 +28,12 @@ queue:
           bindings:
             - routingKey: log-info
               exchange: example-arnavon
+        - name: dead-letters
+          options:
+            durable: true
+          bindings:
+            - routingKey: '#'
+              exchange: dead-letters
 
 jobs:
   - name: send-email
