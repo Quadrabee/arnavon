@@ -18,11 +18,11 @@ services:
 
   postconditions:
     - A job full description is returned
-    - The job has been properly enqueued
-    - The api metrics reflect the job being pushed
+    - (x) The job has been properly enqueued
+    - (x) The api metrics reflect the job being pushed
 
   errconditions:
-    - The api metrics reflect the job error
+    - (x) The api metrics reflect the job error
 
   input_schema: |-
     Job.Request

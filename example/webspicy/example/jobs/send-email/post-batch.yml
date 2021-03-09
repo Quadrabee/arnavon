@@ -13,15 +13,15 @@ preconditions:
   - In all-or-nothing mode, all emails must have valid adresses
 
 postconditions:
-  - The emails are eventually sent, for valid jobs at least
-  - The api metrics reflect the 'send-email' jobs being pushed
-  - The consumer metrics eventually reflect the mails being sent
+  - (x) The emails are eventually sent, for valid jobs at least
+  - (x) The api metrics reflect the 'send-email' jobs being pushed
+  - (x) The consumer metrics eventually reflect the mails being sent
 
 errconditions:
-  - No email is sent
-  - No 'send-email' job has been enqueued
-  - The job pushed api metrics for 'send-email' stays unchanged
-  - The api metrics reflect the 'send-email' job errors
+  - (x) No email is sent
+  - (x) No 'send-email' job has been enqueued
+  - (x) The job pushed api metrics for 'send-email' stays unchanged
+  - (x) The api metrics reflect the 'send-email' job errors
 
 input_schema: |-
   [Job.SendEmail]

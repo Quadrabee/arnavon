@@ -12,15 +12,15 @@ preconditions:
   - The `from` and `to` emails must be valid email addresses
 
 postconditions:
-  - The email is eventually sent
-  - The api metrics reflect the 'send-email' job being pushed
-  - The consumer metrics eventually reflect the mail being sent
+  - (x) The email is eventually sent
+  - (x) The api metrics reflect the 'send-email' job being pushed
+  - (x) The consumer metrics eventually reflect the mail being sent
 
 errconditions:
-  - No email is sent
-  - No 'send-email' job has been enqueued
-  - The job pushed api metrics for 'send-email' stays unchanged
-  - The api metrics reflect the 'send-email' job errors
+  - (x) No email is sent
+  - (x) No 'send-email' job has been enqueued
+  - (x) The job pushed api metrics for 'send-email' stays unchanged
+  - (x) The api metrics reflect the 'send-email' job errors
 
 input_schema: |-
   Job.SendEmail
