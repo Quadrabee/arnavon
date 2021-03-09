@@ -1,4 +1,4 @@
-class EmailSentInMetrics
+class EmailsSentInMetrics
   include Webspicy::Specification::Postcondition
 
   def self.match(service, descr)

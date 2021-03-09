@@ -12,15 +12,15 @@ preconditions:
   - The `from` and `to` emails must be valid email addresses
 
 postconditions:
-  - The email is (or emails are) eventually sent
+  - The email is eventually sent
   - The api metrics reflect the 'send-email' job being pushed
   - The consumer metrics eventually reflect the mail being sent
 
 input_schema: |-
-  Job.SendEmail|[Job.SendEmail]
+  Job.SendEmail
 
 output_schema: |-
-  Job.Full|[Job.Full]
+  Job.Full
 
 error_schema: |-
   Job.Error
@@ -45,23 +45,6 @@ examples:
       status: 201
     assert:
       - 'pathFD("meta", :jobName => "send-email")'
-
-  - description: |-
-      FOR: the emails are eventually sent
-    headers:
-      X-Arnavon-Push-Mode: BATCH
-    params:
-    - from: arnavon@quadrabee.com
-      to: team1@enspirit.be
-      subject: We love queues!
-    - from: arnavon@quadrabee.com
-      to: team2@enspirit.be
-      subject: We love queues!
-    expected:
-      content_type: application/json; charset=utf-8
-      status: 201
-    assert:
-      - 'pathFD("0/meta", :jobName => "send-email")'
 
 counterexamples:
 

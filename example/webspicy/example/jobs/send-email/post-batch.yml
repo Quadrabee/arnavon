@@ -1,0 +1,50 @@
+---
+description: |-
+  Send many emails at once in an asynchronous way
+
+url: |-
+  /jobs/send-email
+
+method: |-
+  POST
+
+preconditions:
+  - The `from` and `to` emails must be valid email addresses
+
+postconditions:
+  - The emails are eventually sent
+  - The api metrics reflect the 'send-email' jobs being pushed
+  - The consumer metrics eventually reflect the mails being sent
+
+errconditions:
+  - The api metrics reflect the 'send-email' job errors
+
+input_schema: |-
+  [Job.SendEmail]
+
+output_schema: |-
+  [Job.Full]
+
+error_schema: |-
+  Job.Error
+
+examples:
+
+  - description: |-
+      FOR: the emails are eventually sent
+    headers:
+      X-Arnavon-Push-Mode: BATCH
+    params:
+    - from: arnavon@quadrabee.com
+      to: team1@enspirit.be
+      subject: We love queues!
+    - from: arnavon@quadrabee.com
+      to: team2@enspirit.be
+      subject: We love queues!
+    expected:
+      content_type: application/json; charset=utf-8
+      status: 201
+    assert:
+      - 'pathFD("0/meta", :jobName => "send-email")'
+
+counterexamples: []

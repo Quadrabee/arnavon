@@ -10,8 +10,8 @@ Webspicy::Configuration.new do |c|
 
   c.postcondition JobEnqueued
   c.postcondition JobEnqueuedInMetrics
-  c.postcondition EmailSent
-  c.postcondition EmailSentInMetrics
+  c.postcondition EmailsSent
+  c.postcondition EmailsSentInMetrics
 
   c.errcondition JobErrorInMetrics
 end
