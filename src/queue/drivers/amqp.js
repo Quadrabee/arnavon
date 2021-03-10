@@ -13,10 +13,11 @@ class AmqpQueue extends Queue {
 
   constructor(params) {
     super(params);
-    if (!params.url) {
+
+    this.#url = process.env.AMQP_URL || params.url;
+    if (!this.#url) {
       throw new Error('AMQP: url parameter required');
     }
-    this.#url = params.url;
     this.#connectRetries = params.connectRetries || 10;
     this.#topology = params.topology;
     // Which is our default exchange (only can have one)
