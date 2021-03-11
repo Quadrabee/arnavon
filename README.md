@@ -1,6 +1,8 @@
 arnavon
 ===========
 
+![ArnavonLogo](assets/arnavon-full@1.5x.png)
+
 Opinionated producer/consumer framework on top of RabbitMQ.
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
