@@ -8,6 +8,7 @@ import Arnavon from '../';
 export default class Server {
 
   #api;
+  #server;
   #dispatcher;
   constructor(config) {
     if (!(config instanceof ArnavonConfig)) {
@@ -19,7 +20,7 @@ export default class Server {
 
   _startApi(port) {
     return new Promise((resolve, reject) => {
-      this.#api.listen(port, (err) => {
+      this.#server = this.#api.listen(port, (err) => {
         if (err) {
           return reject(err);
         }
@@ -27,6 +28,12 @@ export default class Server {
         return resolve();
       });
     });
+  }
+
+  _stopApi() {
+    if (this.#server) {
+      this.#server.close();
+    }
   }
 
   _connectQueue() {
@@ -41,6 +48,10 @@ export default class Server {
     return Arnavon.queue.connect();
   }
 
+  _disconnectQueue() {
+    return Arnavon.queue.disconnect();
+  }
+
   start(port = 3000) {
     return this._connectQueue()
       .then(() => {
@@ -50,5 +61,11 @@ export default class Server {
         console.error(err);
         process.exit(10);
       });
+  }
+
+  stop() {
+    logger.error('Server stopping...');
+    this._stopApi();
+    this._disconnectQueue();
   }
 }

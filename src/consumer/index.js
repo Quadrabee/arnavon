@@ -8,8 +8,10 @@ import { Job, JobRunner, JobDispatcher } from '../jobs';
 export default class Consumer {
 
   #api;
+  #server;
   #configs;
   #dispatcher;
+  #processes;
 
   constructor(configs, dispatcher) {
     configs = [].concat(configs);
@@ -28,7 +30,7 @@ export default class Consumer {
 
   _startApi(port) {
     return new Promise((resolve, reject) => {
-      this.#api.listen(port, (err) => {
+      this.#server = this.#api.listen(port, (err) => {
         if (err) {
           return reject(err);
         }
@@ -38,13 +40,23 @@ export default class Consumer {
     });
   }
 
+  _stopApi() {
+    if (this.#server) {
+      this.#server.close();
+    }
+  }
+
   _connectQueue() {
     return Arnavon.queue.connect();
   }
 
+  _disconnectQueue() {
+    return Arnavon.queue.disconnect();
+  }
+
   _startConsuming() {
     logger.info('Consumer starting consumption');
-    const processes = this.#configs.map((config) => {
+    this.#processes = this.#configs.map((config) => {
       const runner = JobRunner.factor(config.runner.type, config.runner.config);
       return Arnavon.queue.consume(config.queue, (_job, context) => {
         // Convert it back to a job instance
@@ -54,7 +66,7 @@ export default class Consumer {
         return runner.run(job, extendedContext);
       });
     });
-    return Promise.all(processes);
+    return Promise.all(this.#processes);
   }
 
   start(port = 3000) {
@@ -65,5 +77,11 @@ export default class Consumer {
         console.error(err);
         process.exit(10);
       });
+  }
+
+  stop() {
+    logger.error('Server stopping...');
+    this._stopApi();
+    this._disconnectQueue();
   }
 }

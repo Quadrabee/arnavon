@@ -8,6 +8,14 @@ class StartApiCommand extends Command {
     const port = flags.port || 3000;
     const server = new Server(Arnavon.config);
     server.start(port);
+    // Quit properly on SIGINT (typically ctrl-c)
+    process.on('SIGINT', function() {
+      server.stop();
+    });
+    // Quit properly on SIGTERM (typically kubernetes termination)
+    process.on('SIGTERM', function() {
+      server.stop();
+    });
   }
 }
 

@@ -10,6 +10,7 @@ class AmqpQueue extends Queue {
   #exchange;
   #topology;
   #connectRetries;
+  #disconnecting;
 
   constructor(params) {
     super(params);
@@ -65,6 +66,9 @@ class AmqpQueue extends Queue {
     // Connect
       .connect(this.#url)
       .catch((err) => {
+        if (this.#disconnecting) {
+          throw new Error('Connection canceled');
+        }
         if (attemptsLeft <= 0) {
           logger.error('Unable to connect to rabbitmq... Giving up.');
           throw err;
@@ -104,6 +108,14 @@ class AmqpQueue extends Queue {
       });
   }
 
+  _disconnect() {
+    if (this.#conn) {
+      return this.#conn.close();
+    }
+    this.#disconnecting = true;
+    return Promise.resolve();
+  }
+
   _push(key, data) {
     const payload = Buffer.from(JSON.stringify(data));
     const options = { persistent: true };
@@ -118,7 +130,12 @@ class AmqpQueue extends Queue {
   }
 
   _consume(queueName, processor) {
-    this.#channel.consume(queueName, (msg) => {
+    return this.#channel.consume(queueName, (msg) => {
+      // AMQP informs us that the consumption is over (are we quitting, for instance?)
+      if (msg === null) {
+        logger.info(`${this.constructor.name}: AMQP informs consumption is over`);
+        return;
+      }
       let payload;
       try {
         payload = JSON.parse(msg.content);

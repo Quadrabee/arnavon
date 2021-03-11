@@ -31,6 +31,16 @@ class StartConsumerCommand extends Command {
     }
     const consumer = new Consumer(configs, dispatcher);
     consumer.start(port);
+
+    // Quit properly on SIGINT (typically ctrl-c)
+    process.on('SIGINT', function() {
+      consumer.stop();
+    });
+    // Quit properly on SIGTERM (typically kubernetes termination)
+    process.on('SIGTERM', function() {
+      consumer.stop();
+    });
+
   }
 }
 

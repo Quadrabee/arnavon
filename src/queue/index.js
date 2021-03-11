@@ -9,6 +9,7 @@ import { inspect } from '../robust';
 class Queue extends EventEmitter {
 
   #config;
+
   constructor(config) {
     super();
     this.#config = config;
@@ -28,6 +29,15 @@ class Queue extends EventEmitter {
     logger.info(`${this.constructor.name} - Connecting to queue`);
     return this._connect().then((res) => {
       logger.info(`${this.constructor.name} - Connected`);
+      return res;
+    });
+  }
+
+  // subclasses should implement _connect()
+  disconnect() {
+    logger.info(`${this.constructor.name} - Disconnecting from queue`);
+    return this._disconnect().then((res) => {
+      logger.info(`${this.constructor.name} - Disconnected`);
       return res;
     });
   }
