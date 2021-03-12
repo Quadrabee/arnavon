@@ -1,5 +1,5 @@
 class NoEmailSent
-  include Webspicy::Specification::Postcondition
+  include Webspicy::Specification::Post
 
   def self.match(service, descr)
     case descr
@@ -8,19 +8,16 @@ class NoEmailSent
     end
   end
 
-  def instrument(tc, client)
-    client.config.world.fakesmtp.clear!
+  def instrument
+    config.world.fakesmtp.clear!
   end
 
-  def check(invocation)
-    tc = invocation.test_case
-    fakesmtp = invocation.config.world.fakesmtp
+  def check!
     sleep(1)
-    emails = fakesmtp.emails
+    emails = config.world.fakesmtp.emails
     unless emails.nil? || emails.empty?
-      raise "Mails were not supposed to be sent, got #{emails.size}"
+      fail!("Mails were not supposed to be sent, got #{emails.size}")
     end
-    nil
   end
 
 end

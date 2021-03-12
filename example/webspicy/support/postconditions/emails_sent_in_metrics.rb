@@ -1,5 +1,4 @@
 class EmailsSentInMetrics
-  include Webspicy::Specification::Postcondition
 
   def self.match(service, descr)
     world = service.config.world

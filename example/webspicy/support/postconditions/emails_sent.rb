@@ -1,5 +1,5 @@
 class EmailsSent
-  include Webspicy::Specification::Postcondition
+  include Webspicy::Specification::Post
 
   def self.match(service, descr)
     case descr
@@ -10,30 +10,27 @@ class EmailsSent
     end
   end
 
-  def instrument(tc, client)
-    client.config.world.fakesmtp.clear!
+  def instrument
+    config.world.fakesmtp.clear!
   end
 
-  def check(invocation)
-    tc = invocation.test_case
-    fakesmtp = invocation.config.world.fakesmtp
+  def check!
+    fakesmtp, tc = config.world.fakesmtp, test_case
     exp_count = tc.metadata[:expected_success_count] || tc.params.size
     if tc.headers["X-Arnavon-Push-Mode"] == "BATCH"
       emails = sooner_or_later do
         em = fakesmtp.emails
         em && !em.empty? ? em : nil
-      end or raise "Emails not sent"
+      end or fail!("Emails not sent")
       unless exp_count == emails.size
-        raise "Expected #{exp_count} mails sent, got `#{emails.size}`"
+        fail!("Expected #{exp_count} mails sent, got `#{emails.size}`")
       end
-      nil
     else
       email = sooner_or_later do
         fakesmtp.last_email
-      end or raise "Email not sent"
-      raise "Unexpected mail From: #{email.from}" unless email.from == tc.params["from"]
-      raise "Unexpected mail To: #{email.to.inspect}" unless email.to == [tc.params["to"]]
-      nil
+      end or fail!("Email not sent")
+      fail!("Unexpected mail From: #{email.from}") unless email.from == tc.params["from"]
+      fail!("Unexpected mail To: #{email.to.inspect}") unless email.to == [tc.params["to"]]
     end
   end
 

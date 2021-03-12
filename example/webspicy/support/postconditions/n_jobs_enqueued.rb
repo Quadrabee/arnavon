@@ -1,5 +1,5 @@
 class NJobsEnqueued
-  include Webspicy::Specification::Postcondition
+  include Webspicy::Specification::Post
 
   def initialize(job_name = nil, increment = 1)
     @job_name = job_name
@@ -7,44 +7,38 @@ class NJobsEnqueued
   end
   attr_reader :job_name, :increment
 
-  def instrument(tc, client)
-    tc.metadata[increment_key(tc)] = message_ready(tc)
+  def instrument
+    test_case.metadata[increment_key] = message_ready
   end
 
   def check(invocation)
-    tc = invocation.test_case
-    jname, ikey = get_job_name(tc), increment_key(tc)
-    was, is = tc.metadata[ikey], 0
+    jname, ikey = get_job_name, increment_key
+    was, is = test_case.metadata[ikey], 0
     if increment == 0
       sleep(1)
       is = message_ready(tc)
-      unless was == is
-        raise "Expected no #{jname} job to be enqueued, got at least one."
-      end
+      fail!("Expected no #{jname} job to be enqueued, got at least one.") unless was == is
     else
       sooner_or_later do
         is = message_ready(tc)
         is > was
-      end or raise "No `#{jname}` has been enqueued"
-      unless is == was+increment
-        raise "Expected #{was+increment} jobs enqueued, got #{is}"
-      end
+      end or fail!("No `#{jname}` has been enqueued")
+      fail!("Expected #{was+increment} jobs enqueued, got #{is}") unless is == was+increment
     end
-    nil
   end
 
-  def message_ready(tc)
-    tc.specification.config.world.rabbit_queue.message_ready(get_job_name(tc))
+  def message_ready
+    config.world.rabbit_queue.message_ready(get_job_name)
   end
 
 private
 
-  def get_job_name(tc)
-    job_name || tc.params["name"]
+  def get_job_name
+    job_name || test_case.params["name"]
   end
 
-  def increment_key(tc)
-    "NJobsEnqueued::#{get_job_name(tc)}"
+  def increment_key
+    "NJobsEnqueued::#{get_job_name}"
   end
 
 end
