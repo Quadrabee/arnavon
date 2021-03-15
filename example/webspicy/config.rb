@@ -2,7 +2,7 @@ Webspicy::Configuration.new do |c|
   c.host = "http://api"
   c.client = Webspicy::HttpClient
 
-  c.before_all do
+  c.before_all do |tester|
     devops = c.world.devops
     AnApi.new("#{devops.arnavon_api.endpoint}/version").wait!
     #AnApi.new("#{devops.workers.endpoint}/version").wait!

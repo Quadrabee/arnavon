@@ -1,5 +1,5 @@
 class JobErrorsInMetrics
-  include Webspicy::Specification::Postcondition
+  include Webspicy::Specification::Post
 
   def initialize(job_name = nil)
     @job_name = job_name
@@ -16,25 +16,24 @@ class JobErrorsInMetrics
     end
   end
 
-  def instrument(tc, client)
-    mi = MetricIncremented.new(endpoint(tc), metric(tc), job_name)
-    mi.instrument(tc, client)
+  def instrument
+    mi = MetricIncremented.new(endpoint, metric, job_name)
+    mi.bind(tester).instrument
   end
 
-  def check(invocation)
-    tc = invocation.test_case
-    mi = MetricIncremented.new(endpoint(tc), metric(tc), job_name)
-    mi.check(invocation)
+  def check!
+    mi = MetricIncremented.new(endpoint, metric, job_name)
+    mi.bind(tester).check!
   end
 
-  def metric(tc)
-    tc.metadata[:err_metric].tap{|e|
-      raise "Invalid test case #{tc.description}\n#{tc.metadata}" unless e
+  def metric
+    test_case.metadata[:err_metric].tap{|e|
+      fail!("Invalid test case #{test_case.description}\n#{test_case.metadata}") unless e
     }
   end
 
-  def endpoint(tc)
-    tc.specification.config.world.devops.arnavon_api.endpoint
+  def endpoint
+    config.world.devops.arnavon_api.endpoint
   end
 
 end

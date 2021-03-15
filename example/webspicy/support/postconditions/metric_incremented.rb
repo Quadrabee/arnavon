@@ -1,5 +1,5 @@
 class MetricIncremented
-  include Webspicy::Specification::Postcondition
+  include Webspicy::Specification::Post
 
   def initialize(endpoint, metric, job_name = nil, &counter)
     @endpoint = endpoint
@@ -9,36 +9,29 @@ class MetricIncremented
   end
   attr_reader :endpoint, :metric, :job_name, :counter
 
-  def instrument(tc, client)
-    tc.metadata[memoization_key(tc)] = read_metric(tc)
+  def instrument
+    test_case.metadata[memoization_key] = read_metric
   end
 
-  def check(invocation)
-    tc = invocation.test_case
-    was, is = tc.metadata[memoization_key(tc)], 0
-    increment = counter.call(tc)
+  def check!
+    was, is = test_case.metadata[memoization_key], 0
+    increment = counter.call(test_case)
     if increment == 0
       sleep(1)
-      is = read_metric(tc)
-      unless is == was
-        raise "Metrics `#{metric}` was not supposed to change"
-      end
+      is = read_metric
+      fail!("Metrics `#{metric}` was not supposed to change") unless is == was
     else
       sooner_or_later do
-        is = read_metric(tc)
+        is = read_metric
         is > was
-      end or raise "Metrics `#{metric}` not incremented: was #{was} is now #{is}"
-      unless is == was+increment
-        raise "Metrics `#{metric}` not incremented as expected: expected #{was+increment}, is #{is}"
-      end
-      #puts "#{metric} :: #{was} -> #{is}"
+      end or fail!("Metrics `#{metric}` not incremented: was #{was} is now #{is}")
+      fail!("Metrics `#{metric}` not incremented as expected: expected #{was+increment}, is #{is}") unless is == was+increment
     end
-    nil
   end
 
-  def read_metric(tc)
+  def read_metric
     body = ApiSupport.get_2xx("#{endpoint}/metrics").to_s
-    rx = /#{metric}\{jobName="#{get_job_name(tc)}"\}\s+(\d+)/
+    rx = /#{metric}\{jobName="#{get_job_name}"\}\s+(\d+)/
     if body =~ rx
       Integer(body[rx, 1])
     else
@@ -46,12 +39,12 @@ class MetricIncremented
     end
   end
 
-  def memoization_key(tc)
-    "#{endpoint}#{metric}#{get_job_name(tc)}--post-metric"
+  def memoization_key
+    "#{endpoint}#{metric}#{get_job_name}--post-metric"
   end
 
-  def get_job_name(tc)
-    job_name || tc.params["name"]
+  def get_job_name
+    job_name || test_case.params["name"]
   end
 
 end
