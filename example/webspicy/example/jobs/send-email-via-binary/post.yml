@@ -1,0 +1,85 @@
+---
+description: |-
+  Send an email to someone in an asynchronous way
+
+url: |-
+  /jobs/send-email-via-binary
+
+method: |-
+  POST
+
+preconditions:
+  - The `from` and `to` emails must be valid email addresses
+
+postconditions:
+  - (x) The email is eventually sent
+  - (x) The api metrics reflect the 'send-email-via-binary' job being pushed
+  - (x) The consumer metrics eventually reflect the mail being sent
+
+errconditions:
+  - (x) No email is sent
+  - (x) No 'send-email-via-binary' job has been enqueued
+  - (x) The job pushed api metrics for 'send-email-via-binary' stays unchanged
+  - (x) The api metrics reflect the 'send-email-via-binary' job errors
+
+input_schema: |-
+  Job.SendEmail
+
+output_schema: |-
+  Job.Full
+
+error_schema: |-
+  Job.Error
+
+examples:
+
+  - description: |-
+      FOR: the email is eventually sent
+    params:
+      from: arnavon@quadrabee.com
+      to: team@enspirit.be
+      subject: We love queues!
+      text: |
+        I queue
+        You queue
+        She/He/They queue(s)
+        We queue
+        You queue
+        They queue
+    expected:
+      content_type: application/json; charset=utf-8
+      status: 201
+    assert:
+      - 'pathFD("meta", :jobName => "send-email-via-binary")'
+
+counterexamples:
+
+  - description: |-
+      FOR: The `from` email must be valid email addresses
+    metadata:
+      err_metric: dispatcher_invalid_jobs
+      err_metric_increment: 1
+    params:
+      from: notvalid
+      to: team@enspirit.be
+      subject: We love queues!
+    expected:
+      content_type: application/json; charset=utf-8
+      status: 400
+    assert:
+      - "match(/Invalid Email.Address: .notvalid./)"
+
+  - description: |-
+      FOR: The `to` email must be valid email addresses
+    metadata:
+      err_metric: dispatcher_invalid_jobs
+      err_metric_increment: 1
+    params:
+      from: arnavon@quadrabee.com
+      to: notvalid
+      subject: We love queues!
+    expected:
+      content_type: application/json; charset=utf-8
+      status: 400
+    assert:
+      - "match(/Invalid Email.Address: .notvalid./)"

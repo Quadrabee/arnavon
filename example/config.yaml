@@ -24,11 +24,11 @@ queue:
           bindings:
             - routingKey: send-email
               exchange: example-arnavon
-        - name: log-info
+        - name: send-email-via-binary
           options:
             durable: false
           bindings:
-            - routingKey: log-info
+            - routingKey: send-email-via-binary
               exchange: example-arnavon
         - name: dead-letters
           options:
@@ -40,6 +40,8 @@ queue:
 jobs:
   - name: send-email
     inputSchema: Email.Full
+  - name: send-email-via-binary
+    inputSchema: Email.Full
   - name: log-info
     inputSchema: .
 
@@ -50,8 +52,14 @@ consumers:
       type: nodejs
       config:
         module: ./consumers/mailer-worker
-  - name: logger
-    queue: log-info
+  - name: mailer-worker-ruby
+    queue: send-email-via-binary
+    runner:
+      type: binary
+      config:
+        path: ./consumers/mailer-worker.rb
+  - name: log-failures
+    queue: dead-letters
     runner:
       type: nodejs
       config:

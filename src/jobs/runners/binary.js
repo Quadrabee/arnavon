@@ -4,10 +4,11 @@ import JobRunner from '../runner';
 import JobResult from '../result';
 import { inspect } from '../../robust';
 import { spawn } from 'child_process';
+import { sync as commandExistsSync } from 'command-exists';
 
 export default class BinaryRunner extends JobRunner {
 
-  #fpath;
+  #command;
   #args;
   constructor(config) {
     super();
@@ -16,19 +17,10 @@ export default class BinaryRunner extends JobRunner {
       throw new Error(`Binary path expected, got ${inspect(config.path)}`);
     }
 
-    this.#fpath = path.join(process.cwd(), config.path);
-    try {
-      fs.accessSync(this.#fpath, fs.constants.X_OK);
-    } catch (err) {
-      // console.error(err);
-      if (err.code === 'ENOENT') {
-        throw new Error(`Binary '${config.path}' not found`);
-      }
-      if (err.code === 'EACCES') {
-        throw new Error(`File '${config.path}' is not executable, check permission or chmod +x`);
-      }
-      throw err;
+    if (!commandExistsSync(config.path)) {
+      throw new Error(`Command '${config.path}' not found, or not executable`);
     }
+    this.#command = config.path;
 
     if (config.args && !Array.isArray(config.args)) {
       config.args = [config.args];
@@ -38,7 +30,7 @@ export default class BinaryRunner extends JobRunner {
 
   _run(job) {
     return new Promise((resolve, reject) => {
-      const process = spawn(this.#fpath, this.#args);
+      const process = spawn(this.#command, this.#args);
 
       let stdoutData = '';
       process.stdout.on('data', (data) => {
@@ -50,7 +42,6 @@ export default class BinaryRunner extends JobRunner {
       });
 
       process.on('close', (code, signal) => {
-        console.log('process closed', code, signal);
         // Check if maybe we were passed JSON
         try {
           stdoutData = JSON.parse(stdoutData);
