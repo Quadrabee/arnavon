@@ -20,12 +20,13 @@ class StartConsumerCommand extends Command {
     if (flags.all) {
       configs = Arnavon.config.consumers;
     } else {
-      if (!args.consumerName) {
+      if (!args.name) {
         throw new Error('The name of a consumer must be provided');
       }
-      const consumerConfig = Arnavon.config.consumers.find(c => c.name === args.consumerName);
+      const consumerConfig = Arnavon.config.consumers.find(c => c.name === args.name);
       if (!consumerConfig) {
-        throw new Error(`No consumer with name '${args.consumerName} found`);
+        console.log(Arnavon.config.consumers);
+        throw new Error(`No consumer with name '${args.name} found`);
       }
       configs.push(consumerConfig);
     }
