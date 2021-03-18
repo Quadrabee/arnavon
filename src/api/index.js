@@ -33,7 +33,7 @@ export default ({ agent = 'arnavon' } = {}) => {
   app.use(bodyParser.urlencoded({ extended: false }));
 
   // parse application/json
-  app.use(bodyParser.json());
+  app.use(bodyParser.json({ limit: process.env.API_BODYPARSER_LIMIT || '1MB' }));
 
   app.get('/version', (req, res) => {
     res.send({ arnavon: { version, agent } });
