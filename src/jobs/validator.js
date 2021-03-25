@@ -1,5 +1,6 @@
 import Finitio from 'finitio';
 import { inspect, DataValidationError } from '../robust';
+import logger from '../logger';
 
 export default class JobValidator {
 
@@ -28,6 +29,7 @@ export default class JobValidator {
       return this.#schema.dress(inputData);
     } catch (err) {
       if (err instanceof Finitio.TypeError) {
+        logger.error('Invalid job payload', err);
         throw DataValidationError.fromFinitioError('Invalid input data:', err);
       }
       throw err;
