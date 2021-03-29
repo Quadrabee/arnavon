@@ -3,7 +3,7 @@ queue:
   config:
     connectRetries: 20
     # applies to all consumers for now
-    prefetchCount: 1
+    prefetchCount: 5
     url: amqp://rabbit:rabbit@rabbitmq
     topology:
       exchanges:
