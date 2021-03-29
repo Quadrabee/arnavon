@@ -30,6 +30,7 @@ export default class JobValidator {
     } catch (err) {
       if (err instanceof Finitio.TypeError) {
         logger.error('Invalid job payload', err);
+        logger.debug('Input data does not respect the schema:', inputData);
         throw DataValidationError.fromFinitioError('Invalid input data:', err);
       }
       throw err;
