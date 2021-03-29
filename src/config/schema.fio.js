@@ -39,6 +39,7 @@ AMQP.Topology = {
 AMQP.Config = {
   url            :? String
   connectRetries :? Integer
+  prefetchCount  :? Integer
   topology       :  AMQP.Topology
 }
 

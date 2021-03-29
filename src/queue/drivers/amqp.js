@@ -10,6 +10,7 @@ class AmqpQueue extends Queue {
   #exchange;
   #topology;
   #connectRetries;
+  #prefetchCount;
   #disconnecting;
 
   constructor(params) {
@@ -20,6 +21,7 @@ class AmqpQueue extends Queue {
       throw new Error('AMQP: url parameter required');
     }
     this.#connectRetries = params.connectRetries || 10;
+    this.#prefetchCount = params.prefetchCount || 1;
     this.#topology = params.topology;
     // Which is our default exchange (only can have one)
     const defaultExchanges = params.topology.exchanges.filter(ex => ex.default === true);
@@ -94,6 +96,7 @@ class AmqpQueue extends Queue {
         return conn.createConfirmChannel();
       })
       .then((channel) => {
+        channel.prefetch(this.#prefetchCount);
         this.#channel = channel;
         // Install topology
         // Propagate errors
