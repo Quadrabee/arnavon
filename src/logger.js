@@ -5,6 +5,7 @@ import bunyan from 'bunyan';
 const logger = bunyan.createLogger({
   name: 'arnavon',
   version,
+  level: 'debug',
   serializers: bunyan.stdSerializers
 });
 
