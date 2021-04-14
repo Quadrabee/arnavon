@@ -58,6 +58,7 @@ jobs:
           - pkg/arnavon-linux
           - pkg/arnavon-macos
           - pkg/arnavon-win.exe
+          - pkg/arnavon-alpine
         skip_cleanup: true
         on:
           tags: true

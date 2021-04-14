@@ -30,7 +30,7 @@
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "oclif-dev manifest && oclif-dev readme",
     "version": "echo $npm_package_version",
-    "package": "pkg . --out-path pkg/"
+    "package": "pkg . --targets linux,macos,win,alpine --out-path pkg/"
   },
   "license": "ISC",
   "devDependencies": {
