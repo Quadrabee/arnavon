@@ -51,7 +51,6 @@ jobs:
     - stage: Releases
       name: Create and release packages
       script: make package
-      if: tag IS present
       deploy:
         provider: releases
         api_key: $GITHUB_TOKEN
@@ -59,6 +58,6 @@ jobs:
           - pkg/arnavon-linux
           - pkg/arnavon-macos
           - pkg/arnavon-win.exe
-        cleanup: true
+        skip_cleanup: true
         on:
           tags: true
