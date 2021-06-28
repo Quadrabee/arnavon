@@ -22,7 +22,7 @@ $ npm install -g @quadrabee/arnavon
 $ arnavon COMMAND
 running command...
 $ arnavon (-v|--version|version)
-@quadrabee/arnavon/0.2.2 darwin-x64 node-v12.18.4
+@quadrabee/arnavon/0.2.3 darwin-x64 node-v12.18.4
 $ arnavon --help [COMMAND]
 USAGE
   $ arnavon COMMAND
@@ -31,10 +31,50 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
+* [`arnavon api`](#arnavon-api)
+* [`arnavon consumer [CONSUMERNAME]`](#arnavon-consumer-consumername)
 * [`arnavon help [COMMAND]`](#arnavon-help-command)
 * [`arnavon start`](#arnavon-start)
 * [`arnavon start:api`](#arnavon-startapi)
 * [`arnavon start:consumer [NAME]`](#arnavon-startconsumer-name)
+
+## `arnavon api`
+
+Starts the Arnavon REST API
+
+```
+USAGE
+  $ arnavon api
+
+OPTIONS
+  -c, --config=config  location of config file (default "config.yaml")
+  -p, --port=port      Port to use for API (default 3000)
+
+DESCRIPTION
+  ...
+  The REST API provides ways to push Jobs to queues, with validation
+```
+
+## `arnavon consumer [CONSUMERNAME]`
+
+Starts an Arnavon consumer
+
+```
+USAGE
+  $ arnavon consumer [CONSUMERNAME]
+
+ARGUMENTS
+  CONSUMERNAME  The name of the consumer to start
+
+OPTIONS
+  -a, --all            Start all consumers instead of just one (not recommended, but can be useful in dev)
+  -c, --config=config  location of config file (default "config.yaml")
+  -p, --port=port      Port to use for the API exposing prometheus metrics (default 3000)
+
+DESCRIPTION
+  ...
+  TO BE DOCUMENTED
+```
 
 ## `arnavon help [COMMAND]`
 
