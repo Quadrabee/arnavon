@@ -61,8 +61,11 @@ export default class Consumer {
       return Arnavon.queue.consume(config.queue, (_job, context) => {
         // Convert it back to a job instance
         const job = Job.fromJSON(_job);
-        // Extend context to include dispatcher
-        const extendedContext = Object.assign({}, context, { dispatcher: this.#dispatcher });
+        // Extend context to include dispatcher and prometheus registry
+        const extendedContext = Object.assign({}, context, {
+          dispatcher: this.#dispatcher,
+          prometheusRegistry: Arnavon.registry
+        });
         return runner.run(job, extendedContext);
       });
     });
