@@ -13,8 +13,9 @@ class EmailsSentInMetrics
     }
     case descr
     when /The consumer metrics eventually reflect the mails? being sent/
+      job_name = service.specification.url.split('/jobs/')[1]
       endp = world.devops.workers.endpoint
-      MetricIncremented.new(endp, "runner_successful_jobs", "send-email", &inc)
+      MetricIncremented.new(endp, "runner_successful_jobs", job_name, &inc)
     end
   end
 

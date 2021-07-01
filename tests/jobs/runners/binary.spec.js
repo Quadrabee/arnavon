@@ -26,9 +26,13 @@ describe('BinaryRunner', () => {
       const test = (m) => () => new BinaryRunner({ path: m });
 
       // not found
-      expect(test('foo/bar')).to.throw('Binary \'foo/bar\' not found');
+      expect(test('foo/bar')).to.throw('Command \'foo/bar\' not found, or not executable');
       // not executable
-      expect(test('./package.json')).to.throw(/File.*package.json.*is not executable/);
+      expect(test('./package.json')).to.throw(/Command.*package.json.* not found/);
+      // correct (full path)
+      expect(test('/bin/bash')).not.to.throw();
+      // correct (in PATH)
+      expect(test('bash')).not.to.throw();
       // correct
       expect(test(testBinary)).not.to.throw();
     });

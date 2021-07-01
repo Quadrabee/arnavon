@@ -7,6 +7,15 @@ up: consumers/node_modules
 down: consumers/node_modules
 	docker-compose down
 
+workers.logs:
+	docker-compose logs -f workers
+
+workers.restart:
+	docker-compose restart workers
+
+webspicy.bash:
+	docker-compose exec webspicy bash
+
 test.arnavon: up
 	docker-compose stop workers
 	docker-compose exec -e RESOURCE=arnavon -e LOG_LEVEL=DEBUG -T webspicy webspicy /formalspec/
