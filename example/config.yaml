@@ -16,6 +16,10 @@ queue:
           type: topic
           options:
             durable: true
+        - name: invalid-jobs
+          type: topic
+          options:
+            durable: true
       queues:
         - name: send-email
           options:
@@ -36,12 +40,20 @@ queue:
           bindings:
             - routingKey: '#'
               exchange: dead-letters
+        - name: invalid-jobs
+          options:
+            durable: true
+          bindings:
+            - routingKey: '#'
+              exchange: invalid-jobs
 
 jobs:
   - name: send-email
     inputSchema: Email.Full
+    invalidJobExchange: invalid-jobs
   - name: send-email-via-binary
     inputSchema: Email.Full
+    invalidJobExchange: invalid-jobs
   - name: log-info
     inputSchema: .
 

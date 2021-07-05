@@ -8,9 +8,9 @@ import Job from './job';
 export default class JobDispatcher {
 
   /**
-   * Private collection of job validators
+   * Private collection of jobs
    */
-  #validators;
+  #jobs;
   /**
    * Private collection of counters (unknown/invalid/valid jobs)
    */
@@ -45,18 +45,19 @@ export default class JobDispatcher {
         registers: [Arnavon.registry]
       })
     };
-    this.#validators = config.jobs.reduce((validators, jobConfig) => {
-      validators[jobConfig.name] = new JobValidator(jobConfig.inputSchema);
-      return validators;
+    this.#jobs = config.jobs.reduce((jobs, jobConfig) => {
+      jobConfig.validator = new JobValidator(jobConfig.inputSchema);
+      jobs[jobConfig.name] = jobConfig;
+      return jobs;
     }, {});
   }
 
   dispatchBatch(jobName, data, meta = {}, options = { strict: true }) {
-    const validator = this.#validators[jobName];
-    if (!validator) {
+    if (!this.#jobs[jobName]) {
       this.#counters.unknown.inc({ jobName });
       return Promise.reject(new UnknownJobError(jobName));
     }
+    const validator = this.#jobs[jobName].validator;
     if (!Array.isArray(data)) {
       return Promise.reject(new DataValidationError(`Array of payloads expected for batches, got ${inspect(data)}`));
     }
@@ -95,16 +96,20 @@ export default class JobDispatcher {
   }
 
   dispatch(jobName, data, meta = {}) {
-    const validator = this.#validators[jobName];
-    if (!validator) {
+    const jobConfig = this.#jobs[jobName];
+    if (!jobConfig) {
       this.#counters.unknown.inc({ jobName });
       return Promise.reject(new UnknownJobError(jobName));
     }
+    const validator = jobConfig.validator;
     let jobPayload;
     try {
       jobPayload = validator.validate(data);
     } catch (err) {
       this.#counters.invalid.inc({ jobName });
+      if (jobConfig.invalidJobExchange) {
+        Arnavon.queue.push(jobName, data, { exchange: jobConfig.invalidJobExchange });
+      }
       return Promise.reject(err);
     }
 

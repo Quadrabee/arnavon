@@ -21,6 +21,7 @@ errconditions:
   - (x) No 'send-email-via-binary' job has been enqueued
   - (x) The job pushed api metrics for 'send-email-via-binary' stays unchanged
   - (x) The api metrics reflect the 'send-email-via-binary' job errors
+  - (x) Invalid jobs are properly enqueued to relevant failure queues
 
 input_schema: |-
   Job.SendEmail

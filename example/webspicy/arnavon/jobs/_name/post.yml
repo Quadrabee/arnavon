@@ -23,6 +23,7 @@ services:
 
   errconditions:
     - (x) The api metrics reflect the job error
+    - (x) Invalid jobs are properly enqueued to relevant failure queues
 
   input_schema: |-
     Job.Request
