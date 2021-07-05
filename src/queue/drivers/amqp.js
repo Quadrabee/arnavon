@@ -119,11 +119,11 @@ class AmqpQueue extends Queue {
     return Promise.resolve();
   }
 
-  _push(key, data) {
+  _push(key, data, { exchange }) {
     const payload = Buffer.from(JSON.stringify(data));
     const options = { persistent: true };
     return new Promise((resolve, reject) => {
-      return this.#channel.publish(this.#exchange, key, payload, options, (err) => {
+      return this.#channel.publish(exchange || this.#exchange, key, payload, options, (err) => {
         if (err) {
           return reject(err);
         }

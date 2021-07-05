@@ -17,4 +17,5 @@ Webspicy::Configuration.new do |c|
   c.errcondition JobErrorsInMetrics
   c.errcondition JobEnqueuedMetricUnchanged
   c.errcondition NoJobEnqueued
+  c.errcondition InvalidJobEnqueued
 end

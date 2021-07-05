@@ -54,8 +54,9 @@ Job.Name = ID
 Job.ID = ID
 
 Job.Config = .JobConfig <json> {
-  name          :  Job.Name
-  inputSchema   :  String
+  name               :  Job.Name
+  inputSchema        :  String
+  invalidJobExchange :? String
 }
 
 #### RUNNERS

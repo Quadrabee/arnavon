@@ -21,6 +21,7 @@ errconditions:
   - (x) No 'send-email' job has been enqueued
   - (x) The job pushed api metrics for 'send-email' stays unchanged
   - (x) The api metrics reflect the 'send-email' job errors
+  - (x) Invalid jobs are properly enqueued to relevant failure queues
 
 input_schema: |-
   Job.SendEmail
