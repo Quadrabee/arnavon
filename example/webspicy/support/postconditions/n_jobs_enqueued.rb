@@ -11,16 +11,16 @@ class NJobsEnqueued
     test_case.metadata[increment_key] = message_ready
   end
 
-  def check(invocation)
+  def check!
     jname, ikey = get_job_name, increment_key
     was, is = test_case.metadata[ikey], 0
     if increment == 0
       sleep(1)
-      is = message_ready(tc)
+      is = message_ready
       fail!("Expected no #{jname} job to be enqueued, got at least one.") unless was == is
     else
       sooner_or_later do
-        is = message_ready(tc)
+        is = message_ready
         is > was
       end or fail!("No `#{jname}` has been enqueued")
       fail!("Expected #{was+increment} jobs enqueued, got #{is}") unless is == was+increment
