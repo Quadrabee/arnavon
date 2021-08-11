@@ -1,4 +1,5 @@
-VERSION=$(shell npm run version --silent)
+# Specify which docker tag is to be used
+DOCKER_TAG := $(or ${DOCKER_TAG},${DOCKER_TAG},latest)
 
 node_modules:
 	npm install
@@ -14,18 +15,10 @@ test.integration: image
 	make -C example test.arnavon
 
 image:
-	docker build -t quadrabee/arnavon:latest .
+	docker build -t quadrabee/arnavon:${DOCKER_TAG} .
 
-push:
-	docker push quadrabee/arnavon:${VERSION}
-	docker push quadrabee/arnavon:latest
+image.push:
+	docker push quadrabee/arnavon:${DOCKER_TAG}
 
 package: node_modules
 	npm run package
-
-push.latest: image
-	docker push quadrabee/arnavon:latest
-
-push.tag: image
-	docker tag quadrabee/arnavon:latest quadrabee/arnavon:${VERSION}
-	docker push quadrabee/arnavon:${VERSION}
