@@ -1,0 +1,72 @@
+name: Releases packages to github and npm.
+
+on:
+  push:
+    tags:
+    - '*'
+    branches:
+    - master
+
+jobs:
+  tests:
+    uses: Quadrabee/arnavon/.github/workflows/integration.yml@master
+
+  github:
+    needs: tests
+    runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
+      - uses: act10ns/slack@v1
+        with:
+          status: starting
+          channel: '#opensource-cicd'
+
+      - uses: actions/checkout@v2
+
+      - run: make package
+
+      - uses: ncipollo/release-action@v1
+        id: create-release
+        with:
+          artifacts: "pkg/arnavon-*"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: act10ns/slack@v1
+        with:
+          status: ${{ job.status }}
+          steps: ${{ toJson(steps) }}
+          channel: '#opensource-cicd'
+        if: always()
+
+  npm:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: act10ns/slack@v1
+        with:
+          status: starting
+          channel: '#opensource-cicd'
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '12.x'
+          registry-url: 'https://registry.npmjs.org'
+          always-auth: true
+
+      - run: make package
+
+      - name: Push package
+        id: push-package
+        run: npm publish --access-public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - uses: act10ns/slack@v1
+        with:
+          status: ${{ job.status }}
+          steps: ${{ toJson(steps) }}
+          channel: '#opensource-cicd'
+        if: always()
