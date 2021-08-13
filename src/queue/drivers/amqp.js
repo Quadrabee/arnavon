@@ -159,8 +159,8 @@ class AmqpQueue extends Queue {
         })
         .catch((err) => {
           logger.error(err, `${this.constructor.name}: NAcking(!) item consumption`);
-          // Nack with allUpTo=false & requeue=false
-          return this.#channel.nack(msg, false, false);
+          // Nack with requeue=false
+          return this.#channel.reject(msg, false);
         });
     })
       .catch((err) => this.emit('error', err));
