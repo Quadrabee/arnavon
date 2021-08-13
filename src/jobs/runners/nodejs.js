@@ -7,7 +7,7 @@ export default class NodeJSRunner extends JobRunner {
   #config;
   #module;
   constructor(config) {
-    super();
+    super(config);
     this.#config = config;
 
     if (!config.module) {

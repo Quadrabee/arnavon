@@ -61,9 +61,11 @@ class Queue extends EventEmitter {
     }
     logger.info(`${this.constructor.name} - Starting consumption of queue ${queueName}`);
     return this._consume(queueName, (job, metadata) => {
-      const childLogger = logger.child({ jobId: job.meta.id }, true);
+      const childLogger = logger.child({ jobId: job.meta ? job.meta.id : null }, true);
       // set dequeue time
-      job.meta.dequeued = new Date();
+      if (job.meta) {
+        job.meta.dequeued = new Date();
+      }
       childLogger.info({ job: { meta: job.meta } }, `${this.constructor.name} - Consuming job`);
       return processor(job, { logger: childLogger, metadata });
     });

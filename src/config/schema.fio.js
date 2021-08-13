@@ -62,7 +62,9 @@ Job.Config = .JobConfig <json> {
 #### RUNNERS
 
 Runner.Type = String :: { "nodejs", "binary" }
+Runner.Mode = String :: { "raw", "arnavon" }
 Runner.Config = {
+  mode         :? Runner.Mode
   ...
 }
 
@@ -71,9 +73,9 @@ Runner.Config = {
 Consumer.Name = ID
 
 Consumer.Config = .ConsumerConfig <json> {
-  name        : Consumer.Name
-  queue       : String
-  runner      : Runner.Config
+  name        :  Consumer.Name
+  queue       :  String
+  runner      :  Runner.Config
 }
 
 #### MAIN

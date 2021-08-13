@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import JobRunner from '../runner';
 import JobResult from '../result';
 import { inspect } from '../../robust';
@@ -11,7 +9,7 @@ export default class BinaryRunner extends JobRunner {
   #command;
   #args;
   constructor(config) {
-    super();
+    super(config);
 
     if (!config.path) {
       throw new Error(`Binary path expected, got ${inspect(config.path)}`);

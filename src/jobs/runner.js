@@ -1,5 +1,5 @@
 import Job from './job';
-import { inspect, InvalidRunError } from '../robust';
+import { ArnavonError, inspect, InvalidRunError } from '../robust';
 import promClient from 'prom-client';
 import Arnavon from '../';
 import mainLogger from '../logger';
@@ -28,7 +28,15 @@ const ensureCounter = (type, name, help, extraLabels = []) => {
  */
 export default class JobRunner {
 
-  constructor() {
+  static MODES = {
+    ARNAVON: 'arnavon',
+    RAW: 'raw'
+  };
+  static DEFAULT_MODE = 'arnavon';
+
+  #mode;
+  constructor(config = {}) {
+    this.#mode = config.mode || JobRunner.DEFAULT_MODE;
     JobRunner.ensureMetrics();
   }
 
@@ -52,13 +60,21 @@ export default class JobRunner {
    * Runs a job
    * @param {Job} job
    */
-  run(job, context = {}) {
+  run(message, context = {}) {
     context.logger = context.logger ? context.logger : mainLogger;
-
-    if (!(job instanceof Job)) {
-      context.logger.error(`Job expected, got ${inspect(job)}`);
-      throw new Error(`Job expected, got ${inspect(job)}`);
+    switch (this.#mode) {
+    case JobRunner.MODES.ARNAVON:
+      return this.#run_arnavon(message, context);
+    case JobRunner.MODES.RAW:
+      return this.#run_raw(message, context);
+    default:
+      throw new ArnavonError(`Invalid mode ${this.#mode}`);
     }
+  }
+
+  #run_arnavon(message, context) {
+    // Convert it back to a job instance
+    const job = Job.fromJSON(message);
 
     const dispatchedTime = job.meta.dispatched;
     const dequeuedTime = job.meta.dequeued || new Date();
@@ -75,10 +91,18 @@ export default class JobRunner {
       JobRunner.metrics.touchTime.observe({ jobName: job.meta.jobName, success: !err }, touchTime);
     };
 
+    return this.#doRun(job, context, updateMetrics);
+  }
+
+  #run_raw(message, context) {
+    return this.#doRun(message, context);
+  }
+
+  #doRun(message, context, updateMetrics = () => {}) {
     let result;
     try {
       context.logger.info(`Running runner implementation ${this.constructor.name}`);
-      result = this._run(job, context);
+      result = this._run(message, context);
     } catch (err) {
       context.logger.error(err, `${this.constructor.name} Runner failed`);
       updateMetrics(err);

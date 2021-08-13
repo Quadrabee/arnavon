@@ -76,3 +76,10 @@ consumers:
       type: nodejs
       config:
         module: ./consumers/logger
+  # - name: log-invalid-jobs
+  #   queue: invalid-jobs
+  #   runner:
+  #     type: nodejs
+  #     mode: raw
+  #     config:
+  #       module: ./consumers/logger

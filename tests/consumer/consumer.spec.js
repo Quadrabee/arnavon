@@ -143,7 +143,7 @@ describe('Consumer', () => {
         .then(() => {
           expect(runner.run).to.be.calledOnce;
           const { args } = runner.run.getCall(0);
-          expect(args[0]).to.be.an.instanceof(Job);
+          expect(args[0]).to.equal(msg);
           expect(args[1]).to.eql({ dispatcher, prometheusRegistry: Arnavon.registry });
         });
       trigger(msg);

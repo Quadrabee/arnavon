@@ -2,7 +2,6 @@ import NodeJSRunner from '../../../src/jobs/runners/nodejs';
 import { expect, default as chai } from 'chai';
 import Job from '../../../src/jobs/job';
 import Arnavon from '../../../src';
-import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
@@ -50,10 +49,21 @@ describe('NodeJSRunner', () => {
   });
 
   describe('#run', () => {
-    it('should pass the job payload to the node module', () => {
-      runner.run(testJob);
-      expect(dummy.runner.calls).to.have.length(1);
-      expect(dummy.runner.calls[0]).to.equal(testJob);
+
+    describe.skip('when used in raw mode', () => {
+      it('should pass the raw message to the node module', () => {
+        runner.run(testJob);
+        expect(dummy.runner.calls).to.have.length(1);
+        expect(dummy.runner.calls[0]).to.equal(testJob);
+      });
+    });
+
+    describe('when used in arnavon mode', () => {
+      it('should pass a job payload to the node module', () => {
+        runner.run(testJob);
+        expect(dummy.runner.calls).to.have.length(1);
+        expect(dummy.runner.calls[0]).to.be.an.instanceof(Job);
+      });
     });
 
     it('should wait for the runner\'s promise to resolve before resolving', () => {
@@ -62,8 +72,6 @@ describe('NodeJSRunner', () => {
       dummy.runner.promise = p;
       const runnerPromise = runner.run(testJob);
       expect(runnerPromise).to.be.an.instanceof(Promise);
-      expect(dummy.runner.calls).to.have.length(1);
-      expect(dummy.runner.calls[0]).to.equal(testJob);
 
       expect(runnerPromise).to.not.be.fulfilled;
       resolve();

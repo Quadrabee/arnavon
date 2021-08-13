@@ -37,17 +37,6 @@ describe('JobRunner', () => {
   });
 
   describe('#run', () => {
-    it('expects a job as parameter', () => {
-      const test = (j) => () => runner.run(j);
-
-      expect(test()).to.throw(/Job expected, got/);
-      expect(test(null)).to.throw(/Job expected, got/);
-      expect(test('')).to.throw(/Job expected, got/);
-      expect(test({})).to.throw(/Job expected, got/);
-      // correct
-      expect(test(testJob)).to.not.throw();
-    });
-
     it('calls the _run child class implementation', () => {
       const spy = sinon.spy(runner, '_run');
       runner.run(testJob);

@@ -57,16 +57,17 @@ export default class Consumer {
   _startConsuming() {
     logger.info('Consumer starting consumption');
     this.#processes = this.#configs.map((config) => {
-      const runner = JobRunner.factor(config.runner.type, config.runner.config);
+      const runner = JobRunner.factor(config.runner.type, {
+        mode: config.runner.mode,
+        ...config.runner.config
+      });
       return Arnavon.queue.consume(config.queue, (_job, context) => {
-        // Convert it back to a job instance
-        const job = Job.fromJSON(_job);
         // Extend context to include dispatcher and prometheus registry
         const extendedContext = Object.assign({}, context, {
           dispatcher: this.#dispatcher,
           prometheusRegistry: Arnavon.registry
         });
-        return runner.run(job, extendedContext);
+        return runner.run(_job, extendedContext);
       });
     });
     return Promise.all(this.#processes);
