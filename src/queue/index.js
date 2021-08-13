@@ -60,12 +60,12 @@ class Queue extends EventEmitter {
       throw new Error(`Consumer callback expected, got ${inspect(processor)}`);
     }
     logger.info(`${this.constructor.name} - Starting consumption of queue ${queueName}`);
-    return this._consume(queueName, (job) => {
+    return this._consume(queueName, (job, metadata) => {
       const childLogger = logger.child({ jobId: job.meta.id }, true);
       // set dequeue time
       job.meta.dequeued = new Date();
       childLogger.info({ job: { meta: job.meta } }, `${this.constructor.name} - Consuming job`);
-      return processor(job, { logger: childLogger });
+      return processor(job, { logger: childLogger, metadata });
     });
   }
 

@@ -140,15 +140,19 @@ class AmqpQueue extends Queue {
         return;
       }
       let payload;
+      let metadata;
       try {
         payload = JSON.parse(msg.content);
+        metadata = {
+          ...msg.fields
+        };
       } catch (error) {
         // TODO expose that kind of error to monitoring
         logger.error(error, `${this.constructor.name}: Incorrect payload, invalid json`);
         // Nack with allUpTo=false & requeue=false
         return this.#channel.nack(msg, false, false);
       }
-      processor(payload)
+      processor(payload, metadata)
         .then(() => {
           logger.info(`${this.constructor.name}: Acking item consumption`);
           this.#channel.ack(msg);
