@@ -22,7 +22,7 @@ $ npm install -g @quadrabee/arnavon
 $ arnavon COMMAND
 running command...
 $ arnavon (-v|--version|version)
-@quadrabee/arnavon/0.2.6 darwin-x64 node-v12.18.3
+@quadrabee/arnavon/0.2.7 darwin-x64 node-v12.18.3
 $ arnavon --help [COMMAND]
 USAGE
   $ arnavon COMMAND
@@ -32,6 +32,9 @@ USAGE
 # Commands
 <!-- commands -->
 * [`arnavon help [COMMAND]`](#arnavon-help-command)
+* [`arnavon start`](#arnavon-start)
+* [`arnavon start:api`](#arnavon-startapi)
+* [`arnavon start:consumer [NAME]`](#arnavon-startconsumer-name)
 
 ## `arnavon help [COMMAND]`
 
@@ -49,4 +52,56 @@ OPTIONS
 ```
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v3.2.3/src/commands/help.ts)_
+
+## `arnavon start`
+
+Starts an arnavon component
+
+```
+USAGE
+  $ arnavon start
+
+OPTIONS
+  -c, --config=config  location of config file (default "config.yaml")
+```
+
+## `arnavon start:api`
+
+Starts the Arnavon REST API
+
+```
+USAGE
+  $ arnavon start:api
+
+OPTIONS
+  -c, --config=config  location of config file (default "config.yaml")
+  -p, --port=port      Port to use for API (default 3000)
+
+DESCRIPTION
+  ...
+  The REST API provides ways to push Jobs to queues, with validation
+```
+
+## `arnavon start:consumer [NAME]`
+
+Starts an Arnavon consumer
+
+```
+USAGE
+  $ arnavon start:consumer [NAME]
+
+ARGUMENTS
+  NAME  The name of the consumer to start
+
+OPTIONS
+  -a, --all            Start all consumers instead of just one (not recommended, but can be useful in dev)
+  -c, --config=config  location of config file (default "config.yaml")
+  -p, --port=port      Port to use for API (default 3000)
+
+DESCRIPTION
+  ...
+  This command can be used to start one of the consumer defined in your config file.
+
+  Please note that the --all flag can be used to start all consumers at once, but this is not recommended in production.
+```
 <!-- commandsstop -->
