@@ -2,7 +2,7 @@ consumers/node_modules:
 	cd consumers && npm install
 
 up: consumers/node_modules
-	docker-compose up -d
+	docker-compose up --force-recreate --build -d
 
 down: consumers/node_modules
 	docker-compose down
