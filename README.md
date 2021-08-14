@@ -22,7 +22,7 @@ $ npm install -g @quadrabee/arnavon
 $ arnavon COMMAND
 running command...
 $ arnavon (-v|--version|version)
-@quadrabee/arnavon/0.2.8 darwin-x64 node-v12.18.3
+@quadrabee/arnavon/0.2.9 darwin-x64 node-v12.18.3
 $ arnavon --help [COMMAND]
 USAGE
   $ arnavon COMMAND
@@ -97,6 +97,7 @@ OPTIONS
   -a, --all            Start all consumers instead of just one (not recommended, but can be useful in dev)
   -c, --config=config  location of config file (default "config.yaml")
   -p, --port=port      Port to use for API (default 3000)
+  -x, --except=except  Specify a consumer that should not be started. (Requires -a/--all. Can be used multiple times)
 
 DESCRIPTION
   ...
