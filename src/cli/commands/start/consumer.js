@@ -16,20 +16,40 @@ class StartConsumerCommand extends Command {
     const port = flags.port || 3000;
     const dispatcher = new JobDispatcher(Arnavon.config);
 
+    const ensureConsumerExists = (name) => {
+      const consumerConfig = Arnavon.config.consumers.find(c => c.name === name);
+      if (!consumerConfig) {
+        throw new Error(`No consumer with name '${name}' found`);
+      }
+      return consumerConfig;
+    };
+
+    // Ensure -x/--except lists existing consumers
+    if (flags.except) {
+      flags.except.forEach((name) => {
+        ensureConsumerExists(name);
+      });
+    }
+
     let configs = [];
     if (flags.all) {
-      configs = Arnavon.config.consumers;
+      configs = [...Arnavon.config.consumers];
+      if (flags.except) {
+        configs = configs.filter((c) => flags.except.indexOf(c.name) < 0);
+      }
     } else {
       if (!args.name) {
         throw new Error('The name of a consumer must be provided');
       }
-      const consumerConfig = Arnavon.config.consumers.find(c => c.name === args.name);
-      if (!consumerConfig) {
-        console.log(Arnavon.config.consumers);
-        throw new Error(`No consumer with name '${args.name} found`);
-      }
+      const consumerConfig = ensureConsumerExists(args.name);
       configs.push(consumerConfig);
     }
+
+    if (!configs.length) {
+      throw new Error('Empty list of consumers');
+    }
+
+    console.log('Starting consumers:', configs.map(c => c.name));
     const consumer = new Consumer(configs, dispatcher);
     consumer.start(port);
 
@@ -54,8 +74,20 @@ Please note that the --all flag can be used to start all consumers at once, but 
 
 StartConsumerCommand.flags = {
   ...Command.flags,
-  all: flags.boolean({ char: 'a', description: 'Start all consumers instead of just one (not recommended, but can be useful in dev)' }),
-  port: flags.integer({ char: 'p', description: 'Port to use for API (default 3000)' })
+  all: flags.boolean({
+    char: 'a',
+    description: 'Start all consumers instead of just one (not recommended, but can be useful in dev)'
+  }),
+  except: flags.string({
+    char: 'x',
+    description: 'Specify a consumer that should not be started. (Requires -a/--all. Can be used multiple times)',
+    multiple: true,
+    dependsOn: ['all']
+  }),
+  port: flags.integer({
+    char: 'p',
+    description: 'Port to use for API (default 3000)'
+  })
 };
 
 export default StartConsumerCommand;
