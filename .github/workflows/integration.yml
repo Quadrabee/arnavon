@@ -34,7 +34,7 @@ jobs:
         id: unit-tests
         run: make test.unit
 
-      - name: Integretion Tests
+      - name: Integration Tests
         id: integration-tests
         run: make test.integration
 
