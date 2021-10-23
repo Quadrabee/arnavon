@@ -14,7 +14,7 @@ class UnknownJobError extends ArnavonError {
 
 class DataValidationError extends ArnavonError {
   static fromFinitioError(msg, err) {
-    const details = err.rootCausesCache.map(e => {
+    const details = err.rootCauses.map(e => {
       return `${e.message} (${e.location})`;
     }).join('\n');
     return new DataValidationError(msg + ' ' + details);
