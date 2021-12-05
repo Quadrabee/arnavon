@@ -3,7 +3,7 @@ import logger from '../logger';
 import ConsumerConfig from './config';
 import { inspect } from '../robust';
 import Arnavon from '..';
-import { Job, JobRunner, JobDispatcher } from '../jobs';
+import { JobRunner, JobDispatcher } from '../jobs';
 
 export default class Consumer {
 
@@ -62,6 +62,9 @@ export default class Consumer {
         ...config.runner.config
       });
       return Arnavon.queue.consume(config.queue, (_job, context) => {
+        // Dress the payload
+        const validator = this.#dispatcher.getValidator(_job.meta);
+        _job.payload = validator.validate(_job.payload);
         // Extend context to include dispatcher and prometheus registry
         const extendedContext = Object.assign({}, context, {
           dispatcher: this.#dispatcher,
@@ -78,6 +81,7 @@ export default class Consumer {
       .then(() => this._startApi(port))
       .then(() => this._startConsuming())
       .catch((err) => {
+        // eslint-disable-next-line no-console
         console.error(err);
         process.exit(10);
       });

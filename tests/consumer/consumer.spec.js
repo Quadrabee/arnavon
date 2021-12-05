@@ -118,8 +118,19 @@ describe('Consumer', () => {
   });
 
   describe('upon queue message reception', () => {
-    let trigger, runner, jobFactor;
+    let trigger, runner, jobFactor, msg;
     beforeEach(() => {
+      msg = {
+        meta: {
+          jobName: 'send-email'
+        },
+        payload: {
+          from: 'llambeau@quadrabee.com',
+          to: 'blambeau@enspirit.be',
+          subject: 'An email subject'
+        }
+      };
+
       runner = {
         run: sinon.stub().resolves()
       };
@@ -136,9 +147,23 @@ describe('Consumer', () => {
       jobFactor.restore();
     });
 
+    it('dresses the the job', () => {
+      Arnavon.queue.connect = sinon.stub().resolves(true);
+      const validator = dispatcher.getValidator(msg.meta);
+      const getValidator = sinon.spy(dispatcher, 'getValidator');
+      const validate = sinon.spy(validator, 'validate');
+
+      const test = consumer.start()
+        .then(() => {
+          expect(getValidator).to.be.calledOnceWith(msg.meta);
+          expect(validate).to.be.calledOnce;
+        });
+      trigger(msg);
+      return test;
+    });
+
     it('calls the job runner', () => {
       Arnavon.queue.connect = sinon.stub().resolves(true);
-      const msg = { foo: 'bar' };
       const test = consumer.start()
         .then(() => {
           expect(runner.run).to.be.calledOnce;
