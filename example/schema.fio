@@ -10,7 +10,7 @@ Email.Address = String(s | /^[^\s@]+@[^\s@]+$/.test(s) )
 
 Email.Recipients = Email.Address | [Email.Address]
 
-Email.Full = {
+Email.Full = .Email <json> {
   from     :  Email.Address
   to       :  Email.Recipients
   subject  :  String

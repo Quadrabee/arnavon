@@ -49,6 +49,7 @@ class StartConsumerCommand extends Command {
       throw new Error('Empty list of consumers');
     }
 
+    // eslint-disable-next-line no-console
     console.log('Starting consumers:', configs.map(c => c.name));
     const consumer = new Consumer(configs, dispatcher);
     consumer.start(port);

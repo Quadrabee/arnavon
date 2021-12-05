@@ -95,6 +95,13 @@ export default class JobDispatcher {
       .then(() => jobs);
   }
 
+  getValidator(metadata) {
+    if (!this.#jobs[metadata.jobName]) {
+      throw new UnknownJobError(metadata.jobName);
+    }
+    return this.#jobs[metadata.jobName].validator;
+  }
+
   dispatch(jobName, data, meta = {}) {
     const jobConfig = this.#jobs[jobName];
     if (!jobConfig) {

@@ -12,6 +12,8 @@ services:
     volumes:
       - ./config.yaml:/arnavon/config.yaml
       - ./schema.fio:/arnavon/schema.fio
+      - ./schema.world.js:/arnavon/schema.world.js
+      - ./lib:/arnavon/lib
 
   workers:
     depends_on:
@@ -27,7 +29,9 @@ services:
     volumes:
       - ./config.yaml:/arnavon/config.yaml
       - ./schema.fio:/arnavon/schema.fio
+      - ./schema.world.js:/arnavon/schema.world.js
       - ./consumers:/arnavon/consumers
+      - ./lib:/arnavon/lib
 
   fakesmtp:
     image: reachfive/fake-smtp-server
