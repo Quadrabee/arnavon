@@ -26,9 +26,8 @@
     "lint:fix": "eslint --fix src tests *.js .eslintrc.js",
     "build": "babel ./src --out-dir ./dist --source-maps --copy-files",
     "build:watch": "babel ./src --watch --out-dir ./dist --source-maps --copy-files",
-    "prepare": "npm run build",
     "postpack": "rm -f oclif.manifest.json",
-    "prepack": "oclif-dev manifest && oclif-dev readme",
+    "prepack": "npm run build && oclif-dev manifest && oclif-dev readme",
     "version": "echo $npm_package_version",
     "package": "pkg . --targets linux,macos,win,alpine --out-path pkg/"
   },
