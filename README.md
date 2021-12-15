@@ -22,7 +22,7 @@ $ npm install -g @quadrabee/arnavon
 $ arnavon COMMAND
 running command...
 $ arnavon (-v|--version|version)
-@quadrabee/arnavon/0.2.9 darwin-x64 node-v12.18.3
+@quadrabee/arnavon/0.2.10 darwin-x64 node-v12.11.1
 $ arnavon --help [COMMAND]
 USAGE
   $ arnavon COMMAND
@@ -51,7 +51,7 @@ OPTIONS
   --all  see all commands in CLI
 ```
 
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v3.2.3/src/commands/help.ts)_
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v3.2.10/src/commands/help.ts)_
 
 ## `arnavon start`
 

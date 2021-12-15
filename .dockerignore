@@ -6,7 +6,6 @@ coverage
 Dockerfile.*
 rspec.xml
 dist
-package-lock.json
 pkg/
 example/
 env/
