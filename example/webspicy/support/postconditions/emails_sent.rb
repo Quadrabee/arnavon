@@ -20,7 +20,7 @@ class EmailsSent
     if tc.headers["X-Arnavon-Push-Mode"] == "BATCH"
       emails = sooner_or_later do
         em = fakesmtp.emails
-        em && !em.empty? ? em : nil
+        em && !em.empty? && em.size >= exp_count ? em : nil
       end or fail!("Emails not sent")
       unless exp_count == emails.size
         fail!("Expected #{exp_count} mails sent, got `#{emails.size}`")
