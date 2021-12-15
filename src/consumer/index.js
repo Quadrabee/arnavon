@@ -59,7 +59,7 @@ export default class Consumer {
     this.#processes = this.#configs.map((config) => {
       const runner = JobRunner.factor(config.runner.type, {
         mode: config.runner.mode,
-        ...config.runner.config
+        ...config.runner.config,
       });
       return Arnavon.queue.consume(config.queue, (_job, context) => {
         // Dress the payload
@@ -68,7 +68,7 @@ export default class Consumer {
         // Extend context to include dispatcher and prometheus registry
         const extendedContext = Object.assign({}, context, {
           dispatcher: this.#dispatcher,
-          prometheusRegistry: Arnavon.registry
+          prometheusRegistry: Arnavon.registry,
         });
         return runner.run(_job, extendedContext);
       });

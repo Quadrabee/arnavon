@@ -19,14 +19,14 @@ export default (dispatcher) => {
       .toUpperCase();
     if (!PUSH_MODES.includes(pushMode)) {
       return res.status(400).send({
-        error: `Invalid X-Arnavon-Push-Mode header: ${pushMode}`
+        error: `Invalid X-Arnavon-Push-Mode header: ${pushMode}`,
       });
     }
 
     // Providing the X-Arnavon-Batch-Input-Validation header in SINGLE push mode does not make sense
     if (pushMode === 'SINGLE' && req.headers['x-arnavon-batch-input-validation']) {
       return res.status(400).send({
-        error: 'X-Arnavon-Batch-Input-Validation cannot be used in SINGLE push mode'
+        error: 'X-Arnavon-Batch-Input-Validation cannot be used in SINGLE push mode',
       });
     }
 
@@ -38,7 +38,7 @@ export default (dispatcher) => {
       .toUpperCase();
     if (!VALIDATION_MODES.includes(validationMode)) {
       return res.status(400).send({
-        error: `Invalid X-Arnavon-Batch-Input-Validation header: ${validationMode}`
+        error: `Invalid X-Arnavon-Batch-Input-Validation header: ${validationMode}`,
       });
     }
 

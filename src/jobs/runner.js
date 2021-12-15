@@ -15,7 +15,7 @@ const ensureCounter = (type, name, help, extraLabels = []) => {
       name,
       help,
       labelNames: ['jobName'].concat(extraLabels),
-      registers: [Arnavon.registry]
+      registers: [Arnavon.registry],
     });
   }
   return metric;
@@ -30,7 +30,7 @@ export default class JobRunner {
 
   static MODES = {
     ARNAVON: 'arnavon',
-    RAW: 'raw'
+    RAW: 'raw',
   };
   static DEFAULT_MODE = 'arnavon';
 

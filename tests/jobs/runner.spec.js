@@ -12,7 +12,7 @@ describe('JobRunner', () => {
   beforeEach(() => {
     testJob = new Job({}, {
       dispatched: new Date(),
-      dequeued: new Date()
+      dequeued: new Date(),
     });
   });
 

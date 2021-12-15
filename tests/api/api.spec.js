@@ -38,8 +38,8 @@ describe('createApi', () => {
             res.body.should.eql({
               arnavon: {
                 version,
-                agent: 'test'
-              }
+                agent: 'test',
+              },
             });
             done();
           });
@@ -79,8 +79,8 @@ describe('createApi', () => {
       const payload = {
         a: 1,
         b: {
-          c: 2
-        }
+          c: 2,
+        },
       };
       api.post('/test', (req, res) => {
         expect(req.body).to.eql(payload);
@@ -99,7 +99,7 @@ describe('createApi', () => {
       api.get('/test/:id', (req, res) => {
         res.status(200).send({
           query: req.query,
-          params: req.params
+          params: req.params,
         });
       });
       chai.request(api)
@@ -108,7 +108,7 @@ describe('createApi', () => {
           res.should.have.status(200);
           res.body.should.eql({
             params: { id: 'foo' },
-            query: { bar: 'baz' }
+            query: { bar: 'baz' },
           });
           done();
         });

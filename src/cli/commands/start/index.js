@@ -9,7 +9,7 @@ class StartCommand extends Command {
 StartCommand.description = 'Starts an arnavon component';
 
 StartCommand.flags = {
-  ...Command.flags
+  ...Command.flags,
 };
 
 export default StartCommand;

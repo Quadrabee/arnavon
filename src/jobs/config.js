@@ -24,7 +24,7 @@ export default class JobConfig {
     }
 
     Object.assign(this, cfg, {
-      inputSchema: ensureSchema(cfg.inputSchema, system)
+      inputSchema: ensureSchema(cfg.inputSchema, system),
     });
   }
 

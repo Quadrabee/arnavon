@@ -4,16 +4,16 @@ export default class JobResult {
     Object.defineProperties(this, {
       success: {
         writable: false,
-        value: success
+        value: success,
       },
       error: {
         writable: false,
-        value: error
+        value: error,
       },
       result: {
         writable: false,
-        value: result
-      }
+        value: result,
+      },
     });
   }
 

@@ -18,10 +18,10 @@ describe('Server', () => {
       './rest': {
         default: function() {
           return {
-            listen
+            listen,
           };
-        }
-      }
+        },
+      },
     }).default;
 
     server = new Server(config);

@@ -24,7 +24,7 @@ describe('JobDispatcher', () => {
     from: 'foo@bar.com',
     to: 'baz@baz.com',
     subject: 'foo bar',
-    text: 'baz baz baz'
+    text: 'baz baz baz',
   };
 
   it('exports a class', () => {
@@ -83,15 +83,15 @@ describe('JobDispatcher', () => {
       const test = (data) => dispatcher.dispatchBatch('send-email', data, { strict: true });
       let invalidBatch = [
         validPayload,
-        {} // invalid job payload
+        {}, // invalid job payload
       ];
       expect(test(invalidBatch)).to.eventually.be.rejectedWith(InvalidBatch);
 
       invalidBatch = [
         validPayload,
         {
-          test: 'foo'
-        } // invalid job payload
+          test: 'foo',
+        }, // invalid job payload
       ];
       expect(test(invalidBatch)).to.eventually.be.rejectedWith(InvalidBatch)
         .notify(done);
@@ -102,7 +102,7 @@ describe('JobDispatcher', () => {
 
       const invalidBatch = [
         validPayload,
-        {} // invalid job payload
+        {}, // invalid job payload
       ];
 
       return test(invalidBatch)
@@ -165,7 +165,7 @@ describe('JobDispatcher', () => {
         id: uuid(),
         scheduled: new Date(),
         // We should not be able to set that field ourselves
-        jobName: 'foo-bar'
+        jobName: 'foo-bar',
       };
       const spy = sinon.spy(Arnavon.queue, 'push');
       return dispatcher.dispatchBatch('send-email', payload, metadata)
@@ -208,7 +208,7 @@ describe('JobDispatcher', () => {
       expect(test('send-email', {})).to.eventually.be.rejectedWith(DataValidationError);
 
       const payload = {
-        channel: '#test'
+        channel: '#test',
       };
       expect(test('send-email', payload)).to.eventually.be.rejectedWith(DataValidationError)
         .notify(done);
@@ -224,7 +224,7 @@ describe('JobDispatcher', () => {
     it('returns a Promise', () => {
       const payload = {
         channel: '#channel',
-        message: 'foo bar'
+        message: 'foo bar',
       };
       const p = dispatcher.dispatch('send-email', payload);
       expect(p).to.be.an.instanceof(Promise);
@@ -256,7 +256,7 @@ describe('JobDispatcher', () => {
         id: uuid(),
         scheduled: new Date(),
         // We should not be able to set that field ourselves
-        jobName: 'foo-bar'
+        jobName: 'foo-bar',
       };
       const spy = sinon.spy(Arnavon.queue, 'push');
       return dispatcher.dispatch('send-email', validPayload, metadata)

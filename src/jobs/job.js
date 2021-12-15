@@ -15,19 +15,19 @@ export default class Job {
     Object.defineProperties(this, {
       payload: {
         writable: false,
-        value: payload
+        value: payload,
       },
       meta: {
         writable: false,
-        value: meta
-      }
+        value: meta,
+      },
     });
   }
 
   toString() {
     return {
       meta: this.meta,
-      payload: `{${Object.keys(this.payload).join(', ')}}`
+      payload: `{${Object.keys(this.payload).join(', ')}}`,
     };
   }
 
@@ -43,7 +43,7 @@ export default class Job {
   toJSON() {
     return {
       meta: this.meta,
-      payload: this.payload
+      payload: this.payload,
     };
   }
 }

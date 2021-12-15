@@ -6,7 +6,7 @@ const logger = bunyan.createLogger({
   name: 'arnavon',
   version,
   level: 'debug',
-  serializers: bunyan.stdSerializers
+  serializers: bunyan.stdSerializers,
 });
 
 export default logger;

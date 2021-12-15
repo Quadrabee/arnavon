@@ -4,8 +4,8 @@ module.exports = {
     {
       'files': ['tests/**/*.spec.js'], // Or *.test.js
       'rules': {
-        'no-unused-expressions': 'off'
-      }
-    }
-  ]
+        'no-unused-expressions': 'off',
+      },
+    },
+  ],
 };

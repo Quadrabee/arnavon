@@ -19,7 +19,7 @@ class BaseCommand extends Command {
 }
 
 BaseCommand.flags = {
-  config: flags.string({ char: 'c', description: 'location of config file (default "config.yaml")' })
+  config: flags.string({ char: 'c', description: 'location of config file (default "config.yaml")' }),
 };
 
 export default BaseCommand;

@@ -1,7 +1,7 @@
 class ArnavonError extends Error {
   toJSON() {
     return {
-      error: this.message
+      error: this.message,
     };
   }
 }
@@ -17,7 +17,7 @@ class DataValidationError extends ArnavonError {
     const details = err.rootCauses.map(e => {
       return `${e.message} (${e.location})`;
     }).join('\n');
-    return new DataValidationError(msg + ' ' + details);
+    return new DataValidationError(`${msg} ${details}`);
   }
 }
 
@@ -36,7 +36,7 @@ class InvalidBatch extends DataValidationError {
     return {
       error: this.message,
       valids: this.valids,
-      invalids: this.invalids
+      invalids: this.invalids,
     };
   }
 }
@@ -60,5 +60,5 @@ export {
   UnknownJobError,
   InvalidBatch,
   InvalidRunError,
-  inspect
+  inspect,
 };

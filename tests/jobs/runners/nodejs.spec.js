@@ -15,7 +15,7 @@ describe('NodeJSRunner', () => {
   beforeEach(() => {
     testJob = new Job({}, {
       dispatched: new Date(),
-      dequeued: new Date()
+      dequeued: new Date(),
     });
     dummy = require('./dummy.runner');
     Arnavon.cwd = () => __dirname;

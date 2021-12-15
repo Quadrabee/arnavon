@@ -11,5 +11,5 @@ export {
   JobPayload,
   JobResult,
   JobRunner,
-  JobValidator
+  JobValidator,
 };

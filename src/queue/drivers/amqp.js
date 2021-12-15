@@ -144,7 +144,7 @@ class AmqpQueue extends Queue {
       try {
         payload = JSON.parse(msg.content);
         metadata = {
-          ...msg.fields
+          ...msg.fields,
         };
       } catch (error) {
         // TODO expose that kind of error to monitoring

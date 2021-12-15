@@ -8,7 +8,7 @@ import ConsumerConfig from '../consumer/config';
 
 const baseWorld = {
   JobConfig,
-  ConsumerConfig
+  ConsumerConfig,
 };
 
 let system;

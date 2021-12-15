@@ -22,10 +22,10 @@ describe('Consumer', () => {
       '../api': {
         default: function() {
           return {
-            listen
+            listen,
           };
-        }
-      }
+        },
+      },
     }).default;
     consumer = new Consumer(config, dispatcher);
   });
@@ -122,17 +122,17 @@ describe('Consumer', () => {
     beforeEach(() => {
       msg = {
         meta: {
-          jobName: 'send-email'
+          jobName: 'send-email',
         },
         payload: {
           from: 'llambeau@quadrabee.com',
           to: 'blambeau@enspirit.be',
-          subject: 'An email subject'
-        }
+          subject: 'An email subject',
+        },
       };
 
       runner = {
-        run: sinon.stub().resolves()
+        run: sinon.stub().resolves(),
       };
       const promise = new Promise((resolve, reject) => {
         trigger = resolve;

@@ -43,7 +43,7 @@ describe('Job', () => {
       const created = new Date();
       const j = new Job({}, {
         id,
-        created
+        created,
       });
       expect(j.meta).to.be.an.instanceOf(Object);
       expect(j.meta.id).to.equal(id);

@@ -9,11 +9,11 @@ class StartApiCommand extends Command {
     const server = new Server(Arnavon.config);
     server.start(port);
     // Quit properly on SIGINT (typically ctrl-c)
-    process.on('SIGINT', function() {
+    process.on('SIGINT', () => {
       server.stop();
     });
     // Quit properly on SIGTERM (typically kubernetes termination)
-    process.on('SIGTERM', function() {
+    process.on('SIGTERM', () => {
       server.stop();
     });
   }
@@ -26,7 +26,7 @@ The REST API provides ways to push Jobs to queues, with validation
 
 StartApiCommand.flags = {
   ...Command.flags,
-  port: flags.integer({ char: 'p', description: 'Port to use for API (default 3000)' })
+  port: flags.integer({ char: 'p', description: 'Port to use for API (default 3000)' }),
 };
 
 export default StartApiCommand;

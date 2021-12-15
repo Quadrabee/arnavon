@@ -46,5 +46,5 @@ export {
   Config,
   Queue,
   Server,
-  Consumer
+  Consumer,
 };

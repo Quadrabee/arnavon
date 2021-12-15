@@ -3,5 +3,5 @@ import memory from './memory';
 
 export default {
   amqp,
-  memory
+  memory,
 };

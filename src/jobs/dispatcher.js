@@ -30,20 +30,20 @@ export default class JobDispatcher {
         name: 'dispatcher_valid_jobs',
         help: 'number of valid jobs passing through the dispacther',
         labelNames: ['jobName'],
-        registers: [Arnavon.registry]
+        registers: [Arnavon.registry],
       }),
       invalid: new promClient.Counter({
         name: 'dispatcher_invalid_jobs',
         help: 'number of invalid jobs passing through the dispacther',
         labelNames: ['jobName'],
-        registers: [Arnavon.registry]
+        registers: [Arnavon.registry],
       }),
       unknown: new promClient.Counter({
         name: 'dispatcher_unknown_jobs',
         help: 'number of unknown jobs rejected by the  dispacther',
         labelNames: ['jobName'],
-        registers: [Arnavon.registry]
-      })
+        registers: [Arnavon.registry],
+      }),
     };
     this.#jobs = config.jobs.reduce((jobs, jobConfig) => {
       jobConfig.validator = new JobValidator(jobConfig.inputSchema);
@@ -86,7 +86,7 @@ export default class JobDispatcher {
     const jobs = valids.map((j) => new Job(j, Object.assign({}, batchMetadata, {
       batchId,
       jobName: jobName,
-      dispatched: new Date()
+      dispatched: new Date(),
     })));
 
     const promises = jobs.map(job => Arnavon.queue.push(jobName, job));
@@ -123,7 +123,7 @@ export default class JobDispatcher {
     this.#counters.valid.inc({ jobName });
     const job = new Job(jobPayload, Object.assign({}, meta, {
       jobName: jobName,
-      dispatched: new Date()
+      dispatched: new Date(),
     }));
 
     return Arnavon.queue.push(jobName, job)

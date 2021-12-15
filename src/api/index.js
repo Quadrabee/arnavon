@@ -25,7 +25,7 @@ export default ({ agent = 'arnavon' } = {}) => {
   const metricsMiddleware = promBundle({
     includeMethod: true,
     includePath: true,
-    promRegistry: Arnavon.registry
+    promRegistry: Arnavon.registry,
   });
   app.use(metricsMiddleware);
 

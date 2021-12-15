@@ -8,7 +8,7 @@ class StartConsumerCommand extends Command {
   static args = [{
     name: 'name',
     required: false,
-    description: 'The name of the consumer to start'
+    description: 'The name of the consumer to start',
   }]
 
   async run() {
@@ -55,11 +55,11 @@ class StartConsumerCommand extends Command {
     consumer.start(port);
 
     // Quit properly on SIGINT (typically ctrl-c)
-    process.on('SIGINT', function() {
+    process.on('SIGINT', () => {
       consumer.stop();
     });
     // Quit properly on SIGTERM (typically kubernetes termination)
-    process.on('SIGTERM', function() {
+    process.on('SIGTERM', () => {
       consumer.stop();
     });
 
@@ -77,18 +77,18 @@ StartConsumerCommand.flags = {
   ...Command.flags,
   all: flags.boolean({
     char: 'a',
-    description: 'Start all consumers instead of just one (not recommended, but can be useful in dev)'
+    description: 'Start all consumers instead of just one (not recommended, but can be useful in dev)',
   }),
   except: flags.string({
     char: 'x',
     description: 'Specify a consumer that should not be started. (Requires -a/--all. Can be used multiple times)',
     multiple: true,
-    dependsOn: ['all']
+    dependsOn: ['all'],
   }),
   port: flags.integer({
     char: 'p',
-    description: 'Port to use for API (default 3000)'
-  })
+    description: 'Port to use for API (default 3000)',
+  }),
 };
 
 export default StartConsumerCommand;

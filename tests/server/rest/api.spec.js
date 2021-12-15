@@ -27,8 +27,8 @@ describe('server/createApi', () => {
             next();
           });
           return api;
-        }
-      }
+        },
+      },
     }).default;
   });
 
@@ -44,14 +44,14 @@ describe('server/createApi', () => {
     beforeEach(() => {
       dispatcher = {
         dispatch: sinon.stub().returns(Promise.resolve()),
-        dispatchBatch: sinon.stub().returns(Promise.resolve())
+        dispatchBatch: sinon.stub().returns(Promise.resolve()),
       };
       api = createApi(dispatcher);
     });
 
     it('delegates to the dispatcher provided at construction (default push mode is single)', (done) => {
       const jobPayload = {
-        foo: 'bar'
+        foo: 'bar',
       };
 
       chai.request(api)
@@ -77,7 +77,7 @@ describe('server/createApi', () => {
 
     it('delegates to the dispatcher provided at construction (batch mode)', (done) => {
       const jobPayload = {
-        foo: 'bar'
+        foo: 'bar',
       };
 
       chai.request(api)
@@ -110,7 +110,7 @@ describe('server/createApi', () => {
 
     it('delegates to the dispatcher in strict mode if X-Arnavon-Batch-Input-Validation == all-or-nothing', (done) => {
       const jobPayload = {
-        foo: 'bar'
+        foo: 'bar',
       };
 
       chai.request(api)
@@ -132,7 +132,7 @@ describe('server/createApi', () => {
 
     it('delegates to the dispatcher provided at construction (single mode)', (done) => {
       const jobPayload = {
-        foo: 'bar'
+        foo: 'bar',
       };
 
       chai.request(api)
@@ -152,7 +152,7 @@ describe('server/createApi', () => {
 
     it('uses the request unique identifier as a jobId', (done) => {
       const jobPayload = {
-        foo: 'bar'
+        foo: 'bar',
       };
 
       chai.request(api)
@@ -167,7 +167,7 @@ describe('server/createApi', () => {
 
     it('uses the request unique identifier as a batchId (batch mode)', (done) => {
       const jobPayload = {
-        foo: 'bar'
+        foo: 'bar',
       };
 
       chai.request(api)
@@ -184,7 +184,7 @@ describe('server/createApi', () => {
 
     it('returns 201 with dispatcher answer on successful dispatch', (done) => {
       const jobPayload = {
-        foo: 'bar'
+        foo: 'bar',
       };
       dispatcher.dispatch.returns(Promise.resolve({ ok: true }));
 
@@ -200,7 +200,7 @@ describe('server/createApi', () => {
 
     it('returns 201 with dispatcher answer on successful dispatch (batch mode)', (done) => {
       const jobPayload = {
-        foo: 'bar'
+        foo: 'bar',
       };
       dispatcher.dispatchBatch.returns(Promise.resolve({ ok: true }));
 
@@ -218,7 +218,7 @@ describe('server/createApi', () => {
 
     it('returns 404 on unknown job errors', (done) => {
       const jobPayload = {
-        foo: 'bar'
+        foo: 'bar',
       };
       dispatcher.dispatch.returns(Promise.reject(new UnknownJobError('unknown-job')));
 
@@ -234,7 +234,7 @@ describe('server/createApi', () => {
 
     it('returns 404 on unknown job errors (batch mode)', (done) => {
       const jobPayload = {
-        foo: 'bar'
+        foo: 'bar',
       };
       dispatcher.dispatchBatch.returns(Promise.reject(new UnknownJobError('unknown-job')));
 
@@ -252,7 +252,7 @@ describe('server/createApi', () => {
 
     it('returns 400 on invalid job payload', (done) => {
       const jobPayload = {
-        foo: 'bar'
+        foo: 'bar',
       };
       dispatcher.dispatch.returns(Promise.reject(new DataValidationError('invalid-payload')));
 
@@ -268,7 +268,7 @@ describe('server/createApi', () => {
 
     it('returns 400 on invalid job payload (batch mode)', (done) => {
       const jobPayload = {
-        foo: 'bar'
+        foo: 'bar',
       };
       dispatcher.dispatchBatch.returns(Promise.reject(new DataValidationError('invalid-payload')));
 
@@ -286,7 +286,7 @@ describe('server/createApi', () => {
 
     it('returns 500 with error on dispatch errors (rejected promises)', (done) => {
       const jobPayload = {
-        foo: 'bar'
+        foo: 'bar',
       };
       dispatcher.dispatch.returns(Promise.reject(new Error('Oops')));
 
@@ -302,7 +302,7 @@ describe('server/createApi', () => {
 
     it('returns 500 with error on dispatch errors (thrown error)', (done) => {
       const jobPayload = {
-        foo: 'bar'
+        foo: 'bar',
       };
       dispatcher.dispatch.throws(new Error('Oops'));
 
@@ -318,7 +318,7 @@ describe('server/createApi', () => {
 
     it('returns 500 with error on dispatch errors (rejected promises, batch mode)', (done) => {
       const jobPayload = {
-        foo: 'bar'
+        foo: 'bar',
       };
       dispatcher.dispatchBatch.returns(Promise.reject(new Error('Oops')));
 
@@ -336,7 +336,7 @@ describe('server/createApi', () => {
 
     it('returns 500 with error on dispatch errors (thrown error, batch mode)', (done) => {
       const jobPayload = {
-        foo: 'bar'
+        foo: 'bar',
       };
       dispatcher.dispatchBatch.throws(new Error('Oops'));
 

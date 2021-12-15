@@ -33,7 +33,7 @@ describe('AmqpQueue', () => {
       config.queue.config.topology.exchanges.push({
         name: 'second',
         default: true,
-        type: 'topic'
+        type: 'topic',
       });
       expect(() => new AmqpQueue(config.queue.config)).to.throw(/only one exchange can be set as default/);
     });
