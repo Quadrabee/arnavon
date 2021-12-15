@@ -1,7 +1,7 @@
 {
   "name": "@quadrabee/arnavon",
   "description": "Framework on top of RabbitMQ for easing up the development of producer/consumer/job queues.",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "author": "Louis Lambeau <llambeau@quadrabee.com>",
   "main": "dist/index.js",
   "bin": {
@@ -71,7 +71,7 @@
     "prom-client": "^13.1.0",
     "regenerator-runtime": "^0.13.7",
     "uuid": "^8.3.2",
-    "yaml": "^1.10.0"
+    "yaml": "^1.10.2"
   },
   "engines": {
     "node": ">=8.0.0"
