@@ -2,7 +2,7 @@ require('@babel/register');
 import Arnavon from '../../';
 import JobRunner from '../runner';
 import { inspect } from '../../robust';
-
+import logger from '../../logger';
 export default class NodeJSRunner extends JobRunner {
   #config;
   #module;
@@ -18,6 +18,7 @@ export default class NodeJSRunner extends JobRunner {
       const module = Arnavon.require(config.module);
       this.#module = module.default ? module.default : module;
     } catch (err) {
+      logger.error(err);
       throw new Error(`Module '${config.module}' can't be loaded`);
     }
   }
