@@ -60,7 +60,7 @@
     "@babel/register": "^7.13.8",
     "@oclif/command": "^1.8.0",
     "@oclif/config": "^1.17.0",
-    "@oclif/plugin-help": "^3.2.2",
+    "@oclif/plugin-help": "^3.2.14",
     "amqplib": "^0.8.0",
     "bunyan": "^1.8.15",
     "command-exists": "^1.2.9",
