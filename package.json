@@ -57,7 +57,7 @@
     "sinon-chai": "^3.5.0"
   },
   "dependencies": {
-    "@babel/register": "^7.13.8",
+    "@babel/register": "^7.16.5",
     "@oclif/command": "^1.8.0",
     "@oclif/config": "^1.17.0",
     "@oclif/plugin-help": "^3.2.2",
