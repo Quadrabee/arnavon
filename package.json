@@ -31,7 +31,7 @@
     "version": "echo $npm_package_version",
     "package": "pkg . --targets linux,macos,win,alpine --out-path pkg/"
   },
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@babel/cli": "^7.13.0",
     "@babel/core": "^7.13.8",
