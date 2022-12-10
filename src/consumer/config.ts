@@ -1,11 +1,15 @@
+import { JobRunnerConfig } from '../jobs/runner';
 import { inspect } from '../robust';
 
 export default class ConsumerConfig {
 
+  public readonly name: string;
+  public readonly queue: string;
+  public readonly runner: JobRunnerConfig
   /**
    * Constructs a new ConsumerConfig object
    */
-  constructor(cfg) {
+  constructor(cfg: ConsumerConfig) {
     if (!cfg) {
       throw new Error(`Config object expected, got ${inspect(cfg)}`);
     }
@@ -14,13 +18,15 @@ export default class ConsumerConfig {
       throw new Error(`Valid job name expected, got ${cfg.name}`);
     }
 
-    Object.assign(this, cfg);
+    this.name = cfg.name;
+    this.runner = cfg.runner;
+    this.queue = cfg.queue;
   }
 
   /**
    * Used by finitio to dress
    */
-  static json(data) {
+  static json(data: ConsumerConfig) {
     return new ConsumerConfig(data);
   }
 }

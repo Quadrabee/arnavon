@@ -1,6 +1,7 @@
+import './index';
 import { version } from '../../package.json';
 import { v4 as uuidv4 } from 'uuid';
-import express from 'express';
+import express, { Express } from 'express';
 import bodyParser from 'body-parser';
 import promBundle from 'express-prom-bundle';
 import logger from '../logger';
@@ -10,7 +11,7 @@ import Arnavon from '../';
  * Creates an express app, reusing a previous prometheus registry if provided
  * if not, a new one is created
  */
-export default ({ agent = 'arnavon' } = {}) => {
+export default ({ agent = 'arnavon' } = {}): Express => {
   const app = express();
 
   app.use((req, res, next) => {

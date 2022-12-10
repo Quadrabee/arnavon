@@ -1,14 +1,15 @@
-import Job from './job';
+import Job, { JobMeta } from './job';
 import { ArnavonError, inspect, InvalidRunError } from '../robust';
-import promClient from 'prom-client';
+import promClient, { Counter, Histogram, Metric } from 'prom-client';
 import Arnavon from '../';
 import mainLogger from '../logger';
+import Logger from 'bunyan';
 
 /**
  * The prometheus counters are shared amongst JobRunner classes
  * but use labels to distinguish the implementating-class/job
  */
-const ensureCounter = (type, name, help, extraLabels = []) => {
+const ensureCounter = <T extends Metric<any>>(type: new(params: any) => T, name: string, help: string, extraLabels: string[] = []): T => {
   let metric = Arnavon.registry.getSingleMetric(name);
   if (!metric) {
     metric = new type({
@@ -18,8 +19,31 @@ const ensureCounter = (type, name, help, extraLabels = []) => {
       registers: [Arnavon.registry],
     });
   }
-  return metric;
+  return metric as T;
 };
+
+export enum Mode {
+  ARNAVON = 'arnavon',
+  RAW = 'raw',
+}
+
+export type JobRunnerConfig = {
+  type: string
+  mode?: Mode,
+  config: any
+}
+
+export type JobRunnerMetricCollection = {
+  success?: Counter<any>,
+  failures?: Counter<any>,
+  leadTime?: Histogram<any>,
+  touchTime?: Histogram<any>,
+}
+
+export type JobRunnerContext = {
+  logger: Logger,
+  metadata: JobMeta
+}
 
 /**
  * Abstract class JobRunner
@@ -28,91 +52,100 @@ const ensureCounter = (type, name, help, extraLabels = []) => {
  */
 export default class JobRunner {
 
-  static MODES = {
-    ARNAVON: 'arnavon',
-    RAW: 'raw',
-  };
-  static DEFAULT_MODE = 'arnavon';
-
-  #mode;
-  constructor(config = {}) {
-    this.#mode = config.mode || JobRunner.DEFAULT_MODE;
+  protected static metrics: JobRunnerMetricCollection;
+  public readonly mode: Mode;
+  constructor(config: Partial<JobRunnerConfig> = {}) {
+    this.mode = config.mode || Mode.ARNAVON;
     JobRunner.ensureMetrics();
   }
 
   static ensureMetrics() {
     JobRunner.metrics = JobRunner.metrics || {};
-    JobRunner.metrics.success = ensureCounter(promClient.Counter, 'runner_successful_jobs', 'number of successful job runs');
-    JobRunner.metrics.failures = ensureCounter(promClient.Counter, 'runner_failed_jobs', 'number of failed job runs');
+    JobRunner.metrics.success = ensureCounter(
+      promClient.Counter,
+      'runner_successful_jobs',
+      'number of successful job runs',
+    );
+    JobRunner.metrics.failures = ensureCounter(
+      promClient.Counter,
+      'runner_failed_jobs',
+      'number of failed job runs',
+    );
     JobRunner.metrics.leadTime = ensureCounter(
       promClient.Histogram,
       'runner_job_lead_time',
       'time spent between queueing and end of job execution',
-      ['success']);
+      ['success'],
+    );
     JobRunner.metrics.touchTime = ensureCounter(
       promClient.Histogram,
       'runner_job_touch_time',
       'time spent on job execution',
-      ['success']);
+      ['success'],
+    );
   }
 
   /**
    * Runs a job
    * @param {Job} job
    */
-  run(message, context = {}) {
+  run(message: any, context: Partial<JobRunnerContext> = {}) {
     context.logger = context.logger ? context.logger : mainLogger;
-    switch (this.#mode) {
-    case JobRunner.MODES.ARNAVON:
-      return this.#run_arnavon(message, context);
-    case JobRunner.MODES.RAW:
-      return this.#run_raw(message, context);
+    switch (this.mode) {
+    case Mode.ARNAVON:
+      return this.#run_arnavon(message, context as JobRunnerContext);
+    case Mode.RAW:
+      return this.#run_raw(message, context as JobRunnerContext);
     default:
-      throw new ArnavonError(`Invalid mode ${this.#mode}`);
+      throw new ArnavonError(`Invalid mode ${this.mode}`);
     }
   }
 
-  #run_arnavon(message, context) {
+  #run_arnavon(message: any, context: JobRunnerContext) {
     // Convert it back to a job instance
     const job = Job.fromJSON(message);
 
-    const dispatchedTime = job.meta.dispatched;
+    const dispatchedTime = job.meta.dispatched as Date;
     const dequeuedTime = job.meta.dequeued || new Date();
 
-    const updateMetrics = (err = null) => {
-      const leadTime = ((new Date()) - dispatchedTime) / 1000;
-      const touchTime = ((new Date()) - dequeuedTime) / 1000;
+    const updateMetrics = (err?: Error) => {
+      const leadTime = ((new Date()).getTime() - dispatchedTime.getTime()) / 1000;
+      const touchTime = ((new Date()).getTime() - dequeuedTime.getTime()) / 1000;
       if (err) {
         JobRunner.metrics.failures.inc({ jobName: job.meta.jobName });
       } else {
         JobRunner.metrics.success.inc({ jobName: job.meta.jobName });
       }
-      JobRunner.metrics.leadTime.observe({ jobName: job.meta.jobName, success: !err }, leadTime);
-      JobRunner.metrics.touchTime.observe({ jobName: job.meta.jobName, success: !err }, touchTime);
+      JobRunner.metrics.leadTime.observe({ jobName: job.meta.jobName, success: (!err).toString() }, leadTime);
+      JobRunner.metrics.touchTime.observe({ jobName: job.meta.jobName, success: (!err).toString() }, touchTime);
     };
 
     return this.#doRun(job, context, updateMetrics);
   }
 
-  #run_raw(message, context) {
+  #run_raw(message: any, context: JobRunnerContext) {
     return this.#doRun(message, context);
   }
 
-  #doRun(message, context, updateMetrics = () => {}) {
-    let result;
+  #doRun(message: any, context: JobRunnerContext, updateMetrics?: (err?: Error) => any) {
+    let result: any;
     try {
       context.logger.info(`Running runner implementation ${this.constructor.name}`);
       result = this._run(message, context);
-    } catch (err) {
+    } catch (err: any) {
       context.logger.error(err, `${this.constructor.name} Runner failed`);
-      updateMetrics(err);
+      if (updateMetrics) {
+        updateMetrics(err);
+      }
       return Promise.reject(err);
     }
 
     if (!(result instanceof Promise)) {
       const error = new InvalidRunError(`The ${this.constructor.name} runner didn't return a Promise. Got ${inspect(result)}`);
       context.logger.error(error, `${this.constructor.name} Runner failed`);
-      updateMetrics(error);
+      if (updateMetrics) {
+        updateMetrics(error);
+      }
       return Promise.reject(error);
     }
 
@@ -133,12 +166,13 @@ export default class JobRunner {
    * Implementation specific, should be implemented by subclasses
    * @param {Job} job
    */
-  _run(/* job */) {
+  _run(message: any, context: JobRunnerContext) {
     throw new Error('#_run should be implemented by subclasses');
   }
 
-  static factor(type, config) {
+  static factor(type: string, config: JobRunnerConfig) {
     // circular dependency... no choice :(
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const runners = require('./runners').default;
     return runners.factor(type, config);
   }

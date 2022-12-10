@@ -1,16 +1,17 @@
-import Arnavon from '../../src';
+import Arnavon, { Server } from '../../src';
 import Config from '../../src/config';
 import { expect, default as chai } from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import proxyquire from 'proxyquire';
+import ArnavonConfig from '../../src/config';
 
 chai.should();
 chai.use(sinonChai);
 
 describe('Server', () => {
 
-  let config, server, Server, listen;
+  let config, server: Server, Server: new(config: ArnavonConfig) => Server, listen: sinon.SinonStub;
   beforeEach(() => {
     config = Config.fromFile('example/config.yaml');
     listen = sinon.stub().yields();
@@ -24,7 +25,7 @@ describe('Server', () => {
       },
     }).default;
 
-    server = new Server(config);
+    server = new Server(config as ArnavonConfig);
   });
 
   it('is a class', () => {
@@ -48,7 +49,7 @@ describe('Server', () => {
     });
 
     it('connects to the queue', () => {
-      const spy = sinon.stub(Arnavon.queue, 'connect').resolves(true);
+      const spy = sinon.stub(Arnavon.queue, 'connect').resolves(Arnavon.queue);
       server.start();
       expect(spy).to.be.calledOnce;
     });

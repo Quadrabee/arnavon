@@ -1,6 +1,18 @@
 import EventEmitter from 'events';
+import { JobMeta } from '../jobs/job';
+import { JobRunnerContext } from '../jobs/runner';
 import logger from '../logger';
 import { inspect } from '../robust';
+import { QueueDriverConfig } from './drivers';
+
+export interface QueueConfig {
+  driver: string,
+  config: QueueDriverConfig
+}
+
+export type QueueProcessor = (job: any, context: JobRunnerContext) => Promise<any>
+export type QueueInternalProcessor = (job: any, metadata: JobMeta) => Promise<any>
+
 /**
  * Queue subclasses are supposed to properly emit the following events:
  *   - close (when the connection is closed)
@@ -8,24 +20,18 @@ import { inspect } from '../robust';
  */
 class Queue extends EventEmitter {
 
-  #config;
-
-  constructor(config) {
-    super();
-    this.#config = config;
-  }
-
-  static create(params) {
+  static create(config: QueueConfig): Queue {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const drivers = require('./drivers').default;
-    const { driver, config } = params;
+    const { driver, config: driverConfig } = config;
     if (!drivers[driver]) {
       throw new Error(`Unknown queue driver: ${driver}`);
     }
-    return new drivers[driver](config);
+    return new drivers[driver](driverConfig);
   }
 
   // subclasses should implement _connect()
-  connect() {
+  connect(): Promise<Queue> {
     logger.info(`${this.constructor.name} - Connecting to queue`);
     return this._connect().then((res) => {
       logger.info(`${this.constructor.name} - Connected`);
@@ -34,7 +40,7 @@ class Queue extends EventEmitter {
   }
 
   // subclasses should implement _connect()
-  disconnect() {
+  disconnect(): Promise<Queue> {
     logger.info(`${this.constructor.name} - Disconnecting from queue`);
     return this._disconnect().then((res) => {
       logger.info(`${this.constructor.name} - Disconnected`);
@@ -43,7 +49,7 @@ class Queue extends EventEmitter {
   }
 
   // subclasses should implement _push(key, data)
-  push(key, data, opts = {}) {
+  push(key: string, data: any, opts = {}): Promise<any> {
     logger.info(`${this.constructor.name} - Pushing to queue`, key, data);
     return this._push(key, data, opts).then((job) => {
       logger.info(`${this.constructor.name} - Pushed`);
@@ -52,7 +58,7 @@ class Queue extends EventEmitter {
   }
 
   // subclasses should implement _consumer(processor)
-  consume(queueName, processor) {
+  consume(queueName: string, processor: QueueProcessor) {
     if (typeof queueName !== 'string') {
       throw new Error(`String selector expected, got ${inspect(queueName)}`);
     }
@@ -69,6 +75,23 @@ class Queue extends EventEmitter {
       childLogger.info({ job: { meta: job.meta } }, `${this.constructor.name} - Consuming job`);
       return processor(job, { logger: childLogger, metadata });
     });
+  }
+
+  // To be implemented by subclasses
+  _consume(queueName: string, processor: QueueInternalProcessor) {
+    throw new Error('NotImplemented');
+  }
+
+  _connect(): Promise<Queue> {
+    throw new Error('NotImplemented');
+  }
+
+  _disconnect(): Promise<Queue> {
+    throw new Error('NotImplemented');
+  }
+
+  _push(key: string, data: any, opts = {}): Promise<any> {
+    throw new Error('NotImplemented');
   }
 
 }

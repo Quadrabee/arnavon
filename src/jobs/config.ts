@@ -3,14 +3,16 @@ import { inspect } from '../robust';
 
 export default class JobConfig {
 
-  #system;
+  public readonly inputSchema: Finitio.System;
+  public readonly name: string
+  public readonly invalidJobExchange?: string
 
   /**
    * Constructs a new JobConfig object
    * @param {Object} cfg: a configuration object with valid `id` and `schema`
    * @param {Finitio.System} system: an existing finitio system the inputSchema should inherit from
    */
-  constructor(cfg, system) {
+  constructor(cfg: JobConfig, system: Finitio.System) {
     if (!cfg) {
       throw new Error(`Config object expected, got ${inspect(cfg)}`);
     }
@@ -23,6 +25,7 @@ export default class JobConfig {
       throw new Error(`Finitio inputSchema expected, got ${inspect(cfg.inputSchema)}`);
     }
 
+    this.name = cfg.name;
     Object.assign(this, cfg, {
       inputSchema: ensureSchema(cfg.inputSchema, system),
     });
@@ -31,13 +34,13 @@ export default class JobConfig {
   /**
    * Used by finitio to dress
    */
-  static json(data, baseSystem) {
+  static json(data: any, baseSystem: Finitio.System) {
     return new JobConfig(data, baseSystem);
   }
 }
 
 // Private utils
-function ensureSchema(schema, parentSystem) {
+function ensureSchema(schema: string, parentSystem: Finitio.System): Finitio.System {
   if (!parentSystem) {
     parentSystem = Finitio.system('@import finitio/data');
   }
@@ -45,7 +48,7 @@ function ensureSchema(schema, parentSystem) {
   if (typeof schema === 'string') {
     try {
       system = parentSystem.subsystem(schema);
-    } catch (err) {
+    } catch (err: any) {
       throw new Error(`Invalid finitio system: ${err.message}`);
     }
   } else {

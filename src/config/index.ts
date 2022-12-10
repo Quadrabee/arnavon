@@ -3,9 +3,21 @@ import fs from 'fs';
 import path from 'path';
 import types from './finitio';
 import Finitio from 'finitio';
+import JobConfig from '../jobs/config';
+import { QueueConfig } from '../queue';
+import ConsumerConfig from '../consumer/config';
+
 export default class ArnavonConfig {
-  constructor(data, cwd) {
-    Object.assign(this, data);
+
+  public readonly jobs: Array<JobConfig>;
+  public readonly cwd: string;
+  public readonly queue: QueueConfig;
+  public readonly consumers: Array<ConsumerConfig>;
+
+  constructor(data: ArnavonConfig, cwd: string) {
+    this.jobs = data.jobs;
+    this.queue = data.queue;
+    this.consumers = data.consumers;
     this.cwd = cwd;
   }
 
@@ -13,7 +25,7 @@ export default class ArnavonConfig {
     const fpath = path.join(process.cwd(), fname);
     try {
       fs.accessSync(fpath, fs.constants.R_OK);
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'ENOENT') {
         throw new Error(`Config file not found: '${fname}'.`);
       }

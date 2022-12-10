@@ -5,6 +5,7 @@ import createApiHelper from '../../../src/api';
 import { UnknownJobError, DataValidationError } from '../../../src/robust';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
+import { JobDispatcher } from '../../../src/jobs';
 
 chai.should();
 chai.use(sinonChai);
@@ -12,7 +13,7 @@ chai.use(chaiHttp);
 
 describe('server/createApi', () => {
 
-  let createApi, helperCalled, staticUuid;
+  let createApi: (params?: any) => Express.Application, helperCalled: boolean, staticUuid: string;
   beforeEach(() => {
     staticUuid = 'ea47ac69-c0ca-4960-b905-6f14f2029744';
     helperCalled = false;
@@ -20,7 +21,8 @@ describe('server/createApi', () => {
       '../../api': {
         default: function() {
           helperCalled = true;
-          const api = createApiHelper(arguments);
+          // eslint-disable-next-line prefer-rest-params
+          const api = createApiHelper(arguments as any as { agent: string});
           // make sure all request ids use our static uuid
           api.use((req, res, next) => {
             req.id = staticUuid;
@@ -40,7 +42,7 @@ describe('server/createApi', () => {
 
   describe('its POST /jobs/:id endpoint', () => {
 
-    let api, dispatcher;
+    let api: Express.Application, dispatcher: Partial<JobDispatcher>;
     beforeEach(() => {
       dispatcher = {
         dispatch: sinon.stub().returns(Promise.resolve()),

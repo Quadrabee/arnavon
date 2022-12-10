@@ -64,6 +64,7 @@ Job.Config = .JobConfig <json> {
 Runner.Type = String :: { "nodejs", "binary" }
 Runner.Mode = String :: { "raw", "arnavon" }
 Runner.Config = {
+  type         :  Runner.Type
   mode         :? Runner.Mode
   ...
 }

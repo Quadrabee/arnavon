@@ -1,10 +1,17 @@
 import Command from '../../base';
-import { flags } from '@oclif/command';
+import { Flags } from '@oclif/core';
 import { Server, default as Arnavon } from '../../..';
 
-class StartApiCommand extends Command {
+export default class StartApiCommand extends Command<typeof StartApiCommand> {
+
+  static summary = 'The REST API provides ways to push Jobs to queues, with validation'
+
+  static flags = {
+    port: Flags.integer({ char: 'p', description: 'Port to use for API (default 3000)' }),
+  }
+
   async run() {
-    const { flags } = this.parse(StartApiCommand);
+    const { flags } = await this.parse(StartApiCommand);
     const port = flags.port || 3000;
     const server = new Server(Arnavon.config);
     server.start(port);
@@ -18,15 +25,3 @@ class StartApiCommand extends Command {
     });
   }
 }
-
-StartApiCommand.description = `Starts the Arnavon REST API
-...
-The REST API provides ways to push Jobs to queues, with validation
-`;
-
-StartApiCommand.flags = {
-  ...Command.flags,
-  port: flags.integer({ char: 'p', description: 'Port to use for API (default 3000)' }),
-};
-
-export default StartApiCommand;

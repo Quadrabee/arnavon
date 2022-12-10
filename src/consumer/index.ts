@@ -3,18 +3,19 @@ import logger from '../logger';
 import ConsumerConfig from './config';
 import { inspect } from '../robust';
 import Arnavon from '..';
+import { Server } from 'http';
 import { JobRunner, JobDispatcher } from '../jobs';
 
 export default class Consumer {
 
   #api;
-  #server;
+  #server?: Server;
   #configs;
   #dispatcher;
   #processes;
 
-  constructor(configs, dispatcher) {
-    configs = [].concat(configs);
+  constructor(configs: Array<ConsumerConfig>, dispatcher: JobDispatcher) {
+    configs = ([] as Array<ConsumerConfig>).concat(configs).flat();
     configs.forEach((cfg) => {
       if (!(cfg instanceof ConsumerConfig)) {
         throw new Error(`ConsumerConfig expected, got ${inspect(cfg)}`);
@@ -28,14 +29,11 @@ export default class Consumer {
     this.#configs = configs;
   }
 
-  _startApi(port) {
-    return new Promise((resolve, reject) => {
-      this.#server = this.#api.listen(port, (err) => {
-        if (err) {
-          return reject(err);
-        }
+  _startApi(port: number) {
+    return new Promise((resolve) => {
+      this.#server = this.#api.listen(port, () => {
         logger.info(`Consumer API listening at http://0.0.0.0:${port}`);
-        return resolve();
+        return resolve(this);
       });
     });
   }
@@ -56,7 +54,7 @@ export default class Consumer {
 
   _startConsuming() {
     logger.info('Consumer starting consumption');
-    this.#processes = this.#configs.map((config) => {
+    this.#processes = this.#configs.map((config: ConsumerConfig) => {
       const runner = JobRunner.factor(config.runner.type, {
         mode: config.runner.mode,
         ...config.runner.config,

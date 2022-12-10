@@ -3,14 +3,21 @@ import promClient from 'prom-client';
 import ArnavonConfig from '../config';
 import JobValidator from './validator';
 import { DataValidationError, inspect, UnknownJobError, InvalidBatch } from '../robust';
-import Job from './job';
+import Job, { JobMeta } from './job';
+import JobConfig from './config';
+
+interface JobConfigWithValidator extends JobConfig {
+  validator: JobValidator
+}
+
+type JobCollection = {[key: string]: JobConfigWithValidator}
 
 export default class JobDispatcher {
 
   /**
    * Private collection of jobs
    */
-  #jobs;
+  private jobs: JobCollection
   /**
    * Private collection of counters (unknown/invalid/valid jobs)
    */
@@ -20,7 +27,7 @@ export default class JobDispatcher {
    * Constructs a new JobDispatcher
    * @param {ArnavonConfig} config a valid config object
    */
-  constructor(config) {
+  constructor(config: ArnavonConfig) {
     if (!(config instanceof ArnavonConfig)) {
       throw new Error(`ArnavonConfig expected, got ${inspect(config)}`);
     }
@@ -45,25 +52,25 @@ export default class JobDispatcher {
         registers: [Arnavon.registry],
       }),
     };
-    this.#jobs = config.jobs.reduce((jobs, jobConfig) => {
-      jobConfig.validator = new JobValidator(jobConfig.inputSchema);
-      jobs[jobConfig.name] = jobConfig;
+    this.jobs = config.jobs.reduce((jobs: JobCollection, jobConfig: JobConfig) => {
+      (jobConfig as JobConfigWithValidator).validator = new JobValidator(jobConfig.inputSchema);
+      jobs[jobConfig.name] = jobConfig as JobConfigWithValidator;
       return jobs;
     }, {});
   }
 
-  dispatchBatch(jobName, data, meta = {}, options = { strict: true }) {
-    if (!this.#jobs[jobName]) {
+  dispatchBatch(jobName: string, data: any[], meta: JobMeta = {}, options = { strict: true }) {
+    if (!this.jobs[jobName]) {
       this.#counters.unknown.inc({ jobName });
       return Promise.reject(new UnknownJobError(jobName));
     }
-    const validator = this.#jobs[jobName].validator;
+    const validator = this.jobs[jobName].validator;
     if (!Array.isArray(data)) {
       return Promise.reject(new DataValidationError(`Array of payloads expected for batches, got ${inspect(data)}`));
     }
 
-    const valids = [];
-    const invalids = [];
+    const valids: any[] = [];
+    const invalids: any[] = [];
     data.forEach((payload) => {
       try {
         valids.push(validator.validate(payload));
@@ -95,15 +102,15 @@ export default class JobDispatcher {
       .then(() => jobs);
   }
 
-  getValidator(metadata) {
-    if (!this.#jobs[metadata.jobName]) {
-      throw new UnknownJobError(metadata.jobName);
+  getValidator(metadata: JobMeta) {
+    if (!this.jobs[metadata.jobName as string]) {
+      throw new UnknownJobError(metadata.jobName as string);
     }
-    return this.#jobs[metadata.jobName].validator;
+    return this.jobs[metadata.jobName as string].validator;
   }
 
-  dispatch(jobName, data, meta = {}) {
-    const jobConfig = this.#jobs[jobName];
+  dispatch(jobName: string, data: any, meta = {}) {
+    const jobConfig = this.jobs[jobName];
     if (!jobConfig) {
       this.#counters.unknown.inc({ jobName });
       return Promise.reject(new UnknownJobError(jobName));

@@ -1,14 +1,19 @@
-import JobRunner from '../runner';
+import JobRunner, { JobRunnerConfig } from '../runner';
 import JobResult from '../result';
 import { inspect } from '../../robust';
 import { spawn } from 'child_process';
 import { sync as commandExistsSync } from 'command-exists';
 
+export interface BinaryRunnerConfig extends JobRunnerConfig {
+  path: string
+  args: string[]
+}
+
 export default class BinaryRunner extends JobRunner {
 
-  #command;
-  #args;
-  constructor(config) {
+  protected command: string;
+  protected args: string[];
+  constructor(config: BinaryRunnerConfig) {
     super(config);
 
     if (!config.path) {
@@ -18,17 +23,20 @@ export default class BinaryRunner extends JobRunner {
     if (!commandExistsSync(config.path)) {
       throw new Error(`Command '${config.path}' not found, or not executable`);
     }
-    this.#command = config.path;
+    this.command = config.path;
 
     if (config.args && !Array.isArray(config.args)) {
-      config.args = [config.args];
+      this.args = [config.args];
+    } else if (config.args) {
+      this.args = config.args;
+    } else {
+      this.args = [];
     }
-    this.#args = config.args;
   }
 
-  _run(job) {
+  _run(job: any) {
     return new Promise((resolve, reject) => {
-      const process = spawn(this.#command, this.#args);
+      const process = spawn(this.command, this.args);
 
       let stdoutData = '';
       process.stdout.on('data', (data) => {

@@ -1,10 +1,12 @@
-import Queue from '../index';
+import Queue, { QueueInternalProcessor } from '../index';
+
+export type MemoryQueueConfig = any;
 
 class MemoryQueue extends Queue {
 
-  #queue;
-  constructor(params) {
-    super(params);
+  #queue: Array<any>;
+  constructor() {
+    super();
     this.#queue = [];
   }
 
@@ -12,12 +14,12 @@ class MemoryQueue extends Queue {
     return Promise.resolve(this);
   }
 
-  _push(key, data) {
+  _push(key: string, data: any) {
     this.#queue.push({ key, data });
     return Promise.resolve();
   }
 
-  _consume(selector, processor) {
+  _consume(selector: string, processor: QueueInternalProcessor) {
     while (this.#queue.length) {
       const { key, data } = this.#queue.shift();
       processor(key, data);

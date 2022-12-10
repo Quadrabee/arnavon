@@ -1,0 +1,9 @@
+{
+  "extension": ["ts"],
+  "recursive": true,
+  "spec": "tests/**/*.spec.*",
+  "require": "tests/babel-register.js",
+  "reporter-options": {
+    "mochaFile": "tests/test-results.xml"
+  }
+}

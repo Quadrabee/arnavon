@@ -12,7 +12,7 @@ export default class JobValidator {
    * @param {Finitio.Schema} schema a finitio schema that will be used to ensure the job input data
    * is valid
    */
-  constructor(schema) {
+  constructor(schema: Finitio.System) {
     if (!(schema instanceof Finitio.System)) {
       throw new Error(`Finitio system expected, got ${inspect(schema)}`);
     }
@@ -24,7 +24,7 @@ export default class JobValidator {
    *
    * @param {Object} inputData
    */
-  validate(inputData) {
+  validate(inputData: any) {
     try {
       return this.#schema.dress(inputData);
     } catch (err) {

@@ -1,6 +1,6 @@
 export default class JobResult {
 
-  constructor({ success, error, result }) {
+  constructor({ success, error, result }: { success: boolean, error?: Error, result: any }) {
     Object.defineProperties(this, {
       success: {
         writable: false,
@@ -17,11 +17,11 @@ export default class JobResult {
     });
   }
 
-  static fail(error, result) {
+  static fail(error: Error, result: any) {
     return new JobResult({ success: false, error, result });
   }
 
-  static success(result) {
+  static success(result: any) {
     return new JobResult({ success: true, result });
   }
 

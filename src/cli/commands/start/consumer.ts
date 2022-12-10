@@ -1,9 +1,15 @@
 import Command from '../../base';
-import { flags } from '@oclif/command';
+import { Flags, Interfaces } from '@oclif/core';
 import { Consumer, default as Arnavon } from '../../../';
 import { JobDispatcher } from '../../../jobs';
+export default class StartConsumerCommand extends Command<typeof StartConsumerCommand> {
 
-class StartConsumerCommand extends Command {
+  static summary = `Starts an Arnavon consumer
+...
+This command can be used to start one of the consumer defined in your config file.
+
+Please note that the --all flag can be used to start all consumers at once, but this is not recommended in production.
+`;
 
   static args = [{
     name: 'name',
@@ -11,12 +17,30 @@ class StartConsumerCommand extends Command {
     description: 'The name of the consumer to start',
   }]
 
+  static flags = {
+    all: Flags.boolean({
+      char: 'a',
+      description: 'Start all consumers instead of just one (not recommended, but can be useful in dev)',
+    }),
+    except: Flags.string({
+      char: 'x',
+      description: 'Specify a consumer that should not be started. (Requires -a/--all. Can be used multiple times)',
+      multiple: true,
+      dependsOn: ['all'],
+    }),
+    port: Flags.integer({
+      char: 'p',
+      description: 'Port to use for API (default 3000)',
+    }),
+  };
+
   async run() {
-    const { args, flags } = this.parse(StartConsumerCommand);
+    const { args, flags } = await this.parse(StartConsumerCommand);
+
     const port = flags.port || 3000;
     const dispatcher = new JobDispatcher(Arnavon.config);
 
-    const ensureConsumerExists = (name) => {
+    const ensureConsumerExists = (name: string) => {
       const consumerConfig = Arnavon.config.consumers.find(c => c.name === name);
       if (!consumerConfig) {
         throw new Error(`No consumer with name '${name}' found`);
@@ -26,7 +50,7 @@ class StartConsumerCommand extends Command {
 
     // Ensure -x/--except lists existing consumers
     if (flags.except) {
-      flags.except.forEach((name) => {
+      flags.except.forEach((name: string) => {
         ensureConsumerExists(name);
       });
     }
@@ -35,7 +59,7 @@ class StartConsumerCommand extends Command {
     if (flags.all) {
       configs = [...Arnavon.config.consumers];
       if (flags.except) {
-        configs = configs.filter((c) => flags.except.indexOf(c.name) < 0);
+        configs = configs.filter((c) => (flags.except || []).indexOf(c.name) < 0);
       }
     } else {
       if (!args.name) {
@@ -65,30 +89,3 @@ class StartConsumerCommand extends Command {
 
   }
 }
-
-StartConsumerCommand.description = `Starts an Arnavon consumer
-...
-This command can be used to start one of the consumer defined in your config file.
-
-Please note that the --all flag can be used to start all consumers at once, but this is not recommended in production.
-`;
-
-StartConsumerCommand.flags = {
-  ...Command.flags,
-  all: flags.boolean({
-    char: 'a',
-    description: 'Start all consumers instead of just one (not recommended, but can be useful in dev)',
-  }),
-  except: flags.string({
-    char: 'x',
-    description: 'Specify a consumer that should not be started. (Requires -a/--all. Can be used multiple times)',
-    multiple: true,
-    dependsOn: ['all'],
-  }),
-  port: flags.integer({
-    char: 'p',
-    description: 'Port to use for API (default 3000)',
-  }),
-};
-
-export default StartConsumerCommand;

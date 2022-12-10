@@ -1,25 +1,68 @@
-import Queue from '../index';
-import amqplib from 'amqplib';
+import Queue, { QueueInternalProcessor } from '../index';
+import amqplib, { ConfirmChannel } from 'amqplib';
 import logger from '../../logger';
+import { JobMeta } from '../../jobs/job';
+
+export type AMQPQueueBinding = {
+  exchange: string,
+  routingKey: string
+}
+
+export type AMQPQueue = {
+  name: string,
+  options?: {
+    durable ?: boolean,
+    deadLetterExchange ?: string
+    deadLetterRoutingKey ?: string
+  }
+  bindings?: [AMQPQueueBinding]
+}
+
+export type AMQPExchangeType = 'topic' | 'direct' | 'fanout';
+
+export type AMQPExchange = {
+  name : string,
+  type ?: AMQPExchangeType,
+  default ?: boolean,
+  options ?: {
+    durable: boolean
+  }
+}
+
+export type AMQPTopology = {
+  exchanges: Array<AMQPExchange>
+  queues: Array<AMQPQueue>
+}
+
+export type AMQPQueueConfig = {
+  url ?: string,
+  connectRetries ?: number,
+  prefetchCount ?: number
+  topology: AMQPTopology
+}
+
+export type AQMPPushOptions = {
+  exchange: string
+}
 
 class AmqpQueue extends Queue {
 
-  #url;
-  #conn;
-  #channel;
+  protected url: string;
+  #conn?: amqplib.Connection;
+  #channel?: amqplib.ConfirmChannel;
   #exchange;
   #topology;
   #connectRetries;
   #prefetchCount;
-  #disconnecting;
+  #disconnecting ?: boolean;
 
-  constructor(params) {
-    super(params);
+  constructor(params: AMQPQueueConfig) {
+    super();
 
-    this.#url = process.env.AMQP_URL || params.url;
-    if (!this.#url) {
+    if (!(process.env.AMQP_URL || params.url)) {
       throw new Error('AMQP: url parameter required');
     }
+    this.url = process.env.AMQP_URL || params.url as string;
     this.#connectRetries = params.connectRetries || 10;
     this.#prefetchCount = params.prefetchCount || 1;
     this.#topology = params.topology;
@@ -36,25 +79,32 @@ class AmqpQueue extends Queue {
   }
 
   _installTopology() {
+    if (!this.#channel) {
+      throw new Error('Cannot install topology, no channel found');
+    }
     const createExchanges = () => {
       const promises = this.#topology.exchanges.map((ex) => {
-        return this.#channel.assertExchange(ex.name, ex.type, ex.options);
+        return (this.#channel as amqplib.ConfirmChannel)
+          .assertExchange(ex.name, ex.type || 'fanout', ex.options);
       });
       return Promise.all(promises);
     };
     const createQueues = () => {
       const promises = this.#topology.queues.map((q) => {
-        return this.#channel.assertQueue(q.name, q.options);
+        return (this.#channel as amqplib.ConfirmChannel)
+          .assertQueue(q.name, q.options);
       });
       return Promise.all(promises);
     };
     const createBindings = () => {
-      const promises = [];
+      const promises: Array<Promise<any>> = [];
       this.#topology.queues.forEach((q) => {
         const bindings = q.bindings || [];
-        promises.concat(bindings.map((binding) => {
-          return this.#channel.bindQueue(q.name, binding.exchange, binding.routingKey);
-        }));
+        const bindingPromises = bindings.map((binding) => {
+          return (this.#channel as amqplib.ConfirmChannel)
+            .bindQueue(q.name, binding.exchange, binding.routingKey);
+        });
+        promises.concat(bindingPromises as Array<Promise<any>>);
       });
       return Promise.all(promises);
     };
@@ -63,10 +113,10 @@ class AmqpQueue extends Queue {
       .then(createBindings);
   }
 
-  _connectWithRetries(attemptsLeft, waitTime = 10) {
+  _connectWithRetries(attemptsLeft: number, waitTime = 10): Promise<amqplib.Connection> {
     return amqplib
     // Connect
-      .connect(this.#url)
+      .connect(this.url)
       .catch((err) => {
         if (this.#disconnecting) {
           throw new Error('Connection canceled');
@@ -90,8 +140,8 @@ class AmqpQueue extends Queue {
       .then(conn => {
         this.#conn = conn;
         // Propagate errors
-        this.#conn.on('close', (err) => this.emit('close', err));
-        this.#conn.on('error', (err) => this.emit('error', err));
+        this.#conn.on('close', (err: Error) => this.emit('close', err));
+        this.#conn.on('error', (err: Error) => this.emit('error', err));
         // Create channel
         return conn.createConfirmChannel();
       })
@@ -100,40 +150,49 @@ class AmqpQueue extends Queue {
         this.#channel = channel;
         // Install topology
         // Propagate errors
-        this.#channel.on('close', (err) => this.emit('close', err));
-        this.#channel.on('error', (err) => this.emit('error', err));
+        this.#channel.on('close', (err: Error) => this.emit('close', err));
+        this.#channel.on('error', (err: Error) => this.emit('error', err));
         // Ensure topology exists
         return this._installTopology();
       })
       .then(() => this)
       .catch((err) => {
         this.emit('error', err);
+        return this;
       });
   }
 
-  _disconnect() {
+  async _disconnect() {
     if (this.#conn) {
-      return this.#conn.close();
+      this.#disconnecting = true;
+      await this.#conn.close();
     }
-    this.#disconnecting = true;
-    return Promise.resolve();
+    return this;
   }
 
-  _push(key, data, { exchange }) {
+  _push(key: string, data: any, { exchange }: AQMPPushOptions) {
+    if (!this.#channel) {
+      throw new Error('Cannot push, no channel found');
+    }
     const payload = Buffer.from(JSON.stringify(data));
     const options = { persistent: true };
     return new Promise((resolve, reject) => {
-      return this.#channel.publish(exchange || this.#exchange, key, payload, options, (err) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(data);
-      });
+      return (this.#channel as amqplib.ConfirmChannel)
+        .publish(exchange || this.#exchange, key, payload, options, (err) => {
+          if (err) {
+            return reject(err);
+          }
+          return resolve(data);
+        });
     });
   }
 
-  _consume(queueName, processor) {
-    return this.#channel.consume(queueName, (msg) => {
+  _consume(queueName: string, processor: QueueInternalProcessor) {
+    if (!this.#channel) {
+      throw new Error('Cannot push, no channel found');
+    }
+    const channel = this.#channel as ConfirmChannel;
+    return channel.consume(queueName, (msg) => {
       // AMQP informs us that the consumption is over (are we quitting, for instance?)
       if (msg === null) {
         logger.info(`${this.constructor.name}: AMQP informs consumption is over`);
@@ -142,7 +201,7 @@ class AmqpQueue extends Queue {
       let payload;
       let metadata;
       try {
-        payload = JSON.parse(msg.content);
+        payload = JSON.parse(msg.content.toString());
         metadata = {
           ...msg.fields,
         };
@@ -150,17 +209,17 @@ class AmqpQueue extends Queue {
         // TODO expose that kind of error to monitoring
         logger.error(error, `${this.constructor.name}: Incorrect payload, invalid json`);
         // Nack with allUpTo=false & requeue=false
-        return this.#channel.nack(msg, false, false);
+        return channel.nack(msg, false, false);
       }
-      processor(payload, metadata)
+      processor(payload, metadata as JobMeta)
         .then(() => {
           logger.info(`${this.constructor.name}: Acking item consumption`);
-          this.#channel.ack(msg);
+          channel.ack(msg);
         })
-        .catch((err) => {
+        .catch((err: Error) => {
           logger.error(err, `${this.constructor.name}: NAcking(!) item consumption`);
           // Nack with requeue=false
-          return this.#channel.reject(msg, false);
+          return channel.reject(msg, false);
         });
     })
       .catch((err) => this.emit('error', err));

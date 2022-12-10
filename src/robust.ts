@@ -1,3 +1,9 @@
+interface FinitioError extends Error {
+  message: string;
+  location: string;
+  rootCauses: FinitioError[]
+}
+
 class ArnavonError extends Error {
   toJSON() {
     return {
@@ -7,13 +13,13 @@ class ArnavonError extends Error {
 }
 
 class UnknownJobError extends ArnavonError {
-  constructor(jobName) {
+  constructor(jobName: string) {
     super(`Unknown job: ${jobName}, no definition found`);
   }
 }
 
 class DataValidationError extends ArnavonError {
-  static fromFinitioError(msg, err) {
+  static fromFinitioError(msg: string, err: FinitioError) {
     const details = err.rootCauses.map(e => {
       return `${e.message} (${e.location})`;
     }).join('\n');
@@ -26,7 +32,9 @@ class InvalidRunError extends ArnavonError {
 }
 
 class InvalidBatch extends DataValidationError {
-  constructor(message, invalids, valids) {
+  public valids: any[]
+  public invalids: any[]
+  constructor(message: string, invalids: any[], valids: any[]) {
     super(message);
     this.valids = valids;
     this.invalids = invalids;
@@ -41,7 +49,7 @@ class InvalidBatch extends DataValidationError {
   }
 }
 
-const inspect = (t) => {
+const inspect = (t: unknown) => {
   if (t === undefined) {
     return 'undefined';
   }

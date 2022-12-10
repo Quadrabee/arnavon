@@ -1,4 +1,6 @@
+import { NextFunction, Request, Response } from 'express';
 import createApi from '../../api';
+import { JobDispatcher } from '../../jobs';
 import { ArnavonError, UnknownJobError, DataValidationError } from '../../robust';
 
 // Valid x-arnavon-push-modes
@@ -7,14 +9,14 @@ const PUSH_MODES = ['SINGLE', 'BATCH'];
 // Valid x-arnavon-batch-input-validation
 const VALIDATION_MODES = ['ALL-OR-NOTHING', 'BEST-EFFORT'];
 
-export default (dispatcher) => {
+export default (dispatcher: JobDispatcher) => {
   const api = createApi();
 
   api.post('/jobs/:id', (req, res, next) => {
     // Check X-Arnavon-Push-Mode:
     // are we in SINGLE or BATCH mode ?
     // (defaults to SINGLE)
-    const pushMode = (req.headers['x-arnavon-push-mode'] || 'SINGLE')
+    const pushMode: string = (req.headers['x-arnavon-push-mode'] || 'SINGLE')
       .toString()
       .toUpperCase();
     if (!PUSH_MODES.includes(pushMode)) {
@@ -59,7 +61,7 @@ export default (dispatcher) => {
       });
   });
 
-  api.use((err, req, res, next) => {
+  api.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err);
     if (err instanceof ArnavonError) {
       return res.status(500).send(err);

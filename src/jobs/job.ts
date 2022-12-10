@@ -1,8 +1,17 @@
 import { v4 as uuid, validate } from 'uuid';
 import { inspect } from '../robust';
+import JobPayload from './payload';
+
+export interface JobMeta {
+  id?: string
+  jobName?: string
+  dispatched?: Date
+  dequeued?: Date
+}
 
 export default class Job {
-  constructor(payload, meta = {}) {
+
+  constructor(protected readonly payload: JobPayload, public readonly meta: JobMeta = {}) {
     if (!(meta instanceof Object)) {
       throw new Error(`Invalid meta: Object expected, got ${inspect(meta)}`);
     }
@@ -31,7 +40,7 @@ export default class Job {
     };
   }
 
-  static fromJSON(_job) {
+  static fromJSON(_job: Job) {
     // TODO: dress with finitio
     const job = new Job(_job.payload, _job.meta);
     if (job.meta && job.meta.dispatched) {
