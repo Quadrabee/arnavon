@@ -20,10 +20,10 @@
     "test:watch": "mocha --watch tests",
     "lint": "tsc && eslint src **/*.ts .eslintrc.js",
     "lint:fix": "tsc && eslint --fix src tests *.ts .eslintrc.js",
-    "build": "babel ./src --out-dir ./dist --source-maps -x .ts",
+    "build": "shx rm -rf dist && babel ./src --out-dir ./dist --source-maps -x .ts",
     "build:watch": "babel ./src --watch --out-dir ./dist --source-maps --copy-files -x .ts",
-    "postpack": "rm -f oclif.manifest.json",
-    "prepack": "npm run build && oclif-dev manifest && oclif-dev readme",
+    "postpack": "shx rm -f oclif.manifest.json",
+    "prepack": "yarn build && oclif manifest && oclif readme",
     "version": "echo $npm_package_version",
     "package": "pkg . --targets linux,macos,win,alpine --out-path pkg/"
   },
@@ -62,7 +62,8 @@
     "proxyquire": "^2.1.3",
     "sinon": "^9.2.4",
     "sinon-chai": "^3.5.0",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.4",
+    "shx": "^0.3.3"
   },
   "dependencies": {
     "ts-node": "^10.9.1",

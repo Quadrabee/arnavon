@@ -1,8 +1,7 @@
-import Command from '../../base';
-import { Flags, Interfaces } from '@oclif/core';
-import { Consumer, default as Arnavon } from '../../../';
+import { Command, Flags, Interfaces } from '@oclif/core';
+import { Config, Consumer, default as Arnavon } from '../../../';
 import { JobDispatcher } from '../../../jobs';
-export default class StartConsumerCommand extends Command<typeof StartConsumerCommand> {
+export default class StartConsumerCommand extends Command {
 
   static summary = `Starts an Arnavon consumer
 ...
@@ -18,6 +17,11 @@ Please note that the --all flag can be used to start all consumers at once, but 
   }]
 
   static flags = {
+    config: Flags.string({
+      summary: 'location of config file (defaults to \'config.yaml\').',
+      char: 'c',
+      default: 'config.yaml',
+    }),
     all: Flags.boolean({
       char: 'a',
       description: 'Start all consumers instead of just one (not recommended, but can be useful in dev)',
@@ -36,6 +40,10 @@ Please note that the --all flag can be used to start all consumers at once, but 
 
   async run() {
     const { args, flags } = await this.parse(StartConsumerCommand);
+    const configPath = flags.config || 'config.yaml';
+
+    const config = Config.fromFile(configPath);
+    Arnavon.init(config);
 
     const port = flags.port || 3000;
     const dispatcher = new JobDispatcher(Arnavon.config);

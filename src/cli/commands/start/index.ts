@@ -1,6 +1,6 @@
-import Command from '../../base';
+import { Command } from '@oclif/core';
 
-class StartCommand extends Command<typeof StartCommand> {
+class StartCommand extends Command {
 
   static summary = 'Starts an arnavon component'
 
