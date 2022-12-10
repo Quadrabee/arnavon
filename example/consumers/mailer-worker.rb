@@ -26,8 +26,11 @@ Subject: #{email['subject']}
 #{email['text']}
 EOF
 
-Net::SMTP.start('fakesmtp') do |smtp|
-  smtp.send_message message, email['from'], email['to']
-end
+smtp = Net::SMTP.new('fakesmtp', 25)
+smtp.disable_ssl
+smtp.disable_starttls
+smtp.start
+smtp.send_message message, email['from'], email['to']
+smtp.finish
 
 puts "Email sent"
