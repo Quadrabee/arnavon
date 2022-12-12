@@ -22,7 +22,7 @@ $ npm install -g @quadrabee/arnavon
 $ arnavon COMMAND
 running command...
 $ arnavon (--version)
-@quadrabee/arnavon/0.2.12 darwin-x64 node-v14.20.0
+@quadrabee/arnavon/1.0.0-rc.0 darwin-x64 node-v14.20.0
 $ arnavon --help [COMMAND]
 USAGE
   $ arnavon COMMAND
@@ -31,30 +31,9 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`arnavon help [COMMAND]`](#arnavon-help-command)
 * [`arnavon start`](#arnavon-start)
 * [`arnavon start:api`](#arnavon-startapi)
 * [`arnavon start:consumer [NAME]`](#arnavon-startconsumer-name)
-
-## `arnavon help [COMMAND]`
-
-Display help for arnavon.
-
-```
-USAGE
-  $ arnavon help [COMMAND] [-n]
-
-ARGUMENTS
-  COMMAND  Command to show help for.
-
-FLAGS
-  -n, --nested-commands  Include all nested commands in the output.
-
-DESCRIPTION
-  Display help for arnavon.
-```
-
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v5.1.20/src/commands/help.ts)_
 
 ## `arnavon start`
 
