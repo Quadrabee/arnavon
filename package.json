@@ -25,7 +25,7 @@
     "postpack": "shx rm -f oclif.manifest.json",
     "prepack": "yarn build && oclif manifest && oclif readme",
     "version": "echo $npm_package_version",
-    "package": "pkg . --targets linux,macos,win,alpine --out-path pkg/"
+    "package": "pkg . --out-path pkg/"
   },
   "license": "MIT",
   "devDependencies": {
@@ -96,6 +96,11 @@
     "scripts": [
       "bin/**/*.js",
       "dist/**/*.js"
+    ],
+    "targets": [
+      "node14-linux",
+      "node14-macos-x64",
+      "node14-win"
     ]
   }
 }
