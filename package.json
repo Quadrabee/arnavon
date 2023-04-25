@@ -79,7 +79,7 @@
     "prom-client": "^13.1.0",
     "regenerator-runtime": "^0.13.7",
     "uuid": "^9.0.0",
-    "yaml": "^1.10.2",
+    "yaml": "^2.2.2",
     "@types/mocha": "^10.0.1"
   },
   "engines": {
