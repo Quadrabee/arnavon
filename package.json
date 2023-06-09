@@ -1,7 +1,7 @@
 {
   "name": "@quadrabee/arnavon",
   "description": "Framework on top of RabbitMQ for easing up the development of producer/consumer/job queues.",
-  "version": "1.0.0-rc.0",
+  "version": "1.0.0-rc.1",
   "author": "Louis Lambeau <llambeau@quadrabee.com>",
   "main": "dist/index.js",
   "bin": {

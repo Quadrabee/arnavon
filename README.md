@@ -22,7 +22,7 @@ $ npm install -g @quadrabee/arnavon
 $ arnavon COMMAND
 running command...
 $ arnavon (--version)
-@quadrabee/arnavon/1.0.0-rc.0 darwin-x64 node-v14.20.0
+@quadrabee/arnavon/1.0.0-rc.1 darwin-x64 node-v14.21.3
 $ arnavon --help [COMMAND]
 USAGE
   $ arnavon COMMAND
