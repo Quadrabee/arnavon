@@ -92,12 +92,12 @@ export default class JobRunner {
   run(message: any, context: Partial<JobRunnerContext> = {}) {
     context.logger = context.logger ? context.logger : mainLogger;
     switch (this.mode) {
-    case Mode.ARNAVON:
-      return this.#run_arnavon(message, context as JobRunnerContext);
-    case Mode.RAW:
-      return this.#run_raw(message, context as JobRunnerContext);
-    default:
-      throw new ArnavonError(`Invalid mode ${this.mode}`);
+      case Mode.ARNAVON:
+        return this.#run_arnavon(message, context as JobRunnerContext);
+      case Mode.RAW:
+        return this.#run_raw(message, context as JobRunnerContext);
+      default:
+        throw new ArnavonError(`Invalid mode ${this.mode}`);
     }
   }
 
