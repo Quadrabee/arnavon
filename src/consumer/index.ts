@@ -45,6 +45,14 @@ export default class Consumer {
   }
 
   _connectQueue() {
+    Arnavon.queue.on('error', () => {
+      logger.error('Queue errored, quitting');
+      process.exit(10);
+    });
+    Arnavon.queue.on('close', () => {
+      logger.error('Queue disconnected, quitting');
+      process.exit(10);
+    });
     return Arnavon.queue.connect();
   }
 
