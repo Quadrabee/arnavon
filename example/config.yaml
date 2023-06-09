@@ -4,7 +4,7 @@ queue:
     connectRetries: 20
     # applies to all consumers for now
     prefetchCount: 5
-    url: amqp://rabbit:rabbit@rabbitmq
+    url: amqp://rabbit:rabbit@localhost?heartbeat=30
     topology:
       exchanges:
         - name: example-arnavon

@@ -140,8 +140,14 @@ class AmqpQueue extends Queue {
       .then(conn => {
         this.#conn = conn;
         // Propagate errors
-        this.#conn.on('close', (err: Error) => this.emit('close', err));
-        this.#conn.on('error', (err: Error) => this.emit('error', err));
+        this.#conn.on('close', (err: Error) => {
+          logger.error('Connection to queue closed', { err });
+          this.emit('close', err);
+        });
+        this.#conn.on('error', (err: Error) => {
+          logger.error('Connection error', { err });
+          this.emit('error', err);
+        });
         // Create channel
         return conn.createConfirmChannel();
       })
@@ -150,8 +156,14 @@ class AmqpQueue extends Queue {
         this.#channel = channel;
         // Install topology
         // Propagate errors
-        this.#channel.on('close', (err: Error) => this.emit('close', err));
-        this.#channel.on('error', (err: Error) => this.emit('error', err));
+        this.#channel.on('close', (err: Error) => {
+          logger.error('Channel closed', err);
+          this.emit('close', err);
+        });
+        this.#channel.on('error', (err: Error) => {
+          logger.error('Channel error', err);
+          this.emit('error', err);
+        });
         // Ensure topology exists
         return this._installTopology();
       })
