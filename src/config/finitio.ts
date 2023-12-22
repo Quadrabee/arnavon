@@ -13,14 +13,14 @@ const baseWorld = {
 
 interface FinitioType {
   name: string,
-  dress(value: any, system: unknown): unknown
+  dress(value: unknown, system: unknown): unknown
   dressFromFile(path: string, baseSystem: unknown): unknown
 }
 
 let system;
 try {
   system = Finitio.system(schema, { JsTypes: baseWorld });
-} catch (err: any) {
+} catch (err) {
   console.error(err);
   throw new Error(`Invalid finitio schema: ${err.message}`);
 }
@@ -34,7 +34,7 @@ const dressFromFile = (path: string, type: FinitioType, baseSystem: unknown) => 
   }
   try {
     config = type.dress(config, baseSystem);
-  } catch (err: any) {
+  } catch (err) {
     throw DataValidationError.fromFinitioError(`Invalid data for type ${type.name}:`, err);
   }
   return config;

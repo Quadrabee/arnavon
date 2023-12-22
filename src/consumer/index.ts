@@ -5,6 +5,7 @@ import { inspect } from '../robust';
 import Arnavon from '..';
 import { Server } from 'http';
 import { JobRunner, JobDispatcher } from '../jobs';
+import { JobRunnerConfig } from '../jobs/runner';
 
 export default class Consumer {
 
@@ -65,11 +66,12 @@ export default class Consumer {
     this.#processes = this.#configs.map((config: ConsumerConfig) => {
       const runner = JobRunner.factor(config.runner.type, {
         mode: config.runner.mode,
-        ...config.runner.config,
+        ...config.runner.config as JobRunnerConfig,
       });
       return Arnavon.queue.consume(config.queue, (_job, context) => {
         // Dress the payload
         const validator = this.#dispatcher.getValidator(_job.meta);
+        // @ts-expect-error we need to refactor this
         _job.payload = validator.validate(_job.payload);
         // Extend context to include dispatcher and prometheus registry
         const extendedContext = Object.assign({}, context, {

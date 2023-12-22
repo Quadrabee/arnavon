@@ -1,4 +1,4 @@
-import { Command, Flags, Interfaces } from '@oclif/core';
+import { Command, Flags } from '@oclif/core';
 import { Config, Consumer, default as Arnavon } from '../../../';
 import { JobDispatcher } from '../../../jobs';
 export default class StartConsumerCommand extends Command {

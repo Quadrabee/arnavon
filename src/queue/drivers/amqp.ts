@@ -97,14 +97,14 @@ class AmqpQueue extends Queue {
       return Promise.all(promises);
     };
     const createBindings = () => {
-      const promises: Array<Promise<any>> = [];
+      const promises: Array<Promise<unknown>> = [];
       this.#topology.queues.forEach((q) => {
         const bindings = q.bindings || [];
         const bindingPromises = bindings.map((binding) => {
           return (this.#channel as amqplib.ConfirmChannel)
             .bindQueue(q.name, binding.exchange, binding.routingKey);
         });
-        promises.concat(bindingPromises as Array<Promise<any>>);
+        promises.concat(bindingPromises as Array<Promise<unknown>>);
       });
       return Promise.all(promises);
     };
@@ -182,7 +182,7 @@ class AmqpQueue extends Queue {
     return this;
   }
 
-  _push(key: string, data: any, { exchange }: AQMPPushOptions) {
+  _push(key: string, data: unknown, { exchange }: AQMPPushOptions) {
     if (!this.#channel) {
       throw new Error('Cannot push, no channel found');
     }

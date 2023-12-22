@@ -1,5 +1,5 @@
 import EventEmitter from 'events';
-import { JobMeta } from '../jobs/job';
+import Job, { JobMeta } from '../jobs/job';
 import { JobRunnerContext } from '../jobs/runner';
 import logger from '../logger';
 import { inspect } from '../robust';
@@ -10,8 +10,8 @@ export interface QueueConfig {
   config: QueueDriverConfig
 }
 
-export type QueueProcessor = (job: any, context: JobRunnerContext) => Promise<any>
-export type QueueInternalProcessor = (job: any, metadata: JobMeta) => Promise<any>
+export type QueueProcessor = (job: Job, context: JobRunnerContext) => Promise<unknown>
+export type QueueInternalProcessor = (job: Job, metadata: JobMeta) => Promise<unknown>
 
 /**
  * Queue subclasses are supposed to properly emit the following events:
@@ -49,7 +49,7 @@ class Queue extends EventEmitter {
   }
 
   // subclasses should implement _push(key, data)
-  push(key: string, data: any, opts = {}): Promise<any> {
+  push(key: string, data: unknown, opts = {}): Promise<unknown> {
     logger.info(`${this.constructor.name} - Pushing to queue`, key, data);
     return this._push(key, data, opts).then((job) => {
       logger.info(`${this.constructor.name} - Pushed`);
@@ -78,7 +78,7 @@ class Queue extends EventEmitter {
   }
 
   // To be implemented by subclasses
-  _consume(queueName: string, processor: QueueInternalProcessor) {
+  _consume(_queueName: string, _processor: QueueInternalProcessor) {
     throw new Error('NotImplemented');
   }
 
@@ -90,7 +90,7 @@ class Queue extends EventEmitter {
     throw new Error('NotImplemented');
   }
 
-  _push(key: string, data: any, opts = {}): Promise<any> {
+  _push(key: string, data: unknown, _opts = {}): Promise<unknown> {
     throw new Error('NotImplemented');
   }
 

@@ -9,7 +9,7 @@ import Logger from 'bunyan';
  * The prometheus counters are shared amongst JobRunner classes
  * but use labels to distinguish the implementating-class/job
  */
-const ensureCounter = <T extends Metric<any>>(type: new(params: any) => T, name: string, help: string, extraLabels: string[] = []): T => {
+const ensureCounter = <T extends Metric<string>>(type: new(params: unknown) => T, name: string, help: string, extraLabels: string[] = []): T => {
   let metric = Arnavon.registry.getSingleMetric(name);
   if (!metric) {
     metric = new type({
@@ -30,14 +30,14 @@ export enum Mode {
 export type JobRunnerConfig = {
   type: string
   mode?: Mode,
-  config: any
+  config: unknown
 }
 
 export type JobRunnerMetricCollection = {
-  success?: Counter<any>,
-  failures?: Counter<any>,
-  leadTime?: Histogram<any>,
-  touchTime?: Histogram<any>,
+  success?: Counter<string>,
+  failures?: Counter<string>,
+  leadTime?: Histogram<string>,
+  touchTime?: Histogram<string>,
 }
 
 export type JobRunnerContext = {
@@ -89,7 +89,7 @@ export default class JobRunner {
    * Runs a job
    * @param {Job} job
    */
-  run(message: any, context: Partial<JobRunnerContext> = {}) {
+  run(message: unknown, context: Partial<JobRunnerContext> = {}) {
     context.logger = context.logger ? context.logger : mainLogger;
     switch (this.mode) {
       case Mode.ARNAVON:
@@ -101,9 +101,9 @@ export default class JobRunner {
     }
   }
 
-  #run_arnavon(message: any, context: JobRunnerContext) {
+  #run_arnavon(message: unknown, context: JobRunnerContext) {
     // Convert it back to a job instance
-    const job = Job.fromJSON(message);
+    const job = Job.fromJSON(message as Job);
 
     const dispatchedTime = job.meta.dispatched as Date;
     const dequeuedTime = job.meta.dequeued || new Date();
@@ -123,19 +123,19 @@ export default class JobRunner {
     return this.#doRun(job, context, updateMetrics);
   }
 
-  #run_raw(message: any, context: JobRunnerContext) {
+  #run_raw(message: unknown, context: JobRunnerContext) {
     return this.#doRun(message, context);
   }
 
-  #doRun(message: any, context: JobRunnerContext, updateMetrics?: (err?: Error) => any) {
-    let result: any;
+  #doRun(message: unknown, context: JobRunnerContext, updateMetrics?: (err?: Error) => unknown) {
+    let result: unknown;
     try {
       context.logger.info(`Running runner implementation ${this.constructor.name}`);
       result = this._run(message, context);
-    } catch (err: any) {
+    } catch (err: unknown) {
       context.logger.error(err, `${this.constructor.name} Runner failed`);
       if (updateMetrics) {
-        updateMetrics(err);
+        updateMetrics(err as Error);
       }
       return Promise.reject(err);
     }
@@ -166,7 +166,7 @@ export default class JobRunner {
    * Implementation specific, should be implemented by subclasses
    * @param {Job} job
    */
-  _run(message: any, context: JobRunnerContext) {
+  _run(_message: unknown, _context: JobRunnerContext) {
     throw new Error('#_run should be implemented by subclasses');
   }
 

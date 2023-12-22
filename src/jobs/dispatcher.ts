@@ -59,7 +59,7 @@ export default class JobDispatcher {
     }, {});
   }
 
-  dispatchBatch(jobName: string, data: any[], meta: JobMeta = {}, options = { strict: true }) {
+  dispatchBatch(jobName: string, data: unknown[], meta: JobMeta = {}, options = { strict: true }) {
     if (!this.jobs[jobName]) {
       this.#counters.unknown.inc({ jobName });
       return Promise.reject(new UnknownJobError(jobName));
@@ -69,8 +69,8 @@ export default class JobDispatcher {
       return Promise.reject(new DataValidationError(`Array of payloads expected for batches, got ${inspect(data)}`));
     }
 
-    const valids: any[] = [];
-    const invalids: any[] = [];
+    const valids: unknown[] = [];
+    const invalids: unknown[] = [];
     data.forEach((payload) => {
       try {
         valids.push(validator.validate(payload));
@@ -109,7 +109,7 @@ export default class JobDispatcher {
     return this.jobs[metadata.jobName as string].validator;
   }
 
-  dispatch(jobName: string, data: any, meta = {}) {
+  dispatch(jobName: string, data: unknown, meta = {}) {
     const jobConfig = this.jobs[jobName];
     if (!jobConfig) {
       this.#counters.unknown.inc({ jobName });

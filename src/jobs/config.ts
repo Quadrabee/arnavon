@@ -34,8 +34,8 @@ export default class JobConfig {
   /**
    * Used by finitio to dress
    */
-  static json(data: any, baseSystem: Finitio.System) {
-    return new JobConfig(data, baseSystem);
+  static json(data: unknown, baseSystem: Finitio.System) {
+    return new JobConfig(data as JobConfig, baseSystem);
   }
 }
 
@@ -48,7 +48,7 @@ function ensureSchema(schema: string, parentSystem: Finitio.System): Finitio.Sys
   if (typeof schema === 'string') {
     try {
       system = parentSystem.subsystem(schema);
-    } catch (err: any) {
+    } catch (err) {
       throw new Error(`Invalid finitio system: ${err.message}`);
     }
   } else {

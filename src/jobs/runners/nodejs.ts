@@ -3,12 +3,13 @@ import Arnavon from '../../';
 import JobRunner, { JobRunnerConfig, JobRunnerContext } from '../runner';
 import { inspect } from '../../robust';
 import logger from '../../logger';
+import Job from '../job';
 
 export interface NodeJSRunnerConfig extends JobRunnerConfig {
   module: string
 }
 
-export type NodeJSRunnerModule = (job: any, context: JobRunnerContext) => Promise<any>
+export type NodeJSRunnerModule = (job: Job, context: JobRunnerContext) => Promise<unknown>
 
 export default class NodeJSRunner extends JobRunner {
 
@@ -29,7 +30,7 @@ export default class NodeJSRunner extends JobRunner {
     }
   }
 
-  _run(job: any, context: JobRunnerContext) {
+  _run(job: Job, context: JobRunnerContext) {
     context.logger.info(`Calling loaded nodejs module ${this.config.module}`);
     const p = this.module(job, context);
     return p;
