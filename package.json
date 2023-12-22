@@ -85,7 +85,7 @@
     "@types/mocha": "^10.0.6"
   },
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=18.0.0"
   },
   "oclif": {
     "commands": "./dist/cli/commands",
@@ -100,9 +100,9 @@
       "dist/**/*.js"
     ],
     "targets": [
-      "node14-linux",
-      "node14-macos-x64",
-      "node14-win"
+      "node18-linux",
+      "node18-macos-x64",
+      "node18-win"
     ]
   }
 }
