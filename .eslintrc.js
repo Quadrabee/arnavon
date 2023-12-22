@@ -10,11 +10,24 @@ module.exports = {
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
   ],
+  'rules': {
+    'no-unused-expressions': 'off',
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        'argsIgnorePattern': '^_',
+        'varsIgnorePattern': '^_',
+        'caughtErrorsIgnorePattern': '^_',
+      },
+    ],
+  },
   'overrides': [
     {
       'files': ['*.spec.*'],
       'rules': {
         'no-unused-expressions': 'off',
+        'no-unused-vars': 'off',
       },
     },
   ],

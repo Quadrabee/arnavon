@@ -3,6 +3,7 @@ import JobResult from '../result';
 import { inspect } from '../../robust';
 import { spawn } from 'child_process';
 import { sync as commandExistsSync } from 'command-exists';
+import Job from '../job';
 
 export interface BinaryRunnerConfig extends JobRunnerConfig {
   path: string
@@ -34,7 +35,7 @@ export default class BinaryRunner extends JobRunner {
     }
   }
 
-  _run(job: any) {
+  _run(job: Job) {
     return new Promise((resolve, reject) => {
       const process = spawn(this.command, this.args);
 

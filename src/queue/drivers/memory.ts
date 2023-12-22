@@ -1,10 +1,10 @@
 import Queue, { QueueInternalProcessor } from '../index';
 
-export type MemoryQueueConfig = any;
+export type MemoryQueueConfig = unknown;
 
 class MemoryQueue extends Queue {
 
-  #queue: Array<any>;
+  #queue: Array<{ key: string, data: unknown }>;
   constructor() {
     super();
     this.#queue = [];
@@ -14,7 +14,7 @@ class MemoryQueue extends Queue {
     return Promise.resolve(this);
   }
 
-  _push(key: string, data: any) {
+  _push(key: string, data: unknown) {
     this.#queue.push({ key, data });
     return Promise.resolve();
   }
@@ -22,6 +22,7 @@ class MemoryQueue extends Queue {
   _consume(selector: string, processor: QueueInternalProcessor) {
     while (this.#queue.length) {
       const { key, data } = this.#queue.shift();
+      // @ts-expect-error refactor
       processor(key, data);
     }
   }

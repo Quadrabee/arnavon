@@ -11,7 +11,7 @@ export interface JobMeta {
 
 export default class Job {
 
-  constructor(protected readonly payload: JobPayload, public readonly meta: JobMeta = {}) {
+  constructor(public readonly payload: JobPayload, public readonly meta: JobMeta = {}) {
     if (!(meta instanceof Object)) {
       throw new Error(`Invalid meta: Object expected, got ${inspect(meta)}`);
     }

@@ -7,7 +7,6 @@ import promClient from 'prom-client';
 
 import { inspect } from './robust';
 import ArnavonConfig from './config';
-import logger from './logger';
 
 /**
  * Arnavon uses a singleton pattern for the main "module"

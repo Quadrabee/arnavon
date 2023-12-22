@@ -61,7 +61,7 @@ export default (dispatcher: JobDispatcher) => {
       });
   });
 
-  api.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  api.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
     console.error(err);
     if (err instanceof ArnavonError) {
       return res.status(500).send(err);

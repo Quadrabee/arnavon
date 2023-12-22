@@ -24,7 +24,7 @@ export default class JobValidator {
    *
    * @param {Object} inputData
    */
-  validate(inputData: any) {
+  validate(inputData: unknown) {
     try {
       return this.#schema.dress(inputData);
     } catch (err) {

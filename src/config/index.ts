@@ -25,7 +25,7 @@ export default class ArnavonConfig {
     const fpath = path.join(process.cwd(), fname);
     try {
       fs.accessSync(fpath, fs.constants.R_OK);
-    } catch (err: any) {
+    } catch (err) {
       if (err.code === 'ENOENT') {
         throw new Error(`Config file not found: '${fname}'.`);
       }
