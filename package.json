@@ -69,7 +69,7 @@
   },
   "dependencies": {
     "ts-node": "^10.9.2",
-    "@babel/register": "^7.22.15",
+    "@babel/register": "^7.23.7",
     "@oclif/core": "^1.26.2",
     "amqplib": "^0.10.3",
     "bunyan": "^1.8.15",
