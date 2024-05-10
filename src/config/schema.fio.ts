@@ -5,7 +5,7 @@ ID = String(s | /[a-z]+[a-z_-]+/.test(s))
 
 #### QUEUE
 
-AMQP.Exchange.Type = String :: { "topic", "direct", "fanout" }
+AMQP.Exchange.Type = String :: { "topic", "direct", "fanout", "x-delayed-message" }
 
 AMQP.Exchange = {
   name    :  String
@@ -13,6 +13,7 @@ AMQP.Exchange = {
   default :? Boolean
   options :? {
     durable: Boolean
+    ...: .
   }
 }
 

@@ -96,7 +96,9 @@ export default class JobDispatcher {
       dispatched: new Date(),
     })));
 
-    const promises = jobs.map(job => Arnavon.queue.push(jobName, job));
+    delete options['strict'];
+
+    const promises = jobs.map(job => Arnavon.queue.push(jobName, job, options));
 
     return Promise.all(promises)
       .then(() => jobs);
@@ -109,7 +111,7 @@ export default class JobDispatcher {
     return this.jobs[metadata.jobName as string].validator;
   }
 
-  dispatch(jobName: string, data: unknown, meta = {}) {
+  dispatch(jobName: string, data: unknown, meta = {}, extraOptions = {}) {
     const jobConfig = this.jobs[jobName];
     if (!jobConfig) {
       this.#counters.unknown.inc({ jobName });
@@ -133,7 +135,7 @@ export default class JobDispatcher {
       dispatched: new Date(),
     }));
 
-    return Arnavon.queue.push(jobName, job)
+    return Arnavon.queue.push(jobName, job, extraOptions)
       .then(() => job);
   }
 

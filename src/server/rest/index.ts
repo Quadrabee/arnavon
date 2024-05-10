@@ -44,9 +44,21 @@ export default (dispatcher: JobDispatcher) => {
       });
     }
 
+    // Pass all x-* headers (except x-arnavon-*) to the queue
+    // This allows using special rabbitmq things like delayed messages, ttl, etc
+    const headers = Object.keys(req.headers)
+      .filter(h => h.toLowerCase().startsWith('x-') && !h.toLowerCase().startsWith('x-arnavon'))
+      .reduce((headers, k) => {
+        headers[k] = req.headers[k];
+        return headers;
+      }, {});
+
     // Decide on the dispatch mode
     const dispatchFn = pushMode === 'SINGLE' ? dispatcher.dispatch : dispatcher.dispatchBatch;
-    dispatchFn.bind(dispatcher)(req.params.id, req.body, { id: req.id }, { strict: validationMode === 'ALL-OR-NOTHING' })
+    dispatchFn.bind(dispatcher)(req.params.id, req.body, { id: req.id }, {
+      strict: validationMode === 'ALL-OR-NOTHING',
+      headers,
+    })
       .then((job) => {
         return res.status(201).send(job);
       })

@@ -43,6 +43,7 @@ export type AMQPQueueConfig = {
 
 export type AQMPPushOptions = {
   exchange: string
+  headers?: Record<string, unknown>
 }
 
 class AmqpQueue extends Queue {
@@ -182,12 +183,13 @@ class AmqpQueue extends Queue {
     return this;
   }
 
-  _push(key: string, data: unknown, { exchange }: AQMPPushOptions) {
+  _push(key: string, data: unknown, { exchange, headers }: AQMPPushOptions) {
     if (!this.#channel) {
       throw new Error('Cannot push, no channel found');
     }
     const payload = Buffer.from(JSON.stringify(data));
-    const options = { persistent: true };
+    const options = { persistent: true, headers };
+
     return new Promise((resolve, reject) => {
       return (this.#channel as amqplib.ConfirmChannel)
         .publish(exchange || this.#exchange, key, payload, options, (err) => {

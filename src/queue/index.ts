@@ -51,6 +51,7 @@ class Queue extends EventEmitter {
   // subclasses should implement _push(key, data)
   push(key: string, data: unknown, opts = {}): Promise<unknown> {
     logger.info(`${this.constructor.name} - Pushing to queue`, key, data);
+
     return this._push(key, data, opts).then((job) => {
       logger.info(`${this.constructor.name} - Pushed`);
       return job;
