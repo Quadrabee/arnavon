@@ -3,7 +3,8 @@
   "description": "Framework on top of RabbitMQ for easing up the development of producer/consumer/job queues.",
   "version": "1.0.0-rc.1",
   "author": "Louis Lambeau <llambeau@quadrabee.com>",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "bin": {
     "arnavon": "./bin/run"
   },
@@ -20,7 +21,7 @@
     "test:watch": "mocha --watch tests",
     "lint": "tsc && eslint src **/*.ts .eslintrc.js",
     "lint:fix": "tsc && eslint --fix src tests *.ts .eslintrc.js",
-    "build": "shx rm -rf dist && babel ./src --out-dir ./dist --source-maps -x .ts",
+    "build": "shx rm -rf dist && tsc",
     "build:watch": "babel ./src --watch --out-dir ./dist --source-maps --copy-files -x .ts",
     "postpack": "shx rm -f oclif.manifest.json",
     "prepack": "yarn build && oclif manifest && oclif readme",
