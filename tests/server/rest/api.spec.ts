@@ -94,7 +94,7 @@ describe('server/createApi', () => {
           expect(args[0]).to.equal('foo-bar');
           expect(args[1]).to.eql(jobPayload);
           // default validation mode
-          expect(args[3]).to.eql({ strict: false });
+          expect(args[3]).to.eql({ strict: false, headers: {} });
           done();
         });
     });
@@ -127,7 +127,7 @@ describe('server/createApi', () => {
           const { args } = dispatcher.dispatchBatch.getCall(0);
           expect(args[0]).to.equal('foo-bar');
           expect(args[1]).to.eql(jobPayload);
-          expect(args[3]).to.eql({ strict: true });
+          expect(args[3]).to.eql({ strict: true, headers: {} });
           done();
         });
     });
