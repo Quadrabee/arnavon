@@ -5,7 +5,13 @@ import { inspect } from '../robust';
 import Arnavon from '..';
 import { Server } from 'http';
 import { JobRunner, JobDispatcher } from '../jobs';
-import { JobRunnerConfig } from '../jobs/runner';
+import { JobRunnerConfig, JobRunnerContext } from '../jobs/runner';
+import { Registry } from 'prom-client';
+
+export type JobConsumerContext = JobRunnerContext & {
+  dispatcher: JobDispatcher
+  prometheusRegistry: Registry
+}
 
 export default class Consumer {
 
@@ -74,7 +80,7 @@ export default class Consumer {
         // @ts-expect-error we need to refactor this
         _job.payload = validator.validate(_job.payload);
         // Extend context to include dispatcher and prometheus registry
-        const extendedContext = Object.assign({}, context, {
+        const extendedContext: JobConsumerContext = Object.assign({}, context, {
           dispatcher: this.#dispatcher,
           prometheusRegistry: Arnavon.registry,
         });

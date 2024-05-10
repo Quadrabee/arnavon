@@ -49,3 +49,9 @@ export {
   Server,
   Consumer,
 };
+
+export * from './consumer';
+export * from './server';
+export * from './queue';
+export * from './jobs';
+export * from './config';
