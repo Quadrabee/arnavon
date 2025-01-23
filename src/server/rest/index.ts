@@ -53,9 +53,18 @@ export default (dispatcher: JobDispatcher) => {
         return headers;
       }, {});
 
+    // Add all x-arnavon-meta-* headers to the metadata
+    const additionalMetadata = Object.keys(req.headers)
+      .filter(h => h.toLowerCase().startsWith('x-arnavon-meta-'))
+      .reduce((headers, k) => {
+        const key = k.substring('x-arnavon-meta-'.length);
+        headers[key] = req.headers[k];
+        return headers;
+      }, {});
+
     // Decide on the dispatch mode
     const dispatchFn = pushMode === 'SINGLE' ? dispatcher.dispatch : dispatcher.dispatchBatch;
-    dispatchFn.bind(dispatcher)(req.params.id, req.body, { id: req.id }, {
+    dispatchFn.bind(dispatcher)(req.params.id, req.body, { id: req.id, ...additionalMetadata }, {
       strict: validationMode === 'ALL-OR-NOTHING',
       headers,
     })
