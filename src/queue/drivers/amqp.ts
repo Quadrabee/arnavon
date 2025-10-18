@@ -49,7 +49,7 @@ export type AQMPPushOptions = {
 class AmqpQueue extends Queue {
 
   protected url: string;
-  #conn?: amqplib.Connection;
+  #conn?: amqplib.ChannelModel;
   #channel?: amqplib.ConfirmChannel;
   #exchange;
   #topology;
@@ -114,7 +114,7 @@ class AmqpQueue extends Queue {
       .then(createBindings);
   }
 
-  _connectWithRetries(attemptsLeft: number, waitTime = 10): Promise<amqplib.Connection> {
+  _connectWithRetries(attemptsLeft: number, waitTime = 10): Promise<amqplib.ChannelModel> {
     return amqplib
     // Connect
       .connect(this.url)
