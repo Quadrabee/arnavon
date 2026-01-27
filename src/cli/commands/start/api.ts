@@ -23,14 +23,14 @@ export default class StartApiCommand extends Command {
 
     const port = flags.port || 3000;
     const server = new Server(Arnavon.config);
-    server.start(port);
+    await server.start(port);
     // Quit properly on SIGINT (typically ctrl-c)
-    process.on('SIGINT', () => {
-      server.stop();
+    process.on('SIGINT', async () => {
+      await server.stop();
     });
     // Quit properly on SIGTERM (typically kubernetes termination)
-    process.on('SIGTERM', () => {
-      server.stop();
+    process.on('SIGTERM', async () => {
+      await server.stop();
     });
   }
 }

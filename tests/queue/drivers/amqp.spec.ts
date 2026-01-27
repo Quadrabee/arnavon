@@ -96,7 +96,7 @@ describe('AmqpQueue', () => {
   describe('#_consume', () => {
     it('throws an error if no channel is available', () => {
       const queue = new AmqpQueue(config.queue.config);
-      expect(() => queue._consume('queue-name', () => Promise.resolve())).to.throw(/Cannot push, no channel found/);
+      expect(() => queue._consume('queue-name', () => Promise.resolve())).to.throw(/Cannot consume, no channel found/);
     });
   });
 

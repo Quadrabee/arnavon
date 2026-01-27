@@ -45,71 +45,69 @@ describe('MemoryQueue', () => {
       });
     });
 
-    it('stores items in the queue', () => {
+    it('stores items in the queue', async () => {
       const queue = new MemoryQueue();
-      const processorSpy = sinon.spy();
+      const processorSpy = sinon.spy(() => Promise.resolve());
 
-      return queue._push('test-key', { data: 'test1' })
-        .then(() => queue._push('test-key', { data: 'test2' }))
-        .then(() => {
-          queue._consume('test-key', processorSpy);
-          expect(processorSpy).to.have.been.calledTwice;
-        });
+      await queue._push('test-key', { data: 'test1' });
+      await queue._push('test-key', { data: 'test2' });
+      await queue._consume('test-key', processorSpy);
+      expect(processorSpy).to.have.been.calledTwice;
     });
   });
 
   describe('#_consume', () => {
-    it('processes all items in the queue', () => {
+    it('processes all items in the queue', async () => {
       const queue = new MemoryQueue();
-      const processor = sinon.spy();
+      const processor = sinon.spy(() => Promise.resolve());
 
       // Push items first
-      queue._push('key1', { data: 'item1' });
-      queue._push('key2', { data: 'item2' });
-      queue._push('key3', { data: 'item3' });
+      await queue._push('key1', { data: 'item1' });
+      await queue._push('key2', { data: 'item2' });
+      await queue._push('key3', { data: 'item3' });
 
       // Consume
-      queue._consume('selector', processor);
+      await queue._consume('selector', processor);
 
       expect(processor).to.have.been.calledThrice;
     });
 
-    it('empties the queue after consuming', () => {
+    it('empties the queue after consuming', async () => {
       const queue = new MemoryQueue();
-      const processor = sinon.spy();
+      const processor = sinon.spy(() => Promise.resolve());
 
-      queue._push('key1', { data: 'item1' });
-      queue._push('key2', { data: 'item2' });
+      await queue._push('key1', { data: 'item1' });
+      await queue._push('key2', { data: 'item2' });
 
-      queue._consume('selector', processor);
+      await queue._consume('selector', processor);
       expect(processor).to.have.been.calledTwice;
 
       // Consume again - should not process any items
-      const processor2 = sinon.spy();
-      queue._consume('selector', processor2);
+      const processor2 = sinon.spy(() => Promise.resolve());
+      await queue._consume('selector', processor2);
       expect(processor2).to.not.have.been.called;
     });
 
-    it('does nothing when queue is empty', () => {
+    it('does nothing when queue is empty', async () => {
       const queue = new MemoryQueue();
-      const processor = sinon.spy();
+      const processor = sinon.spy(() => Promise.resolve());
 
-      queue._consume('selector', processor);
+      await queue._consume('selector', processor);
 
       expect(processor).to.not.have.been.called;
     });
 
-    it('passes key and data to the processor', () => {
+    it('passes data and metadata to the processor', async () => {
       const queue = new MemoryQueue();
-      const processor = sinon.spy();
+      const processor = sinon.spy(() => Promise.resolve());
 
-      queue._push('my-key', { foo: 'bar' });
-      queue._consume('selector', processor);
+      await queue._push('my-key', { foo: 'bar' });
+      await queue._consume('selector', processor);
 
       expect(processor).to.have.been.calledOnce;
-      const [key, data] = processor.getCall(0).args;
-      expect(key).to.equal('my-key');
+      const [data, metadata] = processor.getCall(0).args;
       expect(data).to.eql({ foo: 'bar' });
+      expect(metadata).to.eql({ jobName: 'my-key' });
     });
   });
 

@@ -84,15 +84,15 @@ Please note that the --all flag can be used to start all consumers at once, but 
     // eslint-disable-next-line no-console
     console.log('Starting consumers:', configs.map(c => c.name));
     const consumer = new Consumer(configs, dispatcher);
-    consumer.start(port);
+    await consumer.start(port);
 
     // Quit properly on SIGINT (typically ctrl-c)
-    process.on('SIGINT', () => {
-      consumer.stop();
+    process.on('SIGINT', async () => {
+      await consumer.stop();
     });
     // Quit properly on SIGTERM (typically kubernetes termination)
-    process.on('SIGTERM', () => {
-      consumer.stop();
+    process.on('SIGTERM', async () => {
+      await consumer.stop();
     });
 
   }
