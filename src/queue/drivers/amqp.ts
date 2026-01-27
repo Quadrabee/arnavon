@@ -1,4 +1,4 @@
-import Queue, { QueueInternalProcessor } from '../index';
+import Queue, { QueueInternalProcessor, RequeueOptions, RequeueResult } from '../index';
 import amqplib, { ConfirmChannel } from 'amqplib';
 import logger from '../../logger';
 import { JobMeta } from '../../jobs/job';
@@ -49,6 +49,10 @@ export type AQMPPushOptions = {
 class AmqpQueue extends Queue {
 
   protected url: string;
+  #managementUrl: string;
+  #managementAuth: string;
+  #vhost: string;
+  #amqpUri: string;
   #conn?: amqplib.ChannelModel;
   #channel?: amqplib.ConfirmChannel;
   #exchange;
@@ -57,6 +61,28 @@ class AmqpQueue extends Queue {
   #prefetchCount;
   #disconnecting ?: boolean;
 
+  /**
+   * Derives the RabbitMQ Management API URL from an AMQP URL.
+   * amqp://user:pass@host:5672/vhost -> http://host:15672
+   */
+  static deriveManagementUrl(amqpUrl: string): { url: string; auth: string; vhost: string; amqpUri: string } {
+    const parsed = new URL(amqpUrl);
+    const host = parsed.hostname;
+    const managementPort = 15672;
+    const protocol = 'http';
+    const auth = Buffer.from(`${parsed.username}:${parsed.password}`).toString('base64');
+    // vhost is the pathname without leading slash, default to '/'
+    const vhost = parsed.pathname ? decodeURIComponent(parsed.pathname.slice(1)) || '/' : '/';
+    // Build AMQP URI for shovel (without query string)
+    const amqpUri = `amqp://${parsed.username}:${parsed.password}@${parsed.host}/${encodeURIComponent(vhost)}`;
+    return {
+      url: `${protocol}://${host}:${managementPort}`,
+      auth,
+      vhost,
+      amqpUri,
+    };
+  }
+
   constructor(params: AMQPQueueConfig) {
     super();
 
@@ -64,6 +90,14 @@ class AmqpQueue extends Queue {
       throw new Error('AMQP: url parameter required');
     }
     this.url = process.env.AMQP_URL || params.url as string;
+
+    // Setup management API URL for shovel operations
+    const derived = AmqpQueue.deriveManagementUrl(this.url);
+    this.#managementUrl = derived.url;
+    this.#managementAuth = derived.auth;
+    this.#vhost = derived.vhost;
+    this.#amqpUri = derived.amqpUri;
+
     this.#connectRetries = params.connectRetries || 10;
     this.#prefetchCount = params.prefetchCount || 1;
     this.#topology = params.topology;
@@ -239,6 +273,123 @@ class AmqpQueue extends Queue {
         });
     })
       .catch((err) => this.emit('error', err));
+  }
+
+  async _requeue(sourceQueue: string, options: RequeueOptions): Promise<RequeueResult> {
+    const { destinationQueue, count } = options;
+    const vhostEncoded = encodeURIComponent(this.#vhost);
+    const sourceQueueEncoded = encodeURIComponent(sourceQueue);
+    // Use deterministic name so we can detect if a requeue is already in progress
+    const shovelName = `arnavon-requeue-${sourceQueue}`;
+    const shovelNameEncoded = encodeURIComponent(shovelName);
+
+    logger.info(`${this.constructor.name}: Initiating requeue from ${sourceQueue} to ${destinationQueue} via Shovel`);
+
+    try {
+      // Check if a shovel already exists for this source queue
+      const statusUrl = `${this.#managementUrl}/api/shovels/${vhostEncoded}/${shovelNameEncoded}`;
+      const existingResponse = await fetch(statusUrl, {
+        headers: { 'Authorization': `Basic ${this.#managementAuth}` },
+      });
+
+      if (existingResponse.ok) {
+        // Shovel already exists - a requeue is in progress
+        throw new Error(
+          `A requeue operation is already in progress for queue '${sourceQueue}'. ` +
+          'Wait for it to complete before starting another.',
+        );
+      }
+
+      // Validate destination queue exists
+      const destQueueEncoded = encodeURIComponent(destinationQueue);
+      const destQueueUrl = `${this.#managementUrl}/api/queues/${vhostEncoded}/${destQueueEncoded}`;
+      const destQueueResponse = await fetch(destQueueUrl, {
+        headers: { 'Authorization': `Basic ${this.#managementAuth}` },
+      });
+
+      if (!destQueueResponse.ok) {
+        if (destQueueResponse.status === 404) {
+          throw new Error(
+            `Destination queue '${destinationQueue}' does not exist. ` +
+            'Please specify an existing queue to avoid accidentally creating new queues.',
+          );
+        }
+        throw new Error(`Failed to validate destination queue: ${destQueueResponse.status}`);
+      }
+
+      // Get the message count from the source queue
+      const queueInfoUrl = `${this.#managementUrl}/api/queues/${vhostEncoded}/${sourceQueueEncoded}`;
+      const queueInfoResponse = await fetch(queueInfoUrl, {
+        headers: { 'Authorization': `Basic ${this.#managementAuth}` },
+      });
+
+      let messageCount = 0;
+      if (queueInfoResponse.ok) {
+        const queueInfo = await queueInfoResponse.json() as { messages?: number };
+        messageCount = queueInfo.messages ?? 0;
+      }
+
+      // Calculate estimated requeue count
+      const estimatedCount = count !== undefined ? Math.min(count, messageCount) : messageCount;
+
+      // Create shovel configuration - it will auto-delete after emptying the queue
+      const shovelConfig = {
+        value: {
+          'src-uri': this.#amqpUri,
+          'src-queue': sourceQueue,
+          'dest-uri': this.#amqpUri,
+          'dest-queue': destinationQueue,
+          'src-delete-after': count ?? 'queue-length',
+          'ack-mode': 'on-confirm',
+        },
+      };
+
+      // Create the shovel
+      const createUrl = `${this.#managementUrl}/api/parameters/shovel/${vhostEncoded}/${shovelNameEncoded}`;
+      const createResponse = await fetch(createUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${this.#managementAuth}`,
+        },
+        body: JSON.stringify(shovelConfig),
+      });
+
+      if (!createResponse.ok) {
+        const errorText = await createResponse.text();
+
+        if (createResponse.status === 404) {
+          throw new Error(
+            'RabbitMQ Shovel plugin not available. ' +
+            'Ensure the rabbitmq_shovel and rabbitmq_shovel_management plugins are enabled.',
+          );
+        }
+        if (createResponse.status === 401) {
+          throw new Error('RabbitMQ Management API authentication failed.');
+        }
+        throw new Error(`Failed to create shovel (${createResponse.status}): ${errorText}`);
+      }
+
+      logger.info(`${this.constructor.name}: Shovel created, requeue initiated from ${sourceQueue} to ${destinationQueue} (estimated: ${estimatedCount} messages)`);
+
+      // Return immediately - shovel will auto-delete when done
+      return {
+        status: 'initiated',
+        requeued: estimatedCount,
+        failed: 0,
+        errors: [],
+      };
+    } catch (err) {
+      // Handle network errors
+      if (err instanceof TypeError && (err as Error).message.includes('fetch')) {
+        throw new Error(
+          `Cannot connect to RabbitMQ Management API at ${this.#managementUrl}. ` +
+          'Ensure RabbitMQ is running and the management plugin is enabled.',
+        );
+      }
+
+      throw err;
+    }
   }
 
 }

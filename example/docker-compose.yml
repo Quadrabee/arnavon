@@ -1,10 +1,9 @@
-version: '3.3'
-
 services:
 
   api:
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     image: quadrabee/arnavon
     ports:
       - 3000:80
@@ -17,8 +16,10 @@ services:
 
   workers:
     depends_on:
-      - rabbitmq
-      - fakesmtp
+      rabbitmq:
+        condition: service_healthy
+      fakesmtp:
+        condition: service_started
     image: example/consumers
     build:
       context: consumers
@@ -40,13 +41,21 @@ services:
       - 1080:1080
 
   rabbitmq:
-    image: rabbitmq:3.8.11-management
+    image: rabbitmq:4-management
     ports:
       - 5672:5672
       - 15672:15672
     environment:
       RABBITMQ_DEFAULT_USER: rabbit
       RABBITMQ_DEFAULT_PASS: rabbit
+    volumes:
+      # Enable shovel plugins for DLQ requeue functionality
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   webspicy:
     build: ./webspicy

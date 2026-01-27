@@ -36,6 +36,31 @@ Job.Error = {
 }
 
 ###
+### DLQ Requeue
+###
+
+Dlq.QueueName = String(s | s.length > 0)
+
+Dlq.RequeueRequest = {
+  queueName        :  String
+  destinationQueue :  Dlq.QueueName
+  count            :? Numeric
+}
+
+Dlq.RequeueStatus = String
+
+Dlq.RequeueResult = {
+  status   : Dlq.RequeueStatus
+  requeued : Numeric
+  failed   : Numeric
+  errors   : [{ error: String }]
+}
+
+Dlq.Error = {
+  error : String
+}
+
+###
 ### Example
 ###
 
