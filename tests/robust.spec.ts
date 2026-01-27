@@ -8,6 +8,13 @@ import {
   inspect,
 } from '../src/robust';
 
+// Mirror of FinitioError interface from robust.ts (not exported)
+interface FinitioErrorLike {
+  message: string;
+  location: string;
+  rootCauses: FinitioErrorLike[];
+}
+
 describe('robust', () => {
 
   describe('ArnavonError', () => {
@@ -67,7 +74,7 @@ describe('robust', () => {
             { message: 'Expected Number', location: 'data.age' },
           ],
         };
-        const err = DataValidationError.fromFinitioError('Validation failed:', finitioError as any);
+        const err = DataValidationError.fromFinitioError('Validation failed:', finitioError as FinitioErrorLike);
         expect(err).to.be.an.instanceof(DataValidationError);
         expect(err.message).to.include('Validation failed:');
         expect(err.message).to.include('Expected String (data.name)');
@@ -80,7 +87,7 @@ describe('robust', () => {
           location: 'root',
           rootCauses: [],
         };
-        const err = DataValidationError.fromFinitioError('Validation failed:', finitioError as any);
+        const err = DataValidationError.fromFinitioError('Validation failed:', finitioError as FinitioErrorLike);
         expect(err).to.be.an.instanceof(DataValidationError);
         expect(err.message).to.equal('Validation failed: ');
       });
