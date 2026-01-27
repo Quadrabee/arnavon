@@ -1,0 +1,83 @@
+---
+name: |-
+  Requeue messages from DLQ
+
+url: |-
+  /dlq/{queueName}/requeue
+
+services:
+- method: |-
+    POST
+
+  description: |-
+    Move messages from a dead letter queue to a destination queue
+    using the RabbitMQ Management API.
+
+  preconditions:
+    - The RabbitMQ Management plugin must be enabled
+    - The source queue must exist
+    - The destination queue must be specified
+
+  postconditions:
+    - Messages are moved from source to destination queue
+    - The response contains the count of requeued messages
+
+  input_schema: |-
+    Dlq.RequeueRequest
+
+  output_schema: |-
+    Dlq.RequeueResult
+
+  error_schema: |-
+    Dlq.Error
+
+  examples:
+
+    - description: |-
+        FOR: Messages are moved from source to destination queue
+      params:
+        queueName: dead-letters
+        destinationQueue: send-email
+      expected:
+        content_type: application/json; charset=utf-8
+        status: 200
+      assert:
+        - 'pathFD("", status: "initiated")'
+        - 'pathFD("", requeued: 0)'
+        - 'pathFD("", failed: 0)'
+        - 'pathFD("", errors: [])'
+
+    - description: |-
+        FOR: A specific count of messages can be moved
+      params:
+        queueName: dead-letters
+        destinationQueue: send-email
+        count: 10
+      expected:
+        content_type: application/json; charset=utf-8
+        status: 200
+
+  counterexamples:
+
+    - description: |-
+        FOR: The destination queue must be specified
+      dress_params: false
+      params:
+        queueName: dead-letters
+      expected:
+        content_type: application/json; charset=utf-8
+        status: 400
+      assert:
+        - match /destinationQueue is required/
+
+    - description: |-
+        FOR: The destination queue must be a string
+      dress_params: false
+      params:
+        queueName: dead-letters
+        destinationQueue: 123
+      expected:
+        content_type: application/json; charset=utf-8
+        status: 400
+      assert:
+        - match /destinationQueue is required/

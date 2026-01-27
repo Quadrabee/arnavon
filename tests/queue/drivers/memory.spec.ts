@@ -111,4 +111,89 @@ describe('MemoryQueue', () => {
     });
   });
 
+  describe('#_requeue', () => {
+    it('requeues all messages from source queue to destination queue', async () => {
+      const queue = new MemoryQueue();
+
+      // Push items to a named "dlq" queue
+      queue.pushToQueue('dlq', 'job-key', { data: 'item1' });
+      queue.pushToQueue('dlq', 'job-key', { data: 'item2' });
+      queue.pushToQueue('dlq', 'job-key', { data: 'item3' });
+
+      const result = await queue._requeue('dlq', { destinationQueue: 'send-email' });
+
+      expect(result.status).to.equal('completed');
+      expect(result.requeued).to.equal(3);
+      expect(result.failed).to.equal(0);
+      expect(result.errors).to.eql([]);
+      expect(queue.getQueueLength('dlq')).to.equal(0);
+      expect(queue.getQueueLength('send-email')).to.equal(3);
+    });
+
+    it('requeues only the specified count of messages', async () => {
+      const queue = new MemoryQueue();
+
+      queue.pushToQueue('dlq', 'job-key', { data: 'item1' });
+      queue.pushToQueue('dlq', 'job-key', { data: 'item2' });
+      queue.pushToQueue('dlq', 'job-key', { data: 'item3' });
+
+      const result = await queue._requeue('dlq', { destinationQueue: 'send-email', count: 2 });
+
+      expect(result.requeued).to.equal(2);
+      expect(result.failed).to.equal(0);
+      expect(queue.getQueueLength('dlq')).to.equal(1);
+      expect(queue.getQueueLength('send-email')).to.equal(2);
+    });
+
+    it('returns zero when source queue is empty', async () => {
+      const queue = new MemoryQueue();
+
+      const result = await queue._requeue('empty-dlq', { destinationQueue: 'send-email' });
+
+      expect(result.status).to.equal('completed');
+      expect(result.requeued).to.equal(0);
+      expect(result.failed).to.equal(0);
+      expect(result.errors).to.eql([]);
+    });
+
+    it('preserves original key when moving messages', async () => {
+      const queue = new MemoryQueue();
+
+      queue.pushToQueue('dlq', 'original-key', { data: 'item1' });
+
+      await queue._requeue('dlq', { destinationQueue: 'send-email' });
+
+      expect(queue.getQueueLength('send-email')).to.equal(1);
+    });
+  });
+
+  describe('#pushToQueue', () => {
+    it('pushes to a named queue', () => {
+      const queue = new MemoryQueue();
+
+      queue.pushToQueue('my-queue', 'key', { data: 'test' });
+
+      expect(queue.getQueueLength('my-queue')).to.equal(1);
+    });
+  });
+
+  describe('#getQueueLength', () => {
+    it('returns length of default queue when no name provided', async () => {
+      const queue = new MemoryQueue();
+
+      await queue._push('key', { data: 'test' });
+
+      expect(queue.getQueueLength()).to.equal(1);
+    });
+
+    it('returns length of named queue', () => {
+      const queue = new MemoryQueue();
+
+      queue.pushToQueue('named-queue', 'key', { data: 'test' });
+
+      expect(queue.getQueueLength('named-queue')).to.equal(1);
+      expect(queue.getQueueLength('other-queue')).to.equal(0);
+    });
+  });
+
 });

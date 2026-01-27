@@ -3,6 +3,7 @@ import createApi from '../../api';
 import { JobDispatcher } from '../../jobs';
 import { ArnavonError, UnknownJobError, DataValidationError } from '../../robust';
 import logger from '../../logger';
+import Arnavon from '../../index';
 
 // Valid x-arnavon-push-modes
 const PUSH_MODES = ['SINGLE', 'BATCH'];
@@ -81,6 +82,33 @@ export default (dispatcher: JobDispatcher) => {
         }
         next(err);
       });
+  });
+
+  api.post('/dlq/:queueName/requeue', async (req, res, next) => {
+    const { queueName } = req.params;
+    const count = req.query.count ? parseInt(req.query.count as string, 10) : undefined;
+    const { destinationQueue } = req.body || {};
+
+    // Validate destinationQueue is provided
+    if (!destinationQueue || typeof destinationQueue !== 'string') {
+      return res.status(400).send({
+        error: 'destinationQueue is required in request body',
+      });
+    }
+
+    // Validate count if provided
+    if (count !== undefined && (isNaN(count) || count < 1)) {
+      return res.status(400).send({
+        error: 'Invalid count parameter: must be a positive integer',
+      });
+    }
+
+    try {
+      const result = await Arnavon.queue.requeue(queueName, { count, destinationQueue });
+      return res.status(200).send(result);
+    } catch (err) {
+      next(err);
+    }
   });
 
   api.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
