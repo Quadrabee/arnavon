@@ -353,6 +353,100 @@ describe('server/createApi', () => {
           done();
         });
     });
+
+    it('returns 400 when X-Arnavon-Batch-Input-Validation is used in SINGLE push mode', (done) => {
+      chai.request(api)
+        .post('/jobs/foo-bar')
+        .set('X-Arnavon-Push-Mode', 'SINGLE')
+        .set('X-Arnavon-Batch-Input-Validation', 'ALL-OR-NOTHING')
+        .send({ foo: 'bar' })
+        .end((err, res) => {
+          res.should.have.status(400);
+          res.body.should.eql({ error: 'X-Arnavon-Batch-Input-Validation cannot be used in SINGLE push mode' });
+          done();
+        });
+    });
+
+    it('passes X-* headers (except X-Arnavon-*) to the dispatcher options', (done) => {
+      const jobPayload = { foo: 'bar' };
+
+      chai.request(api)
+        .post('/jobs/foo-bar')
+        .set('X-Custom-Header', 'custom-value')
+        .set('X-Another-Header', 'another-value')
+        .set('X-Arnavon-Push-Mode', 'SINGLE')
+        .send(jobPayload)
+        .end((err, res) => {
+          res.should.have.status(201);
+          expect(dispatcher.dispatch).to.be.calledOnce;
+          const { args } = dispatcher.dispatch.getCall(0);
+          expect(args[3].headers).to.eql({
+            'x-custom-header': 'custom-value',
+            'x-another-header': 'another-value',
+          });
+          done();
+        });
+    });
+
+    it('does not pass X-Arnavon-* headers to the queue headers', (done) => {
+      const jobPayload = { foo: 'bar' };
+
+      chai.request(api)
+        .post('/jobs/foo-bar')
+        .set('X-Custom-Header', 'custom-value')
+        .set('X-Arnavon-Meta-Foo', 'meta-value')
+        .send(jobPayload)
+        .end((err, res) => {
+          res.should.have.status(201);
+          expect(dispatcher.dispatch).to.be.calledOnce;
+          const { args } = dispatcher.dispatch.getCall(0);
+          // X-Arnavon-Meta-Foo should not be in headers
+          expect(args[3].headers).to.eql({
+            'x-custom-header': 'custom-value',
+          });
+          done();
+        });
+    });
+
+    it('passes X-Arnavon-Meta-* headers as metadata', (done) => {
+      const jobPayload = { foo: 'bar' };
+
+      chai.request(api)
+        .post('/jobs/foo-bar')
+        .set('X-Arnavon-Meta-User-Id', '12345')
+        .set('X-Arnavon-Meta-Correlation-Id', 'abc-def')
+        .send(jobPayload)
+        .end((err, res) => {
+          res.should.have.status(201);
+          expect(dispatcher.dispatch).to.be.calledOnce;
+          const { args } = dispatcher.dispatch.getCall(0);
+          // Metadata should contain the x-arnavon-meta-* values (without the prefix)
+          expect(args[2]).to.include({
+            'user-id': '12345',
+            'correlation-id': 'abc-def',
+          });
+          done();
+        });
+    });
+
+    it('passes X-* headers to the dispatcher in batch mode', (done) => {
+      const jobPayload = [{ foo: 'bar' }];
+
+      chai.request(api)
+        .post('/jobs/foo-bar')
+        .set('X-Arnavon-Push-Mode', 'BATCH')
+        .set('X-Delay', '5000')
+        .send(jobPayload)
+        .end((err, res) => {
+          res.should.have.status(201);
+          expect(dispatcher.dispatchBatch).to.be.calledOnce;
+          const { args } = dispatcher.dispatchBatch.getCall(0);
+          expect(args[3].headers).to.eql({
+            'x-delay': '5000',
+          });
+          done();
+        });
+    });
   });
 
 });
