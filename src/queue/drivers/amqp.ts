@@ -105,7 +105,7 @@ class AmqpQueue extends Queue {
           return (this.#channel as amqplib.ConfirmChannel)
             .bindQueue(q.name, binding.exchange, binding.routingKey);
         });
-        promises.concat(bindingPromises as Array<Promise<unknown>>);
+        promises.push(...bindingPromises);
       });
       return Promise.all(promises);
     };
@@ -176,8 +176,8 @@ class AmqpQueue extends Queue {
   }
 
   async _disconnect() {
+    this.#disconnecting = true;
     if (this.#conn) {
-      this.#disconnecting = true;
       await this.#conn.close();
     }
     return this;
@@ -203,7 +203,7 @@ class AmqpQueue extends Queue {
 
   _consume(queueName: string, processor: QueueInternalProcessor) {
     if (!this.#channel) {
-      throw new Error('Cannot push, no channel found');
+      throw new Error('Cannot consume, no channel found');
     }
     const channel = this.#channel as ConfirmChannel;
     return channel.consume(queueName, (msg) => {
@@ -225,7 +225,9 @@ class AmqpQueue extends Queue {
         // Nack with allUpTo=false & requeue=false
         return channel.nack(msg, false, false);
       }
-      processor(payload, metadata as JobMeta)
+      // Wrap in Promise.resolve to catch synchronous throws from processor
+      Promise.resolve()
+        .then(() => processor(payload, metadata as JobMeta))
         .then(() => {
           logger.info(`${this.constructor.name}: Acking item consumption`);
           channel.ack(msg);

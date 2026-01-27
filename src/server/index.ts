@@ -54,17 +54,17 @@ export default class Server {
   start(port = 3000) {
     return this._connectQueue()
       .then(() => {
-        this._startApi(port);
+        return this._startApi(port);
       })
       .catch((err) => {
-        console.error(err);
+        logger.error(err, 'Server failed to start');
         process.exit(10);
       });
   }
 
-  stop() {
-    logger.error('Server stopping...');
+  async stop() {
+    logger.info('Server stopping...');
     this._stopApi();
-    this._disconnectQueue();
+    await this._disconnectQueue();
   }
 }

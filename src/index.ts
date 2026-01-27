@@ -36,6 +36,12 @@ class Arnavon {
 
   // for test purposes, shouldn't really be used
   static reset() {
+    // Disconnect old queue to prevent memory leaks
+    if (Arnavon.queue) {
+      Arnavon.queue.disconnect().catch(() => {
+        // Ignore disconnect errors during reset
+      });
+    }
     Arnavon.registry = new promClient.Registry();
     promClient.collectDefaultMetrics({ register: Arnavon.registry });
   }

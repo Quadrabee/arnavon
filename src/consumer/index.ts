@@ -101,9 +101,9 @@ export default class Consumer {
       });
   }
 
-  stop() {
-    logger.error('Server stopping...');
+  async stop() {
+    logger.info('Consumer stopping...');
     this._stopApi();
-    this._disconnectQueue();
+    await this._disconnectQueue();
   }
 }

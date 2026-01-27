@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import createApi from '../../api';
 import { JobDispatcher } from '../../jobs';
 import { ArnavonError, UnknownJobError, DataValidationError } from '../../robust';
+import logger from '../../logger';
 
 // Valid x-arnavon-push-modes
 const PUSH_MODES = ['SINGLE', 'BATCH'];
@@ -83,7 +84,7 @@ export default (dispatcher: JobDispatcher) => {
   });
 
   api.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
-    console.error(err);
+    logger.error(err, 'Unhandled error in REST API');
     if (err instanceof ArnavonError) {
       return res.status(500).send(err);
     }

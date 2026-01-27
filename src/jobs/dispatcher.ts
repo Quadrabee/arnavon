@@ -96,9 +96,11 @@ export default class JobDispatcher {
       dispatched: new Date(),
     })));
 
-    delete options['strict'];
+    // Clone options to avoid mutating caller's object
+    const pushOptions = { ...options };
+    delete (pushOptions as { strict?: boolean })['strict'];
 
-    const promises = jobs.map(job => Arnavon.queue.push(jobName, job, options));
+    const promises = jobs.map(job => Arnavon.queue.push(jobName, job, pushOptions));
 
     return Promise.all(promises)
       .then(() => jobs);
@@ -111,11 +113,11 @@ export default class JobDispatcher {
     return this.jobs[metadata.jobName as string].validator;
   }
 
-  dispatch(jobName: string, data: unknown, meta = {}, extraOptions = {}) {
+  async dispatch(jobName: string, data: unknown, meta = {}, extraOptions = {}) {
     const jobConfig = this.jobs[jobName];
     if (!jobConfig) {
       this.#counters.unknown.inc({ jobName });
-      return Promise.reject(new UnknownJobError(jobName));
+      throw new UnknownJobError(jobName);
     }
     const validator = jobConfig.validator;
     let jobPayload;
@@ -124,9 +126,10 @@ export default class JobDispatcher {
     } catch (err) {
       this.#counters.invalid.inc({ jobName });
       if (jobConfig.invalidJobExchange) {
-        Arnavon.queue.push(jobName, data, { exchange: jobConfig.invalidJobExchange });
+        // Await the push to ensure invalid job is queued before rejecting
+        await Arnavon.queue.push(jobName, data, { exchange: jobConfig.invalidJobExchange });
       }
-      return Promise.reject(err);
+      throw err;
     }
 
     this.#counters.valid.inc({ jobName });
@@ -135,8 +138,8 @@ export default class JobDispatcher {
       dispatched: new Date(),
     }));
 
-    return Arnavon.queue.push(jobName, job, extraOptions)
-      .then(() => job);
+    await Arnavon.queue.push(jobName, job, extraOptions);
+    return job;
   }
 
 }
