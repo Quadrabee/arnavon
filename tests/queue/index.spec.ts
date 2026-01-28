@@ -45,6 +45,9 @@ describe('Queue', () => {
     _requeue(_sourceQueue, _options) {
       return Promise.resolve({ status: 'completed', requeued: 1, failed: 0, errors: [] });
     }
+    _getQueuesInfo(queueNames) {
+      return Promise.resolve(queueNames.map(name => ({ name, messages: 0, consumers: 0, state: 'running' })));
+    }
   }
 
   let queue;
@@ -141,6 +144,22 @@ describe('Queue', () => {
         .returns(Promise.resolve({ status: 'initiated', requeued: 0, failed: 0, errors: [] }));
       queue.requeue('dlq-name', { destinationQueue: 'send-email', count: 5 });
       expect(spy).to.be.calledOnceWith('dlq-name', { destinationQueue: 'send-email', count: 5 });
+    });
+  });
+
+  describe('#getQueuesInfo', () => {
+    it('is a function', () => {
+      expect(queue.getQueuesInfo).to.be.an.instanceof(Function);
+    });
+    it('returns a promise', () => {
+      sinon.stub(queue, '_getQueuesInfo').returns(Promise.resolve([]));
+      expect(queue.getQueuesInfo(['queue-1'])).to.be.an.instanceof(Promise);
+    });
+    it('calls the subclass _getQueuesInfo implementation', () => {
+      const spy = sinon.stub(queue, '_getQueuesInfo')
+        .returns(Promise.resolve([{ name: 'q1', messages: 5, consumers: 1, state: 'running' }]));
+      queue.getQueuesInfo(['q1', 'q2']);
+      expect(spy).to.be.calledOnceWith(['q1', 'q2']);
     });
   });
 

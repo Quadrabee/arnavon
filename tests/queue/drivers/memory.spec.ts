@@ -196,4 +196,30 @@ describe('MemoryQueue', () => {
     });
   });
 
+  describe('#_getQueuesInfo', () => {
+    it('returns info for all requested queues', async () => {
+      const queue = new MemoryQueue();
+
+      queue.pushToQueue('queue-1', 'key', { data: 'item1' });
+      queue.pushToQueue('queue-1', 'key', { data: 'item2' });
+      queue.pushToQueue('queue-2', 'key', { data: 'item3' });
+
+      const result = await queue._getQueuesInfo(['queue-1', 'queue-2', 'queue-3']);
+
+      expect(result).to.have.length(3);
+      expect(result[0]).to.eql({ name: 'queue-1', messages: 2, consumers: 0, state: 'running' });
+      expect(result[1]).to.eql({ name: 'queue-2', messages: 1, consumers: 0, state: 'running' });
+      expect(result[2]).to.eql({ name: 'queue-3', messages: 0, consumers: 0, state: 'running' });
+    });
+
+    it('returns zero messages for non-existent queues', async () => {
+      const queue = new MemoryQueue();
+
+      const result = await queue._getQueuesInfo(['non-existent']);
+
+      expect(result).to.have.length(1);
+      expect(result[0]).to.eql({ name: 'non-existent', messages: 0, consumers: 0, state: 'running' });
+    });
+  });
+
 });

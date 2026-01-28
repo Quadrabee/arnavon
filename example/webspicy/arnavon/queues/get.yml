@@ -1,0 +1,41 @@
+---
+name: |-
+  Get queues status
+
+url: |-
+  /queues
+
+services:
+- method: |-
+    GET
+
+  description: |-
+    Retrieve status information for all queues defined in the Arnavon
+    configuration, including message count and consumer count.
+
+  preconditions:
+    - RabbitMQ Management plugin must be enabled
+    - Arnavon must be configured with queue topology
+
+  postconditions:
+    - Returns status for all configured queues
+    - Each queue includes name, messages, consumers, and state
+
+  input_schema: |-
+    .
+
+  output_schema: |-
+    Queue.ListResponse
+
+  error_schema: |-
+    .
+
+  examples:
+
+    - description: |-
+        FOR: Returns status for all configured queues
+      expected:
+        content_type: application/json; charset=utf-8
+        status: 200
+      assert:
+        - 'size("queues", 4)'

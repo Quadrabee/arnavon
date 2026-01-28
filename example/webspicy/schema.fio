@@ -61,6 +61,23 @@ Dlq.Error = {
 }
 
 ###
+### Queues Info
+###
+
+Queue.State = String
+
+Queue.Info = {
+  name      : String
+  messages  : Numeric
+  consumers : Numeric
+  state     : Queue.State
+}
+
+Queue.ListResponse = {
+  queues : [Queue.Info]
+}
+
+###
 ### Example
 ###
 

@@ -1,4 +1,4 @@
-import Queue, { QueueInternalProcessor, RequeueOptions, RequeueResult } from '../index';
+import Queue, { QueueInternalProcessor, QueueInfo, RequeueOptions, RequeueResult } from '../index';
 import amqplib, { ConfirmChannel } from 'amqplib';
 import logger from '../../logger';
 import { JobMeta } from '../../jobs/job';
@@ -390,6 +390,48 @@ class AmqpQueue extends Queue {
 
       throw err;
     }
+  }
+
+  async _getQueuesInfo(queueNames: string[]): Promise<QueueInfo[]> {
+    const vhostEncoded = encodeURIComponent(this.#vhost);
+
+    const fetchQueueInfo = async (queueName: string): Promise<QueueInfo> => {
+      const queueNameEncoded = encodeURIComponent(queueName);
+      const queueInfoUrl = `${this.#managementUrl}/api/queues/${vhostEncoded}/${queueNameEncoded}`;
+
+      try {
+        const response = await fetch(queueInfoUrl, {
+          headers: { 'Authorization': `Basic ${this.#managementAuth}` },
+        });
+
+        if (response.ok) {
+          const info = await response.json() as {
+            name: string;
+            messages?: number;
+            consumers?: number;
+            state?: string;
+          };
+
+          return {
+            name: info.name,
+            messages: info.messages ?? 0,
+            consumers: info.consumers ?? 0,
+            state: info.state === 'running' ? 'running' : info.state === 'idle' ? 'idle' : 'unknown',
+          };
+        } else if (response.status === 404) {
+          // Queue doesn't exist in RabbitMQ
+          return { name: queueName, messages: 0, consumers: 0, state: 'unknown' };
+        } else {
+          logger.warn(`${this.constructor.name}: Failed to get info for queue ${queueName}: ${response.status}`);
+          return { name: queueName, messages: 0, consumers: 0, state: 'unknown' };
+        }
+      } catch (err) {
+        logger.error(err, `${this.constructor.name}: Error getting info for queue ${queueName}`);
+        return { name: queueName, messages: 0, consumers: 0, state: 'unknown' };
+      }
+    };
+
+    return Promise.all(queueNames.map(fetchQueueInfo));
   }
 
 }
