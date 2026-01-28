@@ -450,7 +450,7 @@ describe('server/createApi', () => {
     });
   });
 
-  describe('its POST /dlq/:queueName/requeue endpoint', () => {
+  describe('its POST /queues/:queueName/requeue endpoint', () => {
     let api: Express.Application, dispatcher: Partial<JobDispatcher>, requeueStub: sinon.SinonStub;
     let originalQueue: any;
 
@@ -475,15 +475,14 @@ describe('server/createApi', () => {
       sinon.restore();
     });
 
-    it('calls queue.requeue with queue name and destinationQueue', (done) => {
+    it('calls queue.requeue with queue name', (done) => {
       chai.request(api)
-        .post('/dlq/my-dead-letters/requeue')
-        .send({ destinationQueue: 'send-email' })
+        .post('/queues/my-dead-letters/requeue')
+        .send({})
         .end((err, res) => {
           res.should.have.status(200);
           expect(requeueStub).to.be.calledOnceWith('my-dead-letters', {
             count: undefined,
-            destinationQueue: 'send-email',
           });
           done();
         });
@@ -491,14 +490,13 @@ describe('server/createApi', () => {
 
     it('passes count query parameter as number', (done) => {
       chai.request(api)
-        .post('/dlq/my-dead-letters/requeue?count=10')
-        .send({ destinationQueue: 'send-email' })
+        .post('/queues/my-dead-letters/requeue?count=10')
+        .send({})
         .end((err, res) => {
           res.should.have.status(200);
           expect(requeueStub).to.be.calledOnce;
           const { args } = requeueStub.getCall(0);
           expect(args[1].count).to.equal(10);
-          expect(args[1].destinationQueue).to.equal('send-email');
           done();
         });
     });
@@ -507,8 +505,8 @@ describe('server/createApi', () => {
       requeueStub.returns(Promise.resolve({ status: 'initiated', requeued: 0, failed: 0, errors: [] }));
 
       chai.request(api)
-        .post('/dlq/my-dead-letters/requeue')
-        .send({ destinationQueue: 'send-email' })
+        .post('/queues/my-dead-letters/requeue')
+        .send({})
         .end((err, res) => {
           res.should.have.status(200);
           res.body.should.eql({ status: 'initiated', requeued: 0, failed: 0, errors: [] });
@@ -516,32 +514,10 @@ describe('server/createApi', () => {
         });
     });
 
-    it('returns 400 when destinationQueue is missing', (done) => {
-      chai.request(api)
-        .post('/dlq/my-dead-letters/requeue')
-        .send({})
-        .end((err, res) => {
-          res.should.have.status(400);
-          res.body.should.eql({ error: 'destinationQueue is required in request body' });
-          done();
-        });
-    });
-
-    it('returns 400 when destinationQueue is not a string', (done) => {
-      chai.request(api)
-        .post('/dlq/my-dead-letters/requeue')
-        .send({ destinationQueue: 123 })
-        .end((err, res) => {
-          res.should.have.status(400);
-          res.body.should.eql({ error: 'destinationQueue is required in request body' });
-          done();
-        });
-    });
-
     it('returns 400 for invalid count parameter (non-numeric)', (done) => {
       chai.request(api)
-        .post('/dlq/my-dead-letters/requeue?count=abc')
-        .send({ destinationQueue: 'send-email' })
+        .post('/queues/my-dead-letters/requeue?count=abc')
+        .send({})
         .end((err, res) => {
           res.should.have.status(400);
           res.body.should.eql({ error: 'Invalid count parameter: must be a positive integer' });
@@ -551,8 +527,8 @@ describe('server/createApi', () => {
 
     it('returns 400 for invalid count parameter (zero)', (done) => {
       chai.request(api)
-        .post('/dlq/my-dead-letters/requeue?count=0')
-        .send({ destinationQueue: 'send-email' })
+        .post('/queues/my-dead-letters/requeue?count=0')
+        .send({})
         .end((err, res) => {
           res.should.have.status(400);
           res.body.should.eql({ error: 'Invalid count parameter: must be a positive integer' });
@@ -562,8 +538,8 @@ describe('server/createApi', () => {
 
     it('returns 400 for invalid count parameter (negative)', (done) => {
       chai.request(api)
-        .post('/dlq/my-dead-letters/requeue?count=-5')
-        .send({ destinationQueue: 'send-email' })
+        .post('/queues/my-dead-letters/requeue?count=-5')
+        .send({})
         .end((err, res) => {
           res.should.have.status(400);
           res.body.should.eql({ error: 'Invalid count parameter: must be a positive integer' });
@@ -575,8 +551,8 @@ describe('server/createApi', () => {
       requeueStub.returns(Promise.reject(new Error('Queue connection failed')));
 
       chai.request(api)
-        .post('/dlq/my-dead-letters/requeue')
-        .send({ destinationQueue: 'send-email' })
+        .post('/queues/my-dead-letters/requeue')
+        .send({})
         .end((err, res) => {
           res.should.have.status(500);
           res.body.should.eql({ error: 'Queue connection failed' });
@@ -587,12 +563,12 @@ describe('server/createApi', () => {
     it('returns 500 with clear error when shovel plugin is not available', (done) => {
       requeueStub.returns(Promise.reject(new Error(
         'RabbitMQ Shovel plugin not available. ' +
-        'Ensure the rabbitmq_shovel and rabbitmq_shovel_management plugins are enabled.'
+        'Ensure the rabbitmq_shovel and rabbitmq_shovel_management plugins are enabled.',
       )));
 
       chai.request(api)
-        .post('/dlq/my-dead-letters/requeue')
-        .send({ destinationQueue: 'send-email' })
+        .post('/queues/my-dead-letters/requeue')
+        .send({})
         .end((err, res) => {
           res.should.have.status(500);
           res.body.error.should.include('rabbitmq_shovel');

@@ -112,7 +112,7 @@ describe('MemoryQueue', () => {
   });
 
   describe('#_requeue', () => {
-    it('requeues all messages from source queue to destination queue', async () => {
+    it('requeues all messages from source queue to main queue', async () => {
       const queue = new MemoryQueue();
 
       // Push items to a named "dlq" queue
@@ -120,14 +120,14 @@ describe('MemoryQueue', () => {
       queue.pushToQueue('dlq', 'job-key', { data: 'item2' });
       queue.pushToQueue('dlq', 'job-key', { data: 'item3' });
 
-      const result = await queue._requeue('dlq', { destinationQueue: 'send-email' });
+      const result = await queue._requeue('dlq', {});
 
       expect(result.status).to.equal('completed');
       expect(result.requeued).to.equal(3);
       expect(result.failed).to.equal(0);
       expect(result.errors).to.eql([]);
       expect(queue.getQueueLength('dlq')).to.equal(0);
-      expect(queue.getQueueLength('send-email')).to.equal(3);
+      expect(queue.getQueueLength()).to.equal(3); // main queue
     });
 
     it('requeues only the specified count of messages', async () => {
@@ -137,18 +137,18 @@ describe('MemoryQueue', () => {
       queue.pushToQueue('dlq', 'job-key', { data: 'item2' });
       queue.pushToQueue('dlq', 'job-key', { data: 'item3' });
 
-      const result = await queue._requeue('dlq', { destinationQueue: 'send-email', count: 2 });
+      const result = await queue._requeue('dlq', { count: 2 });
 
       expect(result.requeued).to.equal(2);
       expect(result.failed).to.equal(0);
       expect(queue.getQueueLength('dlq')).to.equal(1);
-      expect(queue.getQueueLength('send-email')).to.equal(2);
+      expect(queue.getQueueLength()).to.equal(2); // main queue
     });
 
     it('returns zero when source queue is empty', async () => {
       const queue = new MemoryQueue();
 
-      const result = await queue._requeue('empty-dlq', { destinationQueue: 'send-email' });
+      const result = await queue._requeue('empty-dlq', {});
 
       expect(result.status).to.equal('completed');
       expect(result.requeued).to.equal(0);
@@ -161,9 +161,9 @@ describe('MemoryQueue', () => {
 
       queue.pushToQueue('dlq', 'original-key', { data: 'item1' });
 
-      await queue._requeue('dlq', { destinationQueue: 'send-email' });
+      await queue._requeue('dlq', {});
 
-      expect(queue.getQueueLength('send-email')).to.equal(1);
+      expect(queue.getQueueLength()).to.equal(1); // main queue
     });
   });
 

@@ -16,7 +16,7 @@ API endpoint to requeue messages from a dead letter queue to a specified destina
 
 ### Endpoint
 ```
-POST /dlq/:queueName/requeue?count=N
+POST /queues/:queueName/requeue?count=N
 ```
 
 **Parameters:**
@@ -111,7 +111,7 @@ Returns `status: 'completed'` with actual count.
 **File:** `src/server/rest/index.ts`
 
 ```typescript
-api.post('/dlq/:queueName/requeue', async (req, res, next) => {
+api.post('/queues/:queueName/requeue', async (req, res, next) => {
   const { queueName } = req.params;
   const count = req.query.count ? parseInt(req.query.count as string, 10) : undefined;
   const { destinationQueue } = req.body || {};
@@ -124,7 +124,7 @@ api.post('/dlq/:queueName/requeue', async (req, res, next) => {
 1. `src/queue/index.ts` - Add `requeue` method and types
 2. `src/queue/drivers/amqp.ts` - Implement via Shovel API
 3. `src/queue/drivers/memory.ts` - Simple queue-to-queue move
-4. `src/server/rest/index.ts` - Add `/dlq/:queueName/requeue` endpoint
+4. `src/server/rest/index.ts` - Add `/queues/:queueName/requeue` endpoint
 
 ## Configuration
 
@@ -148,14 +148,14 @@ api.post('/dlq/:queueName/requeue', async (req, res, next) => {
 - `tests/server/rest/api.spec.ts` - REST API endpoint tests
 
 ### Integration Tests
-- `example/webspicy/arnavon/dlq/_queueName/requeue/post.yml` - Webspicy tests
+- `example/webspicy/arnavon/queues/_queueName/requeue/post.yml` - Webspicy tests
 - `example/webspicy/schema.fio` - Finitio types for request/response
 
 ### Manual Testing
 1. Start RabbitMQ with shovel plugins enabled
 2. Push jobs to a queue with DLQ configured
 3. Force jobs to fail (so they go to DLQ)
-4. Call `POST /dlq/dead-letters/requeue -d '{"destinationQueue": "send-email"}'`
+4. Call `POST /queues/dead-letters/requeue -d '{"destinationQueue": "send-email"}'`
 5. Verify response contains estimated count
 6. Verify messages are moved to destination queue
 7. Verify shovel auto-deleted after completion
