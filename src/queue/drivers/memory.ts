@@ -1,4 +1,4 @@
-import Queue, { QueueInternalProcessor, RequeueOptions, RequeueResult } from '../index';
+import Queue, { QueueInternalProcessor, QueueInfo, RequeueOptions, RequeueResult } from '../index';
 import Job from '../../jobs/job';
 
 export type MemoryQueueConfig = unknown;
@@ -73,6 +73,15 @@ class MemoryQueue extends Queue {
       return this.#getQueue(queueName).length;
     }
     return this.#queue.length;
+  }
+
+  async _getQueuesInfo(queueNames: string[]): Promise<QueueInfo[]> {
+    return queueNames.map(name => ({
+      name,
+      messages: this.#queues.has(name) ? this.#queues.get(name)!.length : 0,
+      consumers: 0, // MemoryQueue doesn't track consumers
+      state: 'running' as const,
+    }));
   }
 
 }

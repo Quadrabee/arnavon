@@ -84,6 +84,19 @@ export default (dispatcher: JobDispatcher) => {
       });
   });
 
+  api.get('/queues', async (req, res, next) => {
+    try {
+      // Get queue names from config topology
+      const config = Arnavon.config.queue.config as { topology?: { queues?: Array<{ name: string }> } };
+      const queueNames = config.topology?.queues?.map(q => q.name) || [];
+
+      const queues = await Arnavon.queue.getQueuesInfo(queueNames);
+      return res.status(200).send({ queues });
+    } catch (err) {
+      next(err);
+    }
+  });
+
   api.post('/dlq/:queueName/requeue', async (req, res, next) => {
     const { queueName } = req.params;
     const count = req.query.count ? parseInt(req.query.count as string, 10) : undefined;

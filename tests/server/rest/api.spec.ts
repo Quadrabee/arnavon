@@ -601,4 +601,95 @@ describe('server/createApi', () => {
     });
   });
 
+  describe('its GET /queues endpoint', () => {
+    let api: Express.Application, dispatcher: Partial<JobDispatcher>, getQueuesInfoStub: sinon.SinonStub;
+    let originalQueue: any, originalConfig: any;
+
+    beforeEach(() => {
+      dispatcher = {
+        dispatch: sinon.stub().returns(Promise.resolve()),
+        dispatchBatch: sinon.stub().returns(Promise.resolve()),
+      };
+      getQueuesInfoStub = sinon.stub().returns(Promise.resolve([
+        { name: 'queue-1', messages: 10, consumers: 2, state: 'running' },
+        { name: 'queue-2', messages: 0, consumers: 0, state: 'idle' },
+      ]));
+      // Save and replace the queue with a mock
+      originalQueue = Arnavon.queue;
+      originalConfig = Arnavon.config;
+      Arnavon.queue = {
+        getQueuesInfo: getQueuesInfoStub,
+        disconnect: sinon.stub().returns(Promise.resolve()),
+      } as any;
+      Arnavon.config = {
+        queue: {
+          config: {
+            topology: {
+              queues: [
+                { name: 'queue-1' },
+                { name: 'queue-2' },
+              ],
+            },
+          },
+        },
+      } as any;
+      api = createApi(dispatcher);
+    });
+
+    afterEach(() => {
+      Arnavon.queue = originalQueue;
+      Arnavon.config = originalConfig;
+      sinon.restore();
+    });
+
+    it('returns 200 with queue info from config', (done) => {
+      chai.request(api)
+        .get('/queues')
+        .end((err, res) => {
+          res.should.have.status(200);
+          expect(getQueuesInfoStub).to.be.calledOnceWith(['queue-1', 'queue-2']);
+          res.body.should.eql({
+            queues: [
+              { name: 'queue-1', messages: 10, consumers: 2, state: 'running' },
+              { name: 'queue-2', messages: 0, consumers: 0, state: 'idle' },
+            ],
+          });
+          done();
+        });
+    });
+
+    it('returns empty array when no queues in config', (done) => {
+      Arnavon.config = {
+        queue: {
+          config: {
+            topology: {
+              queues: [],
+            },
+          },
+        },
+      } as any;
+      getQueuesInfoStub.returns(Promise.resolve([]));
+
+      chai.request(api)
+        .get('/queues')
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.eql({ queues: [] });
+          done();
+        });
+    });
+
+    it('returns 500 on queue info errors', (done) => {
+      getQueuesInfoStub.returns(Promise.reject(new Error('Connection failed')));
+
+      chai.request(api)
+        .get('/queues')
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.eql({ error: 'Connection failed' });
+          done();
+        });
+    });
+  });
+
 });

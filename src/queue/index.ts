@@ -22,6 +22,13 @@ export type RequeueResult = {
   errors: Array<{ error: string }>;
 }
 
+export type QueueInfo = {
+  name: string;
+  messages: number;
+  consumers: number;
+  state: 'running' | 'idle' | 'unknown';
+}
+
 export type QueueProcessor = (job: Job, context: JobRunnerContext) => Promise<unknown>
 export type QueueInternalProcessor = (job: Job, metadata: JobMeta) => Promise<unknown>
 
@@ -105,6 +112,15 @@ class Queue extends EventEmitter {
     });
   }
 
+  // subclasses should implement _getQueuesInfo(queueNames)
+  getQueuesInfo(queueNames: string[]): Promise<QueueInfo[]> {
+    logger.info(`${this.constructor.name} - Getting info for queues: ${queueNames.join(', ')}`);
+    return this._getQueuesInfo(queueNames).then((result) => {
+      logger.info(`${this.constructor.name} - Got info for ${result.length} queues`);
+      return result;
+    });
+  }
+
   // To be implemented by subclasses
   _consume(_queueName: string, _processor: QueueInternalProcessor) {
     throw new Error('NotImplemented');
@@ -123,6 +139,10 @@ class Queue extends EventEmitter {
   }
 
   _requeue(_sourceQueue: string, _options: RequeueOptions): Promise<RequeueResult> {
+    throw new Error('NotImplemented');
+  }
+
+  _getQueuesInfo(_queueNames: string[]): Promise<QueueInfo[]> {
     throw new Error('NotImplemented');
   }
 
