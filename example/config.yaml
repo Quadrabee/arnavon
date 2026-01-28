@@ -70,12 +70,12 @@ consumers:
       type: binary
       config:
         path: ./consumers/mailer-worker.rb
-  - name: log-failures
-    queue: dead-letters
-    runner:
-      type: nodejs
-      config:
-        module: ./consumers/logger
+  # - name: log-failures
+  #   queue: dead-letters
+  #   runner:
+  #     type: nodejs
+  #     config:
+  #       module: ./consumers/logger
   # - name: log-invalid-jobs
   #   queue: invalid-jobs
   #   runner:
