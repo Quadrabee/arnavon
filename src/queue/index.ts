@@ -12,7 +12,6 @@ export interface QueueConfig {
 
 export type RequeueOptions = {
   count?: number; // Number of messages to requeue (undefined = all)
-  destinationQueue: string; // Target queue to move messages to
 }
 
 export type RequeueResult = {
@@ -98,14 +97,11 @@ class Queue extends EventEmitter {
   }
 
   // subclasses should implement _requeue(sourceQueue, options)
-  requeue(sourceQueue: string, options: RequeueOptions): Promise<RequeueResult> {
+  requeue(sourceQueue: string, options: RequeueOptions = {}): Promise<RequeueResult> {
     if (typeof sourceQueue !== 'string') {
       throw new Error(`String queue name expected, got ${inspect(sourceQueue)}`);
     }
-    if (typeof options?.destinationQueue !== 'string') {
-      throw new Error(`String destinationQueue expected, got ${inspect(options?.destinationQueue)}`);
-    }
-    logger.info(`${this.constructor.name} - Requeuing messages from ${sourceQueue} to ${options.destinationQueue}`, options);
+    logger.info(`${this.constructor.name} - Requeuing messages from ${sourceQueue}`, options);
     return this._requeue(sourceQueue, options).then((result) => {
       logger.info(`${this.constructor.name} - Requeue complete`, result);
       return result;

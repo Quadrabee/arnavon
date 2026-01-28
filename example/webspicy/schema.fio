@@ -42,9 +42,8 @@ Job.Error = {
 Dlq.QueueName = String(s | s.length > 0)
 
 Dlq.RequeueRequest = {
-  queueName        :  String
-  destinationQueue :  Dlq.QueueName
-  count            :? Numeric
+  queueName :  String
+  count     :? Numeric
 }
 
 Dlq.RequeueStatus = String

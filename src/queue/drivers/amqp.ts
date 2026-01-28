@@ -276,14 +276,14 @@ class AmqpQueue extends Queue {
   }
 
   async _requeue(sourceQueue: string, options: RequeueOptions): Promise<RequeueResult> {
-    const { destinationQueue, count } = options;
+    const { count } = options;
     const vhostEncoded = encodeURIComponent(this.#vhost);
     const sourceQueueEncoded = encodeURIComponent(sourceQueue);
     // Use deterministic name so we can detect if a requeue is already in progress
     const shovelName = `arnavon-requeue-${sourceQueue}`;
     const shovelNameEncoded = encodeURIComponent(shovelName);
 
-    logger.info(`${this.constructor.name}: Initiating requeue from ${sourceQueue} to ${destinationQueue} via Shovel`);
+    logger.info(`${this.constructor.name}: Initiating requeue from ${sourceQueue} to exchange ${this.#exchange} via Shovel`);
 
     try {
       // Check if a shovel already exists for this source queue
@@ -298,23 +298,6 @@ class AmqpQueue extends Queue {
           `A requeue operation is already in progress for queue '${sourceQueue}'. ` +
           'Wait for it to complete before starting another.',
         );
-      }
-
-      // Validate destination queue exists
-      const destQueueEncoded = encodeURIComponent(destinationQueue);
-      const destQueueUrl = `${this.#managementUrl}/api/queues/${vhostEncoded}/${destQueueEncoded}`;
-      const destQueueResponse = await fetch(destQueueUrl, {
-        headers: { 'Authorization': `Basic ${this.#managementAuth}` },
-      });
-
-      if (!destQueueResponse.ok) {
-        if (destQueueResponse.status === 404) {
-          throw new Error(
-            `Destination queue '${destinationQueue}' does not exist. ` +
-            'Please specify an existing queue to avoid accidentally creating new queues.',
-          );
-        }
-        throw new Error(`Failed to validate destination queue: ${destQueueResponse.status}`);
       }
 
       // Get the message count from the source queue
@@ -333,14 +316,17 @@ class AmqpQueue extends Queue {
       const estimatedCount = count !== undefined ? Math.min(count, messageCount) : messageCount;
 
       // Create shovel configuration - it will auto-delete after emptying the queue
+      // Publish to the exchange without specifying a routing key - the shovel will
+      // preserve the original routing key from each message
       const shovelConfig = {
         value: {
           'src-uri': this.#amqpUri,
           'src-queue': sourceQueue,
           'dest-uri': this.#amqpUri,
-          'dest-queue': destinationQueue,
+          'dest-exchange': this.#exchange,
           'src-delete-after': count ?? 'queue-length',
           'ack-mode': 'on-confirm',
+          'add-forward-headers': true,
         },
       };
 
@@ -370,7 +356,7 @@ class AmqpQueue extends Queue {
         throw new Error(`Failed to create shovel (${createResponse.status}): ${errorText}`);
       }
 
-      logger.info(`${this.constructor.name}: Shovel created, requeue initiated from ${sourceQueue} to ${destinationQueue} (estimated: ${estimatedCount} messages)`);
+      logger.info(`${this.constructor.name}: Shovel created, requeue initiated from ${sourceQueue} to exchange ${this.#exchange} (estimated: ${estimatedCount} messages)`);
 
       // Return immediately - shovel will auto-delete when done
       return {

@@ -1,0 +1,55 @@
+---
+name: |-
+  Requeue messages from DLQ
+
+url: |-
+  /queues/{queueName}/requeue
+
+services:
+- method: |-
+    POST
+
+  description: |-
+    Move messages from a dead letter queue back to the default exchange.
+    Messages are published using their original routing key (preserved by RabbitMQ).
+
+  preconditions:
+    - The RabbitMQ Management plugin must be enabled
+    - The source queue must exist
+
+  postconditions:
+    - Messages are published to the default exchange with their original routing key
+    - The response contains the count of requeued messages
+
+  input_schema: |-
+    Dlq.RequeueRequest
+
+  output_schema: |-
+    Dlq.RequeueResult
+
+  error_schema: |-
+    Dlq.Error
+
+  examples:
+
+    - description: |-
+        FOR: Messages are published to the exchange with their original routing key
+      params:
+        queueName: dead-letters
+      expected:
+        content_type: application/json; charset=utf-8
+        status: 200
+      assert:
+        - 'pathFD("", status: "initiated")'
+        - 'pathFD("", requeued: 0)'
+        - 'pathFD("", failed: 0)'
+        - 'pathFD("", errors: [])'
+
+    - description: |-
+        FOR: A specific count of messages can be moved
+      params:
+        queueName: dead-letters
+        count: 10
+      expected:
+        content_type: application/json; charset=utf-8
+        status: 200

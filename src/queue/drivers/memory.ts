@@ -46,14 +46,14 @@ class MemoryQueue extends Queue {
 
   async _requeue(sourceQueue: string, options: RequeueOptions): Promise<RequeueResult> {
     const source = this.#getQueue(sourceQueue);
-    const destination = this.#getQueue(options.destinationQueue);
     const maxMessages = options.count;
     let requeued = 0;
 
+    // Move messages from source queue back to the main queue
     while (source.length > 0 && (maxMessages === undefined || requeued < maxMessages)) {
       const item = source.shift();
       if (item) {
-        destination.push(item);
+        this.#queue.push(item);
         requeued++;
       }
     }

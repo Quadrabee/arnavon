@@ -97,17 +97,9 @@ export default (dispatcher: JobDispatcher) => {
     }
   });
 
-  api.post('/dlq/:queueName/requeue', async (req, res, next) => {
+  api.post('/queues/:queueName/requeue', async (req, res, next) => {
     const { queueName } = req.params;
     const count = req.query.count ? parseInt(req.query.count as string, 10) : undefined;
-    const { destinationQueue } = req.body || {};
-
-    // Validate destinationQueue is provided
-    if (!destinationQueue || typeof destinationQueue !== 'string') {
-      return res.status(400).send({
-        error: 'destinationQueue is required in request body',
-      });
-    }
 
     // Validate count if provided
     if (count !== undefined && (isNaN(count) || count < 1)) {
@@ -117,7 +109,7 @@ export default (dispatcher: JobDispatcher) => {
     }
 
     try {
-      const result = await Arnavon.queue.requeue(queueName, { count, destinationQueue });
+      const result = await Arnavon.queue.requeue(queueName, { count });
       return res.status(200).send(result);
     } catch (err) {
       next(err);

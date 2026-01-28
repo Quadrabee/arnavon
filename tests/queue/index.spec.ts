@@ -123,27 +123,20 @@ describe('Queue', () => {
       expect(queue.requeue).to.be.an.instanceof(Function);
     });
     it('expects a queue name (String) as first argument', () => {
-      const test = (queueName) => () => queue.requeue(queueName, { destinationQueue: 'dest' });
+      const test = (queueName) => () => queue.requeue(queueName);
 
       expect(test(null)).to.throw(/String queue name expected, got/);
       expect(test(undefined)).to.throw(/String queue name expected, got/);
       expect(test(123)).to.throw(/String queue name expected, got/);
     });
-    it('expects destinationQueue (String) in options', () => {
-      const test = (opts) => () => queue.requeue('dlq-name', opts);
-
-      expect(test(null)).to.throw(/String destinationQueue expected, got/);
-      expect(test({})).to.throw(/String destinationQueue expected, got/);
-      expect(test({ destinationQueue: 123 })).to.throw(/String destinationQueue expected, got/);
-    });
     it('returns a promise', () => {
-      expect(queue.requeue('dlq-name', { destinationQueue: 'send-email' })).to.be.an.instanceof(Promise);
+      expect(queue.requeue('dlq-name')).to.be.an.instanceof(Promise);
     });
     it('calls the subclass _requeue implementation', () => {
       const spy = sinon.stub(queue, '_requeue')
         .returns(Promise.resolve({ status: 'initiated', requeued: 0, failed: 0, errors: [] }));
-      queue.requeue('dlq-name', { destinationQueue: 'send-email', count: 5 });
-      expect(spy).to.be.calledOnceWith('dlq-name', { destinationQueue: 'send-email', count: 5 });
+      queue.requeue('dlq-name', { count: 5 });
+      expect(spy).to.be.calledOnceWith('dlq-name', { count: 5 });
     });
   });
 
