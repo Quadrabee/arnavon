@@ -1,0 +1,53 @@
+---
+description: |-
+  Testing worker failures
+
+url: |-
+  /jobs/send-email
+
+method: |-
+  POST
+
+preconditions: []
+
+postconditions:
+  - (x) No email is sent
+  - (x) The api metrics reflect the 'send-email' job being pushed
+  - (x) Failing jobs are properly sent to dead queue letters
+
+errconditions: []
+
+input_schema: |-
+  Job.SendEmail
+
+output_schema: |-
+  Job.Full
+
+error_schema: |-
+  Job.Error
+
+default_example:
+  params:
+    from: arnavon@quadrabee.com
+    to: team@enspirit.be
+    subject: We love queues!
+    text: |
+      I queue
+      You queue
+      She/He/They queue(s)
+      We queue
+      You queue
+      They queue
+
+examples:
+
+  - description: |-
+      FOR: the failing jobs are sent to dead queue letters
+    params:
+      to: fail@enspirit.be
+    expected:
+      content_type: application/json; charset=utf-8
+      status: 201
+    assert:
+      - 'pathFD("meta", :jobName => "send-email")'
+
