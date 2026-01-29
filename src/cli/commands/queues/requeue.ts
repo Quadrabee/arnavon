@@ -1,9 +1,8 @@
-import { Flags, Command } from '@oclif/core';
-import { Config, default as Arnavon } from '../../..';
-import logger from '../../../logger';
-import bunyan from 'bunyan';
+import { Flags } from '@oclif/core';
+import { default as Arnavon } from '../../..';
+import BaseQueueCommand from './base';
 
-export default class RequeueCommand extends Command {
+export default class RequeueCommand extends BaseQueueCommand {
 
   static summary = 'Requeue messages from a dead letter queue back to the original queue'
 
@@ -25,11 +24,7 @@ Examples:
   }]
 
   static flags = {
-    config: Flags.string({
-      summary: 'location of config file (defaults to \'config.yaml\').',
-      char: 'c',
-      default: 'config.yaml',
-    }),
+    ...BaseQueueCommand.baseFlags,
     count: Flags.integer({
       char: 'n',
       description: 'Number of messages to requeue (default: all messages)',
@@ -38,22 +33,17 @@ Examples:
 
   async run() {
     const { args, flags } = await this.parse(RequeueCommand);
-    const configPath = flags.config || 'config.yaml';
     const { queueName } = args;
     const { count } = flags;
-    logger.level(bunyan.FATAL + 1);
 
     if (count !== undefined && count < 1) {
       this.error('Count must be a positive integer');
     }
 
-    const config = Config.fromFile(configPath);
-    Arnavon.init(config);
+    this.initArnavon(flags.config);
 
     this.log('Connecting to queue...');
-    await Arnavon.queue.connect();
-
-    try {
+    await this.withQueue(async () => {
       this.log(`Requeuing messages from ${queueName}${count ? ` (limit: ${count})` : ''}...`);
       const result = await Arnavon.queue.requeue(queueName, { count });
 
@@ -66,8 +56,6 @@ Examples:
           this.warn(`  - ${err.error}`);
         }
       }
-    } finally {
-      await Arnavon.queue.disconnect();
-    }
+    });
   }
 }
