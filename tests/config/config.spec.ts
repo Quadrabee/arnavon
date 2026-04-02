@@ -36,6 +36,22 @@ describe('ArnavonConfig', () => {
       const test = () => ArnavonConfig.fromFile();
       expect(test).to.throw(/Config file not found/);
     });
+
+    it('complains on malformed YAML syntax', () => {
+      const test = () => ArnavonConfig.fromFile('tests/config/malformed.yaml');
+      expect(test).to.throw();
+    });
+
+    it('works without schema.fio and schema.world.js in config directory', () => {
+      const config = ArnavonConfig.fromFile('tests/config/minimal/config.yaml');
+      expect(config).to.be.an.instanceOf(ArnavonConfig);
+      expect(config.queue.driver).to.equal('amqp');
+      expect(config.jobs).to.be.an.instanceof(Array);
+      expect(config.jobs.length).to.equal(1);
+      expect(config.jobs[0].name).to.equal('test-job');
+      expect(config.consumers).to.be.an.instanceof(Array);
+      expect(config.consumers.length).to.equal(1);
+    });
   });
 
   describe('constructor', () => {

@@ -147,8 +147,8 @@ describe('BinaryRunner', () => {
       });
     });
 
-    it.skip('gets every line printed on stderr and forwards to logger');
-    it.skip('parses every line printed on stderr when possible and forwards to logger');
+    it('gets every line printed on stderr and forwards to logger');
+    it('parses every line printed on stderr when possible and forwards to logger');
 
   });
 });
