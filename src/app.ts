@@ -2,13 +2,10 @@ import promClient from 'prom-client';
 import Queue from './queue';
 import { QueueConfig } from './queue';
 import ArnavonConfig, {
-  ArnavonOptions,
   QueueDefinition,
   JobDefinition,
   ConsumerDefinition,
 } from './config';
-import JobConfig from './jobs/config';
-import ConsumerConfig from './consumer/config';
 import { JobDispatcher } from './jobs';
 import Consumer from './consumer';
 import Server from './server';

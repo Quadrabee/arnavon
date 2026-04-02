@@ -26,6 +26,7 @@ export default class NodeJSRunner extends JobRunner {
     const cwd = config.cwd || Arnavon.cwd();
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const module = require(path.join(cwd, config.module));
       this.module = module.default ? module.default : module;
     } catch (err) {

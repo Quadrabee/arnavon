@@ -1,11 +1,6 @@
-import { expect, default as chai } from 'chai';
-import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
+import { expect } from 'chai';
 import ArnavonApp from '../src/app';
 import MemoryQueue from '../src/queue/drivers/memory';
-
-chai.should();
-chai.use(sinonChai);
 
 describe('ArnavonApp', () => {
 
