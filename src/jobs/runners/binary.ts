@@ -4,6 +4,7 @@ import { inspect } from '../../robust';
 import { spawn, ChildProcess } from 'child_process';
 import { sync as commandExistsSync } from 'command-exists';
 import Job from '../job';
+import promClient from 'prom-client';
 
 // Default timeout: 5 minutes
 const DEFAULT_TIMEOUT_MS = 5 * 60 * 1000;
@@ -22,8 +23,8 @@ export default class BinaryRunner extends JobRunner {
   protected args: string[];
   protected timeout: number;
 
-  constructor(config: BinaryRunnerConfig) {
-    super(config);
+  constructor(config: BinaryRunnerConfig, registry?: promClient.Registry) {
+    super(config, registry);
 
     if (!config.path) {
       throw new Error(`Binary path expected, got ${inspect(config.path)}`);

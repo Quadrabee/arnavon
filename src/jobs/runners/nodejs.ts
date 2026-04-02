@@ -5,6 +5,7 @@ import JobRunner, { JobRunnerConfig, JobRunnerContext } from '../runner';
 import { inspect } from '../../robust';
 import logger from '../../logger';
 import Job from '../job';
+import promClient from 'prom-client';
 
 export interface NodeJSRunnerConfig extends JobRunnerConfig {
   module: string
@@ -16,8 +17,8 @@ export type NodeJSRunnerModule = (job: Job, context: JobRunnerContext) => Promis
 export default class NodeJSRunner extends JobRunner {
 
   private module: NodeJSRunnerModule;
-  constructor(private config: NodeJSRunnerConfig) {
-    super(config);
+  constructor(private config: NodeJSRunnerConfig, registry?: promClient.Registry) {
+    super(config, registry);
 
     if (!config.module) {
       throw new Error(`Module path expected, got ${inspect(config.module)}`);
