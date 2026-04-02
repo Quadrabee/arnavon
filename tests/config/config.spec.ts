@@ -85,4 +85,74 @@ describe('ArnavonConfig', () => {
     });
   });
 
+  describe('.from', () => {
+
+    it('creates a config from plain objects', () => {
+      const config = ArnavonConfig.from({
+        queue: { driver: 'memory', config: {} },
+        jobs: [
+          { name: 'test-job', inputSchema: '.' },
+        ],
+        consumers: [
+          { name: 'test-consumer', queue: 'test-queue', runner: { type: 'nodejs', config: { module: './test' } } },
+        ],
+      });
+      expect(config).to.be.an.instanceOf(ArnavonConfig);
+      expect(config.jobs).to.have.length(1);
+      expect(config.jobs[0].name).to.equal('test-job');
+      expect(config.consumers).to.have.length(1);
+      expect(config.consumers[0].name).to.equal('test-consumer');
+      expect(config.queue.driver).to.equal('memory');
+    });
+
+    it('accepts validator functions as inputSchema', () => {
+      const myValidator = (data) => {
+        if (!data.email) throw new Error('email required');
+        return data;
+      };
+      const config = ArnavonConfig.from({
+        queue: { driver: 'memory', config: {} },
+        jobs: [
+          { name: 'send-email', inputSchema: myValidator },
+        ],
+        consumers: [],
+      });
+      expect(config.jobs[0].name).to.equal('send-email');
+      expect(config.jobs[0].inputSchema).to.equal(myValidator);
+    });
+
+    it('accepts handler functions in consumer definitions', () => {
+      const handler = async (job) => { return job; };
+      const config = ArnavonConfig.from({
+        queue: { driver: 'memory', config: {} },
+        jobs: [
+          { name: 'test-job', inputSchema: '.' },
+        ],
+        consumers: [
+          { name: 'my-consumer', queue: 'test-queue', handler },
+        ],
+      });
+      expect(config.consumers[0].runner.type).to.equal('function');
+    });
+
+    it('sets cwd to process.cwd() by default', () => {
+      const config = ArnavonConfig.from({
+        queue: { driver: 'memory', config: {} },
+        jobs: [],
+        consumers: [],
+      });
+      expect(config.cwd).to.equal(process.cwd());
+    });
+
+    it('accepts custom cwd', () => {
+      const config = ArnavonConfig.from({
+        queue: { driver: 'memory', config: {} },
+        jobs: [],
+        consumers: [],
+      }, '/custom/path');
+      expect(config.cwd).to.equal('/custom/path');
+    });
+
+  });
+
 });

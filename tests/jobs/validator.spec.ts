@@ -25,13 +25,15 @@ describe('JobValidator', () => {
   });
 
   describe('its constructor', () => {
-    it('expects a finitio type as first argument', () => {
+    it('expects a finitio type or validator function as first argument', () => {
       const test = (t) => () => new JobValidator(t);
-      expect(test()).to.throw(/Finitio system expected, got undefined/);
-      expect(test(null)).to.throw(/Finitio system expected, got null/);
-      expect(test({})).to.throw(/Finitio system expected, got/);
-      // correct
+      expect(test()).to.throw(/Finitio system or validator function expected, got undefined/);
+      expect(test(null)).to.throw(/Finitio system or validator function expected, got null/);
+      expect(test({})).to.throw(/Finitio system or validator function expected, got/);
+      // correct: Finitio system
       expect(test(jobSchema)).to.not.throw();
+      // correct: validator function
+      expect(test((data) => data)).to.not.throw();
     });
   });
 
@@ -93,6 +95,33 @@ describe('JobValidator', () => {
 
     it('throws a DataValidationError on invalid input', () => {
       expect(() => validator.validate({ id: 'not-a-number', name: 'test' })).to.throw(DataValidationError);
+    });
+
+  });
+
+  describe('with a validator function', () => {
+
+    it('uses the function for validation', () => {
+      const fn = (data: any) => {
+        if (!data || !data.email) throw new Error('email required');
+        return { email: data.email.toLowerCase() };
+      };
+      const v = new JobValidator(fn);
+      const result = v.validate({ email: 'FOO@BAR.COM' });
+      expect(result.email).to.equal('foo@bar.com');
+    });
+
+    it('throws when the validator function throws', () => {
+      const fn = () => { throw new Error('invalid'); };
+      const v = new JobValidator(fn);
+      expect(() => v.validate({})).to.throw('invalid');
+    });
+
+    it('returns the transformed data from the function', () => {
+      const fn = (data: any) => ({ ...data, validated: true });
+      const v = new JobValidator(fn);
+      const result = v.validate({ foo: 'bar' });
+      expect(result).to.eql({ foo: 'bar', validated: true });
     });
 
   });

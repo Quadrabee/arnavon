@@ -1,5 +1,6 @@
 import NodeJSRunner from './nodejs';
 import BinaryRunner from './binary';
+import FunctionRunner from './function';
 import JobRunner, { JobRunnerConfig } from '../runner';
 
 export type RunnerRegistry = {[key: string]: typeof JobRunner};
@@ -30,5 +31,6 @@ class RunnersFactory {
 const factory = new RunnersFactory();
 factory.register('nodejs', NodeJSRunner);
 factory.register('binary', BinaryRunner);
+factory.register('function', FunctionRunner);
 
 export default factory;

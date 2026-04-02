@@ -1,9 +1,10 @@
 import Finitio from 'finitio';
 import { inspect } from '../robust';
+import { ValidatorFn } from './validator';
 
 export default class JobConfig {
 
-  public readonly inputSchema: Finitio.System;
+  public readonly inputSchema: Finitio.System | ValidatorFn;
   public readonly name: string
   public readonly invalidJobExchange?: string
 
@@ -12,7 +13,7 @@ export default class JobConfig {
    * @param {Object} cfg: a configuration object with valid `id` and `schema`
    * @param {Finitio.System} system: an existing finitio system the inputSchema should inherit from
    */
-  constructor(cfg: JobConfig, system: Finitio.System) {
+  constructor(cfg: JobConfig, system?: Finitio.System) {
     if (!cfg) {
       throw new Error(`Config object expected, got ${inspect(cfg)}`);
     }
@@ -40,7 +41,12 @@ export default class JobConfig {
 }
 
 // Private utils
-function ensureSchema(schema: string, parentSystem: Finitio.System): Finitio.System {
+function ensureSchema(schema: string | Finitio.System | ValidatorFn, parentSystem?: Finitio.System): Finitio.System | ValidatorFn {
+  // If it's already a validator function, return as-is
+  if (typeof schema === 'function') {
+    return schema;
+  }
+
   if (!parentSystem) {
     parentSystem = Finitio.system('@import finitio/data');
   }
@@ -61,4 +67,3 @@ function ensureSchema(schema: string, parentSystem: Finitio.System): Finitio.Sys
 
   return system;
 }
-
