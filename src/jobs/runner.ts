@@ -152,12 +152,16 @@ export default class JobRunner {
     return result
       .then((result) => {
         context.logger.info({ result }, `${this.constructor.name} run succeeded`);
-        updateMetrics();
+        if (updateMetrics) {
+          updateMetrics();
+        }
         return result;
       })
       .catch((err) => {
         context.logger.error(err, `${this.constructor.name} Runner failed`);
-        updateMetrics(err);
+        if (updateMetrics) {
+          updateMetrics(err);
+        }
         throw err;
       });
   }

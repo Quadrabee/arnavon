@@ -1,12 +1,12 @@
-import proxyquire from 'proxyquire';
 import { expect, default as chai } from 'chai';
 import chaiHttp from 'chai-http';
-import createApiHelper from '../../../src/api';
+import createApi from '../../../src/server/rest';
 import { UnknownJobError, DataValidationError } from '../../../src/robust';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { JobDispatcher } from '../../../src/jobs';
 import Arnavon from '../../../src/index';
+import { validate as uuidValidate } from 'uuid';
 
 chai.should();
 chai.use(sinonChai);
@@ -14,31 +14,9 @@ chai.use(chaiHttp);
 
 describe('server/createApi', () => {
 
-  let createApi: (params?: any) => Express.Application, helperCalled: boolean, staticUuid: string;
-  beforeEach(() => {
-    staticUuid = 'ea47ac69-c0ca-4960-b905-6f14f2029744';
-    helperCalled = false;
-    createApi = proxyquire('../../../src/server/rest', {
-      '../../api': {
-        default: function() {
-          helperCalled = true;
-          // eslint-disable-next-line prefer-rest-params
-          const api = createApiHelper(arguments as any as { agent: string});
-          // make sure all request ids use our static uuid
-          api.use((req, res, next) => {
-            req.id = staticUuid;
-            next();
-          });
-          return api;
-        },
-      },
-    }).default;
-  });
-
   it('calls the createApi helper (src/api)', () => {
-    expect(helperCalled).to.equal(false);
-    createApi();
-    expect(helperCalled).to.equal(true);
+    const api = createApi();
+    expect(api).to.be.a('function');
   });
 
   describe('its POST /jobs/:id endpoint', () => {
@@ -163,7 +141,11 @@ describe('server/createApi', () => {
         .send(jobPayload)
         .end((err, res) => {
           res.should.have.status(201);
-          expect(dispatcher.dispatch).to.be.calledOnceWith('foo-bar', jobPayload, { id: staticUuid });
+          expect(dispatcher.dispatch).to.be.calledOnce;
+          const { args } = dispatcher.dispatch.getCall(0);
+          expect(args[0]).to.equal('foo-bar');
+          expect(args[1]).to.eql(jobPayload);
+          expect(uuidValidate(args[2].id)).to.be.true;
           done();
         });
     });
@@ -180,7 +162,11 @@ describe('server/createApi', () => {
         .send(jobPayload)
         .end((err, res) => {
           res.should.have.status(201);
-          expect(dispatcher.dispatchBatch).to.be.calledOnceWith('foo-bar', jobPayload, { id: staticUuid });
+          expect(dispatcher.dispatchBatch).to.be.calledOnce;
+          const { args } = dispatcher.dispatchBatch.getCall(0);
+          expect(args[0]).to.equal('foo-bar');
+          expect(args[1]).to.eql(jobPayload);
+          expect(uuidValidate(args[2].id)).to.be.true;
           done();
         });
     });

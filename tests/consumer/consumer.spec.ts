@@ -1,37 +1,30 @@
 import Arnavon from '../../src/';
 import Config from '../../src/config';
+import Consumer from '../../src/consumer';
 import { expect, default as chai } from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import proxyquire from 'proxyquire';
-import { Job, JobDispatcher, JobRunner } from '../../src/jobs';
+import { JobDispatcher, JobRunner } from '../../src/jobs';
 
 chai.should();
 chai.use(sinonChai);
 
 describe('Consumer', () => {
 
-  let consumer, config, Consumer, listen, processExit, dispatcher;
+  let consumer, config, processExit, dispatcher;
   beforeEach(() => {
     const arncfg = Config.fromFile('example/config.yaml');
     config = arncfg.consumers[0];
-    listen = sinon.stub().yields();
     processExit = sinon.stub(process, 'exit');
     dispatcher = new JobDispatcher(arncfg);
-    Consumer = proxyquire('../../src/consumer', {
-      '../api': {
-        default: function() {
-          return {
-            listen,
-          };
-        },
-      },
-    }).default;
     consumer = new Consumer(config, dispatcher);
+    // Stub _startApi to avoid actually starting an HTTP server
+    sinon.stub(consumer, '_startApi').resolves(consumer);
   });
 
   afterEach(() => {
     processExit.restore();
+    sinon.restore();
   });
 
   it('is a class', () => {
@@ -52,7 +45,7 @@ describe('Consumer', () => {
       expect(test({})).to.throw(/JobDispatcher expected, got/);
     });
     it('it works', () => {
-      expect(new Consumer(config, dispatcher)).to.be.an.instanceof(Consumer);
+      expect(consumer).to.be.an.instanceof(Consumer);
     });
   });
 
@@ -72,13 +65,14 @@ describe('Consumer', () => {
       Arnavon.queue.connect = sinon.stub().resolves(true);
       return consumer.start()
         .then(() => {
-          expect(listen).to.be.calledOnce;
+          expect(consumer._startApi).to.be.calledOnce;
         });
     });
 
     it('quits if unable to start the api', () => {
       Arnavon.queue.connect = sinon.stub().resolves(true);
-      listen.yields(new Error('oops'));
+      consumer._startApi.restore();
+      sinon.stub(consumer, '_startApi').rejects(new Error('oops'));
       return consumer.start()
         .finally(() => {
           expect(processExit).to.be.calledOnceWith(10);
@@ -175,6 +169,65 @@ describe('Consumer', () => {
       return test;
     });
 
+  });
+
+  describe('#stop', () => {
+
+    it('disconnects the queue', async () => {
+      Arnavon.queue.connect = sinon.stub().resolves(true);
+      const disconnectSpy = sinon.stub(Arnavon.queue, 'disconnect').resolves(Arnavon.queue);
+      await consumer.start();
+      await consumer.stop();
+      expect(disconnectSpy).to.be.calledOnce;
+    });
+
+    it('stops the internal API server', async () => {
+      Arnavon.queue.connect = sinon.stub().resolves(true);
+      sinon.stub(Arnavon.queue, 'disconnect').resolves(Arnavon.queue);
+      const stopApiSpy = sinon.spy(consumer, '_stopApi');
+      await consumer.start();
+      await consumer.stop();
+      expect(stopApiSpy).to.be.calledOnce;
+    });
+  });
+
+  describe('with multiple consumer configs', () => {
+    let multiConsumer;
+    beforeEach(() => {
+      // Reset registry to avoid metric registration conflicts from prior Consumer creation
+      Arnavon.reset();
+      const arncfg = Config.fromFile('example/config.yaml');
+      dispatcher = new JobDispatcher(arncfg);
+      const configs = arncfg.consumers;
+      multiConsumer = new Consumer(configs, dispatcher);
+      sinon.stub(multiConsumer, '_startApi').resolves(multiConsumer);
+    });
+
+    it('starts consuming all configured queues', () => {
+      Arnavon.queue.connect = sinon.stub().resolves(true);
+      sinon.stub(JobRunner, 'factor').returns({ run: sinon.stub().resolves() });
+      const consumeSpy = sinon.stub(Arnavon.queue, 'consume').resolves(true);
+      return multiConsumer.start()
+        .then(() => {
+          expect(consumeSpy.callCount).to.equal(2);
+          const queueNames = consumeSpy.getCalls().map(c => c.args[0]);
+          expect(queueNames).to.include('send-email');
+          expect(queueNames).to.include('send-email-via-binary');
+        });
+    });
+
+    it('factors a runner for each consumer config', () => {
+      Arnavon.queue.connect = sinon.stub().resolves(true);
+      sinon.stub(Arnavon.queue, 'consume').resolves(true);
+      const factorSpy = sinon.stub(JobRunner, 'factor').returns({ run: sinon.stub().resolves() });
+      return multiConsumer.start()
+        .then(() => {
+          expect(factorSpy.callCount).to.equal(2);
+          const types = factorSpy.getCalls().map(c => c.args[0]);
+          expect(types).to.include('nodejs');
+          expect(types).to.include('binary');
+        });
+    });
   });
 
 });

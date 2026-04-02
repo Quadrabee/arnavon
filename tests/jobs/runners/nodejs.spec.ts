@@ -50,11 +50,18 @@ describe('NodeJSRunner', () => {
 
   describe('#run', () => {
 
-    describe.skip('when used in raw mode', () => {
-      it('should pass the raw message to the node module', () => {
-        runner.run(testJob);
+    describe('when used in raw mode', () => {
+      let rawRunner;
+      beforeEach(() => {
+        rawRunner = new NodeJSRunner({ module: './dummy.runner', mode: 'raw' });
+        dummy.runner.reset();
+      });
+
+      it('should pass the raw message to the node module unchanged', () => {
+        const rawMessage = { some: 'raw data' };
+        rawRunner.run(rawMessage);
         expect(dummy.runner.calls).to.have.length(1);
-        expect(dummy.runner.calls[0]).to.equal(testJob);
+        expect(dummy.runner.calls[0]).to.equal(rawMessage);
       });
     });
 
