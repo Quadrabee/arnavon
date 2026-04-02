@@ -22,9 +22,10 @@ export default class Consumer {
   #dispatcher;
   #registry;
   #queue: Queue;
+  #cwd: string;
   #processes;
 
-  constructor(configs: Array<ConsumerConfig>, dispatcher: JobDispatcher, registry?: promClient.Registry, queue?: Queue) {
+  constructor(configs: Array<ConsumerConfig>, dispatcher: JobDispatcher, registry?: promClient.Registry, queue?: Queue, cwd?: string) {
     configs = ([] as Array<ConsumerConfig>).concat(configs).flat();
     configs.forEach((cfg) => {
       if (!(cfg instanceof ConsumerConfig)) {
@@ -36,6 +37,7 @@ export default class Consumer {
     }
     this.#registry = registry || Arnavon.registry;
     this.#queue = queue || Arnavon.queue;
+    this.#cwd = cwd || (Arnavon.config ? Arnavon.config.cwd : process.cwd());
     this.#api = createApi({ registry: this.#registry });
     this.#dispatcher = dispatcher;
     this.#configs = configs;
@@ -77,6 +79,7 @@ export default class Consumer {
     this.#processes = this.#configs.map((config: ConsumerConfig) => {
       const runner = JobRunner.factor(config.runner.type, {
         mode: config.runner.mode,
+        cwd: this.#cwd,
         ...config.runner.config as JobRunnerConfig,
       }, this.#registry);
       return this.#queue.consume(config.queue, (_job, context) => {

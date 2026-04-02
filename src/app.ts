@@ -117,7 +117,7 @@ export default class ArnavonApp {
       throw new Error(`No consumer with name '${name}' found`);
     }
     const dispatcher = new JobDispatcher(config, this.#registry, this.#queue);
-    this.#consumer = new Consumer([consumerConfig], dispatcher, this.#registry, this.#queue);
+    this.#consumer = new Consumer([consumerConfig], dispatcher, this.#registry, this.#queue, this.#cwd);
     await this.#consumer.start(port);
     return this;
   }
@@ -135,7 +135,7 @@ export default class ArnavonApp {
       throw new Error('No consumers to start');
     }
     const dispatcher = new JobDispatcher(config, this.#registry, this.#queue);
-    this.#consumer = new Consumer(configs, dispatcher, this.#registry, this.#queue);
+    this.#consumer = new Consumer(configs, dispatcher, this.#registry, this.#queue, this.#cwd);
     await this.#consumer.start(port);
     return this;
   }

@@ -30,7 +30,8 @@ export enum Mode {
 export type JobRunnerConfig = {
   type: string
   mode?: Mode,
-  config: unknown
+  config: unknown,
+  cwd?: string
 }
 
 export type JobRunnerMetricCollection = {
