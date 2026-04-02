@@ -177,11 +177,11 @@ export default class JobRunner {
     throw new Error('#_run should be implemented by subclasses');
   }
 
-  static factor(type: string, config: JobRunnerConfig) {
+  static factor(type: string, config: JobRunnerConfig, registry?: promClient.Registry) {
     // circular dependency... no choice :(
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const runners = require('./runners').default;
-    return runners.factor(type, config);
+    return runners.factor(type, config, registry);
   }
 
 }

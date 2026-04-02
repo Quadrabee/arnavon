@@ -22,9 +22,9 @@ class RunnersFactory {
     return this.runners[type];
   }
 
-  factor(type: string, config: JobRunnerConfig) {
+  factor(type: string, config: JobRunnerConfig, registry?: import('prom-client').Registry) {
     const clazz = this.get(type);
-    return new clazz(config);
+    return new clazz(config, registry);
   }
 }
 

@@ -78,7 +78,7 @@ export default class Consumer {
       const runner = JobRunner.factor(config.runner.type, {
         mode: config.runner.mode,
         ...config.runner.config as JobRunnerConfig,
-      });
+      }, this.#registry);
       return this.#queue.consume(config.queue, (_job, context) => {
         // Dress the payload
         const validator = this.#dispatcher.getValidator(_job.meta);
