@@ -6,7 +6,8 @@ import Arnavon from '..';
 import { Server } from 'http';
 import { JobRunner, JobDispatcher } from '../jobs';
 import { JobRunnerConfig, JobRunnerContext } from '../jobs/runner';
-import { Registry } from 'prom-client';
+import promClient, { Registry } from 'prom-client';
+import Queue from '../queue';
 
 export type JobConsumerContext = JobRunnerContext & {
   dispatcher: JobDispatcher
@@ -19,9 +20,11 @@ export default class Consumer {
   #server?: Server;
   #configs;
   #dispatcher;
+  #registry;
+  #queue: Queue;
   #processes;
 
-  constructor(configs: Array<ConsumerConfig>, dispatcher: JobDispatcher) {
+  constructor(configs: Array<ConsumerConfig>, dispatcher: JobDispatcher, registry?: promClient.Registry, queue?: Queue) {
     configs = ([] as Array<ConsumerConfig>).concat(configs).flat();
     configs.forEach((cfg) => {
       if (!(cfg instanceof ConsumerConfig)) {
@@ -31,7 +34,9 @@ export default class Consumer {
     if (!(dispatcher instanceof JobDispatcher)) {
       throw new Error(`JobDispatcher expected, got ${inspect(dispatcher)}`);
     }
-    this.#api = createApi();
+    this.#registry = registry || Arnavon.registry;
+    this.#queue = queue || Arnavon.queue;
+    this.#api = createApi({ registry: this.#registry });
     this.#dispatcher = dispatcher;
     this.#configs = configs;
   }
@@ -52,19 +57,19 @@ export default class Consumer {
   }
 
   _connectQueue() {
-    Arnavon.queue.on('error', () => {
+    this.#queue.on('error', () => {
       logger.error('Queue errored, quitting');
       process.exit(10);
     });
-    Arnavon.queue.on('close', () => {
+    this.#queue.on('close', () => {
       logger.error('Queue disconnected, quitting');
       process.exit(10);
     });
-    return Arnavon.queue.connect();
+    return this.#queue.connect();
   }
 
   _disconnectQueue() {
-    return Arnavon.queue.disconnect();
+    return this.#queue.disconnect();
   }
 
   _startConsuming() {
@@ -74,7 +79,7 @@ export default class Consumer {
         mode: config.runner.mode,
         ...config.runner.config as JobRunnerConfig,
       });
-      return Arnavon.queue.consume(config.queue, (_job, context) => {
+      return this.#queue.consume(config.queue, (_job, context) => {
         // Dress the payload
         const validator = this.#dispatcher.getValidator(_job.meta);
         // @ts-expect-error we need to refactor this
@@ -82,7 +87,7 @@ export default class Consumer {
         // Extend context to include dispatcher and prometheus registry
         const extendedContext: JobConsumerContext = Object.assign({}, context, {
           dispatcher: this.#dispatcher,
-          prometheusRegistry: Arnavon.registry,
+          prometheusRegistry: this.#registry,
         });
         return runner.run(_job, extendedContext);
       });

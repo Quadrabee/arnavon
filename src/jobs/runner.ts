@@ -9,14 +9,14 @@ import Logger from 'bunyan';
  * The prometheus counters are shared amongst JobRunner classes
  * but use labels to distinguish the implementating-class/job
  */
-const ensureCounter = <T extends Metric<string>>(type: new(params: unknown) => T, name: string, help: string, extraLabels: string[] = []): T => {
-  let metric = Arnavon.registry.getSingleMetric(name);
+const ensureCounter = <T extends Metric<string>>(registry: promClient.Registry, type: new(params: unknown) => T, name: string, help: string, extraLabels: string[] = []): T => {
+  let metric = registry.getSingleMetric(name);
   if (!metric) {
     metric = new type({
       name,
       help,
       labelNames: ['jobName'].concat(extraLabels),
-      registers: [Arnavon.registry],
+      registers: [registry],
     });
   }
   return metric as T;
@@ -54,30 +54,35 @@ export default class JobRunner {
 
   protected static metrics: JobRunnerMetricCollection;
   public readonly mode: Mode;
-  constructor(config: Partial<JobRunnerConfig> = {}) {
+  constructor(config: Partial<JobRunnerConfig> = {}, registry?: promClient.Registry) {
     this.mode = config.mode || Mode.ARNAVON;
-    JobRunner.ensureMetrics();
+    JobRunner.ensureMetrics(registry || Arnavon.registry);
   }
 
-  static ensureMetrics() {
+  static ensureMetrics(registry?: promClient.Registry) {
+    const reg = registry || Arnavon.registry;
     JobRunner.metrics = JobRunner.metrics || {};
     JobRunner.metrics.success = ensureCounter(
+      reg,
       promClient.Counter,
       'runner_successful_jobs',
       'number of successful job runs',
     );
     JobRunner.metrics.failures = ensureCounter(
+      reg,
       promClient.Counter,
       'runner_failed_jobs',
       'number of failed job runs',
     );
     JobRunner.metrics.leadTime = ensureCounter(
+      reg,
       promClient.Histogram,
       'runner_job_lead_time',
       'time spent between queueing and end of job execution',
       ['success'],
     );
     JobRunner.metrics.touchTime = ensureCounter(
+      reg,
       promClient.Histogram,
       'runner_job_touch_time',
       'time spent on job execution',
@@ -87,7 +92,6 @@ export default class JobRunner {
 
   /**
    * Runs a job
-   * @param {Job} job
    */
   run(message: unknown, context: Partial<JobRunnerContext> = {}) {
     context.logger = context.logger ? context.logger : mainLogger;
@@ -168,7 +172,6 @@ export default class JobRunner {
 
   /**
    * Implementation specific, should be implemented by subclasses
-   * @param {Job} job
    */
   _run(_message: unknown, _context: JobRunnerContext) {
     throw new Error('#_run should be implemented by subclasses');

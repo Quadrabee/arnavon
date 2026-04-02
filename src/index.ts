@@ -9,8 +9,14 @@ import { inspect } from './robust';
 import ArnavonConfig from './config';
 
 /**
- * Arnavon uses a singleton pattern for the main "module"
- * exposing the prometheus instance, the queue, the config etc
+ * Arnavon singleton - convenience facade for CLI usage.
+ *
+ * Internal components (Server, Consumer, JobDispatcher, JobRunner, createApi)
+ * no longer depend on this singleton. They accept registry, queue, and cwd
+ * as explicit parameters, falling back to Arnavon.* only when not provided.
+ *
+ * For library usage, pass dependencies explicitly instead of relying on
+ * Arnavon.init().
  */
 class Arnavon {
   static registry: promClient.Registry;
@@ -26,15 +32,16 @@ class Arnavon {
     Arnavon.config = config;
   }
 
+  /** @deprecated Use config.cwd directly or pass cwd to components */
   static cwd() {
     return Arnavon.config.cwd;
   }
 
+  /** @deprecated Pass module functions directly or use cwd config option */
   static require(fname: string) {
     return require(path.join(Arnavon.cwd(), fname));
   }
 
-  // for test purposes, shouldn't really be used
   static reset() {
     // Disconnect old queue to prevent memory leaks
     if (Arnavon.queue) {

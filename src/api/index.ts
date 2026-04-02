@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import express, { Express } from 'express';
 import bodyParser from 'body-parser';
 import promBundle from 'express-prom-bundle';
+import promClient from 'prom-client';
 import logger from '../logger';
 import Arnavon from '../';
 
@@ -11,7 +12,8 @@ import Arnavon from '../';
  * Creates an express app, reusing a previous prometheus registry if provided
  * if not, a new one is created
  */
-export default ({ agent = 'arnavon' } = {}): Express => {
+export default ({ agent = 'arnavon', registry }: { agent?: string, registry?: promClient.Registry } = {}): Express => {
+  const reg = registry || Arnavon.registry;
   const app = express();
 
   app.use((req, res, next) => {
@@ -26,7 +28,7 @@ export default ({ agent = 'arnavon' } = {}): Express => {
   const metricsMiddleware = promBundle({
     includeMethod: true,
     includePath: true,
-    promRegistry: Arnavon.registry,
+    promRegistry: reg,
   });
   app.use(metricsMiddleware);
 
