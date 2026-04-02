@@ -1,5 +1,5 @@
 import { Command, Flags } from '@oclif/core';
-import { Config, default as Arnavon } from '../../..';
+import ArnavonApp from '../../../app';
 import logger from '../../../logger';
 import bunyan from 'bunyan';
 
@@ -17,25 +17,26 @@ export default abstract class BaseQueueCommand extends Command {
     }),
   }
 
+  protected app: ArnavonApp;
+
   /**
-   * Initialize Arnavon from config file.
+   * Initialize ArnavonApp from config file.
    * Silences the logger to avoid noise in CLI output.
    */
-  protected initArnavon(configPath: string) {
+  protected initApp(configPath: string) {
     logger.level(bunyan.FATAL + 1);
-    const config = Config.fromFile(configPath);
-    Arnavon.init(config);
+    this.app = ArnavonApp.fromYaml(configPath);
   }
 
   /**
    * Execute a function with queue connection, ensuring proper disconnect.
    */
   protected async withQueue<T>(fn: () => Promise<T>): Promise<T> {
-    await Arnavon.queue.connect();
+    await this.app.queue.connect();
     try {
       return await fn();
     } finally {
-      await Arnavon.queue.disconnect();
+      await this.app.queue.disconnect();
     }
   }
 }

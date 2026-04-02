@@ -1,5 +1,5 @@
 import { Flags, Command } from '@oclif/core';
-import { Server, Config, default as Arnavon } from '../../..';
+import ArnavonApp from '../../../app';
 
 export default class StartApiCommand extends Command {
 
@@ -17,20 +17,18 @@ export default class StartApiCommand extends Command {
   async run() {
     const { flags } = await this.parse(StartApiCommand);
     const configPath = flags.config || 'config.yaml';
-
-    const config = Config.fromFile(configPath);
-    Arnavon.init(config);
-
     const port = flags.port || 3000;
-    const server = new Server(Arnavon.config);
-    await server.start(port);
+
+    const app = ArnavonApp.fromYaml(configPath);
+    await app.startApi({ port });
+
     // Quit properly on SIGINT (typically ctrl-c)
     process.on('SIGINT', async () => {
-      await server.stop();
+      await app.stop();
     });
     // Quit properly on SIGTERM (typically kubernetes termination)
     process.on('SIGTERM', async () => {
-      await server.stop();
+      await app.stop();
     });
   }
 }

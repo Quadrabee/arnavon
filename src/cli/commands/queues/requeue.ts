@@ -1,5 +1,4 @@
 import { Flags } from '@oclif/core';
-import { default as Arnavon } from '../../..';
 import BaseQueueCommand from './base';
 
 export default class RequeueCommand extends BaseQueueCommand {
@@ -40,12 +39,12 @@ Examples:
       this.error('Count must be a positive integer');
     }
 
-    this.initArnavon(flags.config);
+    this.initApp(flags.config);
 
     this.log('Connecting to queue...');
     await this.withQueue(async () => {
       this.log(`Requeuing messages from ${queueName}${count ? ` (limit: ${count})` : ''}...`);
-      const result = await Arnavon.queue.requeue(queueName, { count });
+      const result = await this.app.queue.requeue(queueName, { count });
 
       this.log('');
       this.log(`Status: ${result.status}`);

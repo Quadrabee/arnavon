@@ -1,5 +1,4 @@
 import { CliUx } from '@oclif/core';
-import { default as Arnavon } from '../../..';
 import BaseQueueCommand from './base';
 
 export default class StatusCommand extends BaseQueueCommand {
@@ -21,11 +20,11 @@ Examples:
 
   async run() {
     const { flags } = await this.parse(StatusCommand);
-    this.initArnavon(flags.config);
+    this.initApp(flags.config);
 
     await this.withQueue(async () => {
       // Get queue names from config topology
-      const queueConfig = Arnavon.config.queue.config as { topology?: { queues?: Array<{ name: string }> } };
+      const queueConfig = this.app.queueDefinition.config as { topology?: { queues?: Array<{ name: string }> } };
       const queueNames = queueConfig.topology?.queues?.map(q => q.name) || [];
 
       if (queueNames.length === 0) {
@@ -33,7 +32,7 @@ Examples:
         return;
       }
 
-      const queues = await Arnavon.queue.getQueuesInfo(queueNames);
+      const queues = await this.app.queue.getQueuesInfo(queueNames);
 
       CliUx.ux.table(queues, {
         name: {

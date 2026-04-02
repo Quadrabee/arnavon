@@ -56,13 +56,17 @@ class Arnavon {
 
 export default Arnavon;
 
+import ArnavonApp from './app';
+
 export {
+  ArnavonApp,
   Config,
   Queue,
   Server,
   Consumer,
 };
 
+export * from './app';
 export * from './consumer';
 export * from './server';
 export * from './queue';
