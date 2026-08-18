@@ -1,13 +1,14 @@
+'use strict';
+import { expect, use, should } from 'chai';
 import NodeJSRunner from '../../../src/jobs/runners/nodejs';
-import { expect, default as chai } from 'chai';
 import Job from '../../../src/jobs/job';
 import Arnavon from '../../../src';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
-chai.should();
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
+should();
+use(sinonChai);
+use(chaiAsPromised);
 
 describe('NodeJSRunner', () => {
 

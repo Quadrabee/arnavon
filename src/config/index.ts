@@ -1,4 +1,4 @@
-require('@babel/register');
+import { requireUserModuleDefault } from '../user-module';
 import fs from 'fs';
 import path from 'path';
 import types from './finitio';
@@ -66,10 +66,10 @@ export default class ArnavonConfig {
       fs.accessSync(fpath, fs.constants.R_OK);
     } catch (err) {
       if (err.code === 'ENOENT') {
-        throw new Error(`Config file not found: '${fname}'.`);
+        throw new Error(`Config file not found: '${fname}'.`, { cause: err });
       }
       if (err.code === 'EACCES') {
-        throw new Error(`Config file '${fname}' is not readable, check permissions.`);
+        throw new Error(`Config file '${fname}' is not readable, check permissions.`, { cause: err });
       }
       throw err;
     }
@@ -80,8 +80,7 @@ export default class ArnavonConfig {
     let baseWorld = null;
     const worldPath = path.join(configFolder, 'schema.world.js');
     if (fs.existsSync(worldPath)) {
-      baseWorld = require(path.relative(__dirname, worldPath));
-      baseWorld = baseWorld && baseWorld.default ? baseWorld.default : baseWorld;
+      baseWorld = requireUserModuleDefault(worldPath);
     }
 
     // check if a schema.fio is present in same folder as config, if so use it as base finitio system

@@ -1,8 +1,7 @@
 import './index';
 import { version } from '../../package.json';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from '../uuid';
 import express, { Express } from 'express';
-import bodyParser from 'body-parser';
 import promBundle from 'express-prom-bundle';
 import promClient from 'prom-client';
 import logger from '../logger';
@@ -33,10 +32,10 @@ export default ({ agent = 'arnavon', registry }: { agent?: string, registry?: pr
   app.use(metricsMiddleware);
 
   // parse application/x-www-form-urlencoded
-  app.use(bodyParser.urlencoded({ extended: false }));
+  app.use(express.urlencoded({ extended: false }));
 
   // parse application/json
-  app.use(bodyParser.json({ limit: process.env.API_BODYPARSER_LIMIT || '1MB' }));
+  app.use(express.json({ limit: process.env.API_BODYPARSER_LIMIT || '1MB' }));
 
   app.get('/version', (req, res) => {
     res.send({ arnavon: { version, agent } });

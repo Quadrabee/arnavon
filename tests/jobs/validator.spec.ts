@@ -1,6 +1,7 @@
+'use strict';
+import { expect } from 'chai';
 import Finitio from 'finitio';
 import JobValidator from '../../src/jobs/validator';
-import { expect } from 'chai';
 import { DataValidationError } from '../../src/robust';
 
 describe('JobValidator', () => {
@@ -103,7 +104,7 @@ describe('JobValidator', () => {
 
     it('uses the function for validation', () => {
       const fn = (data: any) => {
-        if (!data || !data.email) throw new Error('email required');
+        if (!data || !data.email) {throw new Error('email required');}
         return { email: data.email.toLowerCase() };
       };
       const v = new JobValidator(fn);

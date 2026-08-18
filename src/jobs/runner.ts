@@ -180,7 +180,8 @@ export default class JobRunner {
 
   static factor(type: string, config: JobRunnerConfig, registry?: promClient.Registry) {
     // circular dependency... no choice :(
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const runners = require('./runners').default;
     return runners.factor(type, config, registry);
   }

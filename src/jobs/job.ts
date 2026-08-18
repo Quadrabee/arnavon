@@ -1,4 +1,4 @@
-import { v4 as uuid, validate } from 'uuid';
+import { v4 as uuid, validate } from '../uuid';
 import { inspect } from '../robust';
 import JobPayload from './payload';
 

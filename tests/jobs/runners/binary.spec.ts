@@ -1,6 +1,7 @@
+'use strict';
+import { expect } from 'chai';
 import BinaryRunner from '../../../src/jobs/runners/binary';
 import JobResult from '../../../src/jobs/result';
-import { expect } from 'chai';
 
 describe('BinaryRunner', () => {
 

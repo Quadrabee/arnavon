@@ -1,15 +1,16 @@
+'use strict';
+import { expect, use, should } from 'chai';
 import { version } from '../../package.json';
-import { expect, default as chai } from 'chai';
-import chaiHttp from 'chai-http';
+import chaiHttp, { request as httpRequest } from 'chai-http';
 import createApi from '../../src/api';
 import logger from '../../src/logger';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { validate } from 'uuid';
 
-chai.should();
-chai.use(sinonChai);
-chai.use(chaiHttp);
+should();
+use(sinonChai);
+use(chaiHttp);
 
 describe('createApi', () => {
 
@@ -18,7 +19,9 @@ describe('createApi', () => {
     const app = createApi();
     // Ways I found of checking it looks like an expressjs app
     // ""...if it quacks like a duck"
-    expect(app.settings).to.be.an.instanceof(Object);
+    // express 5 creates `settings` with a null prototype, so `instanceof Object`
+    // no longer holds; duck-type on the shape instead.
+    expect(app.settings).to.be.an('object');
     expect(app.settings.view).to.be.an.instanceof(Function);
   });
 
@@ -31,7 +34,7 @@ describe('createApi', () => {
 
     describe('GET /version', () => {
       it('should return the current version number', (done) => {
-        chai.request(api)
+        httpRequest.execute(api)
           .get('/version')
           .end((err, res) => {
             res.should.have.status(200);
@@ -48,7 +51,7 @@ describe('createApi', () => {
 
     describe('GET /metrics', () => {
       it('should return prometheus metrics', (done) => {
-        chai.request(api)
+        httpRequest.execute(api)
           .get('/metrics')
           .end((err, res) => {
             res.should.have.status(200);
@@ -60,10 +63,10 @@ describe('createApi', () => {
       });
 
       it('should be updated after other requests', (done) => {
-        chai.request(api)
+        httpRequest.execute(api)
           .get('/404')
           .end(() => {
-            chai.request(api)
+            httpRequest.execute(api)
               .get('/metrics')
               .end((err, res) => {
                 res.should.have.status(200);
@@ -86,7 +89,7 @@ describe('createApi', () => {
         expect(req.body).to.eql(payload);
         res.sendStatus(204);
       });
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/test')
         .send(payload)
         .end((err, res) => {
@@ -102,7 +105,7 @@ describe('createApi', () => {
           params: req.params,
         });
       });
-      chai.request(api)
+      httpRequest.execute(api)
         .get('/test/foo?bar=baz')
         .end((err, res) => {
           res.should.have.status(200);
@@ -123,7 +126,7 @@ describe('createApi', () => {
         request = req;
       });
 
-      chai.request(api)
+      httpRequest.execute(api)
         .get('/test')
         .end((err, res) => {
           expect(request).to.exist;

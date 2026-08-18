@@ -1,5 +1,6 @@
-import { Consumer, Server, Config, Queue, default as Arnavon } from '../src/index';
+'use strict';
 import { expect } from 'chai';
+import { Consumer, Server, Config, Queue, default as Arnavon } from '../src/index';
 import promClient from 'prom-client';
 import ArnavonConfig from '../src/config';
 

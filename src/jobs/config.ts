@@ -5,8 +5,8 @@ import { ValidatorFn } from './validator';
 export default class JobConfig {
 
   public readonly inputSchema: Finitio.System | ValidatorFn;
-  public readonly name: string
-  public readonly invalidJobExchange?: string
+  public readonly name: string;
+  public readonly invalidJobExchange?: string;
 
   /**
    * Constructs a new JobConfig object
@@ -55,7 +55,7 @@ function ensureSchema(schema: string | Finitio.System | ValidatorFn, parentSyste
     try {
       system = parentSystem.subsystem(schema);
     } catch (err) {
-      throw new Error(`Invalid finitio system: ${err.message}`);
+      throw new Error(`Invalid finitio system: ${err.message}`, { cause: err });
     }
   } else {
     system = schema;

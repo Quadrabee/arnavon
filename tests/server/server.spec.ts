@@ -1,12 +1,13 @@
+'use strict';
+import { expect, use, should } from 'chai';
 import Arnavon from '../../src';
 import Config from '../../src/config';
 import Server from '../../src/server';
-import { expect, default as chai } from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-chai.should();
-chai.use(sinonChai);
+should();
+use(sinonChai);
 
 describe('Server', () => {
 

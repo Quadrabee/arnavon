@@ -3,7 +3,7 @@ import ArnavonApp from '../../../app';
 
 export default class StartApiCommand extends Command {
 
-  static summary = 'The REST API provides ways to push Jobs to queues, with validation'
+  static summary = 'The REST API provides ways to push Jobs to queues, with validation';
 
   static flags = {
     config: Flags.string({
@@ -12,7 +12,7 @@ export default class StartApiCommand extends Command {
       default: 'config.yaml',
     }),
     port: Flags.integer({ char: 'p', description: 'Port to use for API (default 3000)' }),
-  }
+  };
 
   async run() {
     const { flags } = await this.parse(StartApiCommand);

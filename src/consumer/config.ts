@@ -6,7 +6,7 @@ export default class ConsumerConfig {
 
   public readonly name: string;
   public readonly queue: string;
-  public readonly runner: JobRunnerConfig
+  public readonly runner: JobRunnerConfig;
 
   /**
    * Constructs a new ConsumerConfig object.

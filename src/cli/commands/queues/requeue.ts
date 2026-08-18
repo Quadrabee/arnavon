@@ -1,9 +1,9 @@
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import BaseQueueCommand from './base';
 
 export default class RequeueCommand extends BaseQueueCommand {
 
-  static summary = 'Requeue messages from a dead letter queue back to the original queue'
+  static summary = 'Requeue messages from a dead letter queue back to the original queue';
 
   static description = `Moves messages from a dead letter queue back to the original queue for reprocessing.
 
@@ -16,11 +16,12 @@ Examples:
   $ arnavon queue requeue my-queue -n 100 -c config.yaml
 `;
 
-  static args = [{
-    name: 'queueName',
-    required: true,
-    description: 'The name of the dead letter queue to requeue from',
-  }]
+  static args = {
+    queueName: Args.string({
+      required: true,
+      description: 'The name of the dead letter queue to requeue from',
+    }),
+  };
 
   static flags = {
     ...BaseQueueCommand.baseFlags,
@@ -28,7 +29,7 @@ Examples:
       char: 'n',
       description: 'Number of messages to requeue (default: all messages)',
     }),
-  }
+  };
 
   async run() {
     const { args, flags } = await this.parse(RequeueCommand);

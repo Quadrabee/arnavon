@@ -18,7 +18,7 @@ export default class JobDispatcher {
   /**
    * Private collection of jobs
    */
-  private jobs: JobCollection
+  private jobs: JobCollection;
   /**
    * Private collection of counters (unknown/invalid/valid jobs)
    */
@@ -81,7 +81,7 @@ export default class JobDispatcher {
     data.forEach((payload) => {
       try {
         valids.push(validator.validate(payload));
-      } catch (err) {
+      } catch (_err) {
         invalids.push(payload);
       }
     });

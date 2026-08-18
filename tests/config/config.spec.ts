@@ -1,3 +1,4 @@
+'use strict';
 import { expect } from 'chai';
 import path from 'path';
 
@@ -107,7 +108,7 @@ describe('ArnavonConfig', () => {
 
     it('accepts validator functions as inputSchema', () => {
       const myValidator = (data) => {
-        if (!data.email) throw new Error('email required');
+        if (!data.email) {throw new Error('email required');}
         return data;
       };
       const config = ArnavonConfig.from({

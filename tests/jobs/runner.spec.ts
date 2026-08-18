@@ -1,13 +1,14 @@
+'use strict';
+import { expect, use } from 'chai';
 import Arnavon from '../../src';
 import sinon from 'sinon';
 import Runners from '../../src/jobs/runners';
 import JobRunner from '../../src/jobs/runner';
-import { expect, default as chai } from 'chai';
 import sinonChai from 'sinon-chai';
 import Job from '../../src/jobs/job';
 import { InvalidRunError } from '../../src/robust';
 
-chai.use(sinonChai);
+use(sinonChai);
 
 describe('JobRunner', () => {
 

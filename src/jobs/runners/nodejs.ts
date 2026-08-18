@@ -1,4 +1,4 @@
-require('@babel/register');
+import { requireUserModule } from '../../user-module';
 import path from 'path';
 import Arnavon from '../../';
 import JobRunner, { JobRunnerConfig, JobRunnerContext } from '../runner';
@@ -27,12 +27,12 @@ export default class NodeJSRunner extends JobRunner {
     const cwd = config.cwd || Arnavon.cwd();
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const module = require(path.join(cwd, config.module));
-      this.module = module.default ? module.default : module;
+       
+      const module = requireUserModule(path.join(cwd, config.module));
+      this.module = (module.default ? module.default : module) as NodeJSRunnerModule;
     } catch (err) {
       logger.error(err);
-      throw new Error(`Module '${config.module}' can't be loaded`);
+      throw new Error(`Module '${config.module}' can't be loaded`, { cause: err });
     }
   }
 

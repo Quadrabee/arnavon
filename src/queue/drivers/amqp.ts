@@ -371,6 +371,7 @@ class AmqpQueue extends Queue {
         throw new Error(
           `Cannot connect to RabbitMQ Management API at ${this.#managementUrl}. ` +
           'Ensure RabbitMQ is running and the management plugin is enabled.',
+          { cause: err },
         );
       }
 

@@ -1,5 +1,6 @@
-import ConsumerConfig from '../../src/consumer/config';
+'use strict';
 import { expect } from 'chai';
+import ConsumerConfig from '../../src/consumer/config';
 
 describe('ConsumerConfig', () => {
 

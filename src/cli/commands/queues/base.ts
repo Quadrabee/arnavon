@@ -15,7 +15,7 @@ export default abstract class BaseQueueCommand extends Command {
       char: 'c',
       default: 'config.yaml',
     }),
-  }
+  };
 
   protected app: ArnavonApp;
 

@@ -39,6 +39,7 @@ class Arnavon {
 
   /** @deprecated Pass module functions directly or use cwd config option */
   static require(fname: string) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require(path.join(Arnavon.cwd(), fname));
   }
 

@@ -1,12 +1,13 @@
-import { expect, default as chai } from 'chai';
+'use strict';
+import { expect, use, should } from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import AmqpQueue from '../../../src/queue/drivers/amqp';
 import Config from '../../../src/config';
 import amqplib from 'amqplib';
 
-chai.should();
-chai.use(sinonChai);
+should();
+use(sinonChai);
 
 // Helpers to build a mock AMQP connection and channel
 function createMockChannel(overrides: Record<string, any> = {}) {
@@ -156,7 +157,7 @@ describe('AmqpQueue', () => {
       let callCount = 0;
       sandbox.stub(amqplib, 'connect').callsFake(() => {
         callCount++;
-        if (callCount === 1) return Promise.reject(new Error('ECONNREFUSED'));
+        if (callCount === 1) {return Promise.reject(new Error('ECONNREFUSED'));}
         return Promise.resolve(conn);
       });
 

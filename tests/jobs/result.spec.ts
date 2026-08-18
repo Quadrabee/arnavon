@@ -1,5 +1,6 @@
-import JobResult from '../../src/jobs/result';
+'use strict';
 import { expect } from 'chai';
+import JobResult from '../../src/jobs/result';
 
 describe('JobResult', () => {
 

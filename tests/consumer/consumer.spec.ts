@@ -1,13 +1,14 @@
+'use strict';
+import { expect, use, should } from 'chai';
 import Arnavon from '../../src/';
 import Config from '../../src/config';
 import Consumer from '../../src/consumer';
-import { expect, default as chai } from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { JobDispatcher, JobRunner } from '../../src/jobs';
 
-chai.should();
-chai.use(sinonChai);
+should();
+use(sinonChai);
 
 describe('Consumer', () => {
 

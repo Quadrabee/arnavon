@@ -1,11 +1,12 @@
+'use strict';
+import { expect, use } from 'chai';
 import FunctionRunner from '../../../src/jobs/runners/function';
-import { expect, default as chai } from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import Job from '../../../src/jobs/job';
 
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
+use(sinonChai);
+use(chaiAsPromised);
 
 describe('FunctionRunner', () => {
 
@@ -32,10 +33,10 @@ describe('FunctionRunner', () => {
 
   describe('#run', () => {
     it('calls the handler with the job and context', () => {
-      let receivedJob, receivedContext;
+      let receivedJob, _receivedContext;
       const handler = async (job, context) => {
         receivedJob = job;
-        receivedContext = context;
+        _receivedContext = context;
         return 'done';
       };
       const runner = new FunctionRunner({ type: 'function', handler, config: {} });

@@ -1,9 +1,8 @@
-import { CliUx } from '@oclif/core';
 import BaseQueueCommand from './base';
 
 export default class StatusCommand extends BaseQueueCommand {
 
-  static summary = 'Show the status of queues (messages, consumers)'
+  static summary = 'Show the status of queues (messages, consumers)';
 
   static description = `Displays the status of all configured queues, including the number of messages and consumers.
 
@@ -16,7 +15,7 @@ Examples:
 
   static flags = {
     ...BaseQueueCommand.baseFlags,
-  }
+  };
 
   async run() {
     const { flags } = await this.parse(StatusCommand);
@@ -34,19 +33,18 @@ Examples:
 
       const queues = await this.app.queue.getQueuesInfo(queueNames);
 
-      CliUx.ux.table(queues, {
-        name: {
-          header: 'Name',
-        },
-        messages: {
-          header: 'Messages',
-        },
-        consumers: {
-          header: 'Consumers',
-        },
-        state: {
-          header: 'State',
-        },
+      // @oclif/table is ESM-only (and pulls in a dependency using top-level
+      // await), so it cannot be require()d from this CommonJS build.
+      const { printTable } = await import('@oclif/table');
+
+      printTable({
+        data: queues,
+        columns: [
+          { key: 'name', name: 'Name' },
+          { key: 'messages', name: 'Messages' },
+          { key: 'consumers', name: 'Consumers' },
+          { key: 'state', name: 'State' },
+        ],
       });
     });
   }

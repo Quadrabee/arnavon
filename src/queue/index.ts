@@ -39,7 +39,8 @@ export type QueueInternalProcessor = (job: Job, metadata: JobMeta) => Promise<un
 class Queue extends EventEmitter {
 
   static create(config: QueueConfig): Queue {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const drivers = require('./drivers').default;
     const { driver, config: driverConfig } = config;
     if (!drivers[driver]) {

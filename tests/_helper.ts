@@ -1,3 +1,4 @@
+'use strict';
 import { default as Arnavon, Config } from '../src';
 
 beforeEach(() => {

@@ -1,4 +1,4 @@
-import { Command, Flags } from '@oclif/core';
+import { Args, Command, Flags } from '@oclif/core';
 import ArnavonApp from '../../../app';
 
 export default class StartConsumerCommand extends Command {
@@ -10,11 +10,12 @@ This command can be used to start one of the consumer defined in your config fil
 Please note that the --all flag can be used to start all consumers at once, but this is not recommended in production.
 `;
 
-  static args = [{
-    name: 'name',
-    required: false,
-    description: 'The name of the consumer to start',
-  }]
+  static args = {
+    name: Args.string({
+      required: false,
+      description: 'The name of the consumer to start',
+    }),
+  };
 
   static flags = {
     config: Flags.string({

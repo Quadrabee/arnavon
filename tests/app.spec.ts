@@ -1,3 +1,4 @@
+'use strict';
 import { expect } from 'chai';
 import ArnavonApp from '../src/app';
 import MemoryQueue from '../src/queue/drivers/memory';

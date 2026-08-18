@@ -1,7 +1,8 @@
+'use strict';
+import { expect, use, should } from 'chai';
 import JobDispatcher from '../../src/jobs/dispatcher';
 import ArnavonConfig from '../../src/config';
 import Arnavon from '../../src';
-import { expect, default as chai } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { DataValidationError, UnknownJobError, InvalidBatch } from '../../src/robust';
 import Job from '../../src/jobs/job';
@@ -10,9 +11,9 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { v4 as uuid } from 'uuid';
 
-chai.should();
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
+should();
+use(sinonChai);
+use(chaiAsPromised);
 
 /**
  * TODO: refactor this as it looks more like integration testing than unit testing
