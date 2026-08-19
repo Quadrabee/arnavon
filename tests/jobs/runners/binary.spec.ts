@@ -1,6 +1,7 @@
+'use strict';
+import { expect } from 'chai';
 import BinaryRunner from '../../../src/jobs/runners/binary';
 import JobResult from '../../../src/jobs/result';
-import { expect } from 'chai';
 
 describe('BinaryRunner', () => {
 
@@ -147,8 +148,8 @@ describe('BinaryRunner', () => {
       });
     });
 
-    it.skip('gets every line printed on stderr and forwards to logger');
-    it.skip('parses every line printed on stderr when possible and forwards to logger');
+    it('gets every line printed on stderr and forwards to logger');
+    it('parses every line printed on stderr when possible and forwards to logger');
 
   });
 });

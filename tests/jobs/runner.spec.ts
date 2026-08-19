@@ -1,10 +1,14 @@
+'use strict';
+import { expect, use } from 'chai';
 import Arnavon from '../../src';
 import sinon from 'sinon';
 import Runners from '../../src/jobs/runners';
 import JobRunner from '../../src/jobs/runner';
-import { expect } from 'chai';
+import sinonChai from 'sinon-chai';
 import Job from '../../src/jobs/job';
 import { InvalidRunError } from '../../src/robust';
+
+use(sinonChai);
 
 describe('JobRunner', () => {
 
@@ -22,8 +26,8 @@ describe('JobRunner', () => {
   });
 
   class TestRunner extends JobRunner {
-    constructor(config) {
-      super();
+    constructor(config = {}) {
+      super(config);
       this.config = config;
     }
 
@@ -187,6 +191,84 @@ describe('JobRunner', () => {
         });
     });
 
+  });
+
+  describe('#run in raw mode', () => {
+    let rawRunner;
+    beforeEach(() => {
+      rawRunner = new TestRunner({ mode: 'raw' });
+    });
+
+    it('passes the message as-is to _run', () => {
+      const rawMessage = { some: 'data' };
+      rawRunner._run = sinon.stub().returns(Promise.resolve(42));
+      rawRunner.run(rawMessage);
+      expect(rawRunner._run).to.be.calledOnceWith(rawMessage);
+    });
+
+    it('does not deserialize the message as a Job', () => {
+      const rawMessage = { some: 'data' };
+      rawRunner._run = sinon.stub().returns(Promise.resolve(42));
+      return rawRunner.run(rawMessage)
+        .then(() => {
+          const passedMessage = rawRunner._run.getCall(0).args[0];
+          // In raw mode, the message is NOT converted to a Job instance
+          expect(passedMessage).to.equal(rawMessage);
+          expect(passedMessage).to.not.be.an.instanceof(Job);
+        });
+    });
+
+    it('does not track prometheus metrics', () => {
+      rawRunner._run = sinon.stub().returns(Promise.resolve(42));
+      const successMetric = Arnavon.registry.getSingleMetric('runner_successful_jobs');
+      const failureMetric = Arnavon.registry.getSingleMetric('runner_failed_jobs');
+      const spySuccess = sinon.spy(successMetric, 'inc');
+      const spyFailure = sinon.spy(failureMetric, 'inc');
+
+      return rawRunner.run({ some: 'data' })
+        .then(() => {
+          expect(spySuccess).to.not.have.been.called;
+          expect(spyFailure).to.not.have.been.called;
+        });
+    });
+
+    it('does not track prometheus metrics on failure either', () => {
+      rawRunner._run = sinon.stub().returns(Promise.reject(new Error('fail')));
+      const successMetric = Arnavon.registry.getSingleMetric('runner_successful_jobs');
+      const failureMetric = Arnavon.registry.getSingleMetric('runner_failed_jobs');
+      const spySuccess = sinon.spy(successMetric, 'inc');
+      const spyFailure = sinon.spy(failureMetric, 'inc');
+
+      return rawRunner.run({ some: 'data' })
+        .catch(() => {
+          expect(spySuccess).to.not.have.been.called;
+          expect(spyFailure).to.not.have.been.called;
+        });
+    });
+
+    it('still returns a Promise', () => {
+      rawRunner._run = sinon.stub().returns(Promise.resolve(42));
+      const res = rawRunner.run({ some: 'data' });
+      expect(res).to.be.an.instanceof(Promise);
+    });
+
+    it('still rejects when _run throws', () => {
+      rawRunner._run = sinon.stub().throws(new Error('oops'));
+      return rawRunner.run({ some: 'data' })
+        .then(() => { throw new Error('should not resolve'); })
+        .catch(err => {
+          expect(err.message).to.equal('oops');
+        });
+    });
+
+    it('still rejects for non-promise results', () => {
+      rawRunner._run = sinon.stub().returns('not a promise');
+      return rawRunner.run({ some: 'data' })
+        .then(() => { throw new Error('should not resolve'); })
+        .catch(err => {
+          expect(err).to.be.an.instanceof(InvalidRunError);
+        });
+    });
   });
 
   describe('.factor', () => {

@@ -1,0 +1,28 @@
+queue:
+  driver: amqp
+  config:
+    url: amqp://localhost
+    topology:
+      exchanges:
+        - name: test-exchange
+          type: topic
+          default: true
+          options:
+            durable: true
+      queues:
+        - name: test-queue
+          options:
+            durable: true
+          bindings:
+            - routingKey: test-job
+              exchange: test-exchange
+jobs:
+  - name: test-job
+    inputSchema: .
+consumers:
+  - name: test-consumer
+    queue: test-queue
+    runner:
+      type: nodejs
+      config:
+        module: ./test-module

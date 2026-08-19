@@ -1,12 +1,15 @@
-require('@babel/register');
+import { requireUserModule } from '../../user-module';
+import path from 'path';
 import Arnavon from '../../';
 import JobRunner, { JobRunnerConfig, JobRunnerContext } from '../runner';
 import { inspect } from '../../robust';
 import logger from '../../logger';
 import Job from '../job';
+import promClient from 'prom-client';
 
 export interface NodeJSRunnerConfig extends JobRunnerConfig {
   module: string
+  cwd?: string
 }
 
 export type NodeJSRunnerModule = (job: Job, context: JobRunnerContext) => Promise<unknown>
@@ -14,19 +17,22 @@ export type NodeJSRunnerModule = (job: Job, context: JobRunnerContext) => Promis
 export default class NodeJSRunner extends JobRunner {
 
   private module: NodeJSRunnerModule;
-  constructor(private config: NodeJSRunnerConfig) {
-    super(config);
+  constructor(private config: NodeJSRunnerConfig, registry?: promClient.Registry) {
+    super(config, registry);
 
     if (!config.module) {
       throw new Error(`Module path expected, got ${inspect(config.module)}`);
     }
 
+    const cwd = config.cwd || Arnavon.cwd();
+
     try {
-      const module = Arnavon.require(config.module);
-      this.module = module.default ? module.default : module;
+       
+      const module = requireUserModule(path.join(cwd, config.module));
+      this.module = (module.default ? module.default : module) as NodeJSRunnerModule;
     } catch (err) {
       logger.error(err);
-      throw new Error(`Module '${config.module}' can't be loaded`);
+      throw new Error(`Module '${config.module}' can't be loaded`, { cause: err });
     }
   }
 

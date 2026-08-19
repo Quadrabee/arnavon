@@ -1,6 +1,6 @@
-import { Command, Flags } from '@oclif/core';
-import { Config, Consumer, default as Arnavon } from '../../../';
-import { JobDispatcher } from '../../../jobs';
+import { Args, Command, Flags } from '@oclif/core';
+import ArnavonApp from '../../../app';
+
 export default class StartConsumerCommand extends Command {
 
   static summary = `Starts an Arnavon consumer
@@ -10,11 +10,12 @@ This command can be used to start one of the consumer defined in your config fil
 Please note that the --all flag can be used to start all consumers at once, but this is not recommended in production.
 `;
 
-  static args = [{
-    name: 'name',
-    required: false,
-    description: 'The name of the consumer to start',
-  }]
+  static args = {
+    name: Args.string({
+      required: false,
+      description: 'The name of the consumer to start',
+    }),
+  };
 
   static flags = {
     config: Flags.string({
@@ -41,59 +42,27 @@ Please note that the --all flag can be used to start all consumers at once, but 
   async run() {
     const { args, flags } = await this.parse(StartConsumerCommand);
     const configPath = flags.config || 'config.yaml';
-
-    const config = Config.fromFile(configPath);
-    Arnavon.init(config);
-
     const port = flags.port || 3000;
-    const dispatcher = new JobDispatcher(Arnavon.config);
 
-    const ensureConsumerExists = (name: string) => {
-      const consumerConfig = Arnavon.config.consumers.find(c => c.name === name);
-      if (!consumerConfig) {
-        throw new Error(`No consumer with name '${name}' found`);
-      }
-      return consumerConfig;
-    };
+    const app = ArnavonApp.fromYaml(configPath);
 
-    // Ensure -x/--except lists existing consumers
-    if (flags.except) {
-      flags.except.forEach((name: string) => {
-        ensureConsumerExists(name);
-      });
-    }
-
-    let configs = [];
     if (flags.all) {
-      configs = [...Arnavon.config.consumers];
-      if (flags.except) {
-        configs = configs.filter((c) => (flags.except || []).indexOf(c.name) < 0);
-      }
+      const except = flags.except || [];
+      await app.startAllConsumers({ port, except });
     } else {
       if (!args.name) {
         throw new Error('The name of a consumer must be provided');
       }
-      const consumerConfig = ensureConsumerExists(args.name);
-      configs.push(consumerConfig);
+      await app.startConsumer(args.name, { port });
     }
-
-    if (!configs.length) {
-      throw new Error('Empty list of consumers');
-    }
-
-    // eslint-disable-next-line no-console
-    console.log('Starting consumers:', configs.map(c => c.name));
-    const consumer = new Consumer(configs, dispatcher);
-    await consumer.start(port);
 
     // Quit properly on SIGINT (typically ctrl-c)
     process.on('SIGINT', async () => {
-      await consumer.stop();
+      await app.stop();
     });
     // Quit properly on SIGTERM (typically kubernetes termination)
     process.on('SIGTERM', async () => {
-      await consumer.stop();
+      await app.stop();
     });
-
   }
 }

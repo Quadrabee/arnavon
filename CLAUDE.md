@@ -10,22 +10,22 @@ Arnavon (`@quadrabee/arnavon`) is an opinionated producer/consumer framework bui
 
 ```bash
 # Build
-yarn build              # Compile TypeScript to dist/
+npm run build           # Compile TypeScript to dist/
 
 # Test
-yarn test               # Run all tests with mocha
-yarn test:watch         # Run tests in watch mode
+npm test                # Run all tests with mocha
+npm run test:watch      # Run tests in watch mode
 npx mocha tests/path/to/file.spec.ts  # Run single test file
 
 # Lint
-yarn lint               # Type check + eslint
-yarn lint:fix           # Auto-fix lint issues
+npm run lint            # Type check + eslint
+npm run lint:fix        # Auto-fix lint issues
 
 # Development
-yarn build:watch        # Watch mode with Babel
+npm run build:watch     # Watch mode (tsc --watch)
 
 # Package
-yarn package            # Create standalone binaries with pkg
+npm run package         # Create standalone binaries with @yao-pkg/pkg
 ```
 
 ## Architecture
@@ -86,7 +86,9 @@ Built with oclif:
 Tests mirror the src structure. Each spec file uses:
 - Mocha + Chai + chai-as-promised + chai-http
 - Sinon for mocking with sinon-chai matchers
-- Babel runtime transpilation via `tests/babel-register.js`
+- TypeScript/ESM transpilation at runtime via `tsx` (`node-option` in `.mocharc.json`)
+- Specs start with `'use strict';`: tsx compiles them to CommonJS, which (unlike
+  tsc's output for `dist/`) does not otherwise imply strict mode
 
 Test output goes to `tests/test-results.xml` (JUnit format).
 
@@ -100,7 +102,11 @@ Test output goes to `tests/test-results.xml` (JUnit format).
 
 ## Important Notes
 
-- TypeScript strict mode is disabled
+- TypeScript strict mode is disabled (but `alwaysStrict` is on)
+- ESLint uses flat config (`eslint.config.mjs`); the rules formerly provided by
+  `@enspirit/eslint-config-node` are inlined there, as that package is eslintrc-only
+- User-supplied modules (nodejs runners, `schema.world.js`) are loaded through
+  `src/user-module.ts`, which scopes the tsx hook to just that load
 - Queue errors exit process with code 10 (designed for auto-restart)
 - All job throughput tracked by job name for per-job observability
-- Requires Node.js >= 18.0.0 and RabbitMQ 4.x
+- Requires Node.js >= 20.0.0 and RabbitMQ 4.x

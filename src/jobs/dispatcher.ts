@@ -1,6 +1,7 @@
 import Arnavon from '../';
 import promClient from 'prom-client';
 import ArnavonConfig from '../config';
+import Queue from '../queue';
 import JobValidator from './validator';
 import { DataValidationError, inspect, UnknownJobError, InvalidBatch } from '../robust';
 import Job, { JobMeta } from './job';
@@ -17,39 +18,45 @@ export default class JobDispatcher {
   /**
    * Private collection of jobs
    */
-  private jobs: JobCollection
+  private jobs: JobCollection;
   /**
    * Private collection of counters (unknown/invalid/valid jobs)
    */
   #counters;
+  #queue: Queue;
 
   /**
    * Constructs a new JobDispatcher
    * @param {ArnavonConfig} config a valid config object
+   * @param {promClient.Registry} registry optional prometheus registry (defaults to Arnavon.registry)
+   * @param {Queue} queue optional queue instance (defaults to Arnavon.queue)
    */
-  constructor(config: ArnavonConfig) {
+  constructor(config: ArnavonConfig, registry?: promClient.Registry, queue?: Queue) {
     if (!(config instanceof ArnavonConfig)) {
       throw new Error(`ArnavonConfig expected, got ${inspect(config)}`);
     }
+
+    this.#queue = queue || Arnavon.queue;
+    const reg = registry || Arnavon.registry;
 
     this.#counters = {
       valid: new promClient.Counter({
         name: 'dispatcher_valid_jobs',
         help: 'number of valid jobs passing through the dispacther',
         labelNames: ['jobName'],
-        registers: [Arnavon.registry],
+        registers: [reg],
       }),
       invalid: new promClient.Counter({
         name: 'dispatcher_invalid_jobs',
         help: 'number of invalid jobs passing through the dispacther',
         labelNames: ['jobName'],
-        registers: [Arnavon.registry],
+        registers: [reg],
       }),
       unknown: new promClient.Counter({
         name: 'dispatcher_unknown_jobs',
         help: 'number of unknown jobs rejected by the  dispacther',
         labelNames: ['jobName'],
-        registers: [Arnavon.registry],
+        registers: [reg],
       }),
     };
     this.jobs = config.jobs.reduce((jobs: JobCollection, jobConfig: JobConfig) => {
@@ -74,7 +81,7 @@ export default class JobDispatcher {
     data.forEach((payload) => {
       try {
         valids.push(validator.validate(payload));
-      } catch (err) {
+      } catch (_err) {
         invalids.push(payload);
       }
     });
@@ -100,7 +107,7 @@ export default class JobDispatcher {
     const pushOptions = { ...options };
     delete (pushOptions as { strict?: boolean })['strict'];
 
-    const promises = jobs.map(job => Arnavon.queue.push(jobName, job, pushOptions));
+    const promises = jobs.map(job => this.#queue.push(jobName, job, pushOptions));
 
     return Promise.all(promises)
       .then(() => jobs);
@@ -127,7 +134,7 @@ export default class JobDispatcher {
       this.#counters.invalid.inc({ jobName });
       if (jobConfig.invalidJobExchange) {
         // Await the push to ensure invalid job is queued before rejecting
-        await Arnavon.queue.push(jobName, data, { exchange: jobConfig.invalidJobExchange });
+        await this.#queue.push(jobName, data, { exchange: jobConfig.invalidJobExchange });
       }
       throw err;
     }
@@ -138,7 +145,7 @@ export default class JobDispatcher {
       dispatched: new Date(),
     }));
 
-    await Arnavon.queue.push(jobName, job, extraOptions);
+    await this.#queue.push(jobName, job, extraOptions);
     return job;
   }
 

@@ -1,12 +1,12 @@
+'use strict';
+import { expect, use, should } from 'chai';
 import sinon from 'sinon';
-import { expect } from 'chai';
-import chai from 'chai';
 import sinonChai from 'sinon-chai';
 import Queue from '../../src/queue';
 import MemoryQueue from '../../src/queue/drivers/memory';
 
-chai.should();
-chai.use(sinonChai);
+should();
+use(sinonChai);
 
 describe('Queue', () => {
 

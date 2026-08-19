@@ -1,31 +1,26 @@
-import Arnavon, { Server } from '../../src';
+'use strict';
+import { expect, use, should } from 'chai';
+import Arnavon from '../../src';
 import Config from '../../src/config';
-import { expect, default as chai } from 'chai';
+import Server from '../../src/server';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import proxyquire from 'proxyquire';
-import ArnavonConfig from '../../src/config';
 
-chai.should();
-chai.use(sinonChai);
+should();
+use(sinonChai);
 
 describe('Server', () => {
 
-  let config, server: Server, Server: new(config: ArnavonConfig) => Server, listen: sinon.SinonStub;
+  let config, server: Server;
   beforeEach(() => {
     config = Config.fromFile('example/config.yaml');
-    listen = sinon.stub().yields();
-    Server = proxyquire('../../src/server', {
-      './rest': {
-        default: function() {
-          return {
-            listen,
-          };
-        },
-      },
-    }).default;
+    server = new Server(config);
+    // Stub _startApi to avoid actually starting an HTTP server
+    sinon.stub(server, '_startApi').resolves(server);
+  });
 
-    server = new Server(config as ArnavonConfig);
+  afterEach(() => {
+    sinon.restore();
   });
 
   it('is a class', () => {
@@ -58,7 +53,7 @@ describe('Server', () => {
       Arnavon.queue.connect = sinon.stub().resolves(true);
       return server.start()
         .then(() => {
-          expect(listen).to.be.calledOnce;
+          expect(server._startApi).to.be.calledOnce;
         });
     });
 
@@ -70,6 +65,26 @@ describe('Server', () => {
           expect(spy).to.be.calledOnceWith(10);
           spy.restore();
         });
+    });
+  });
+
+  describe('#stop', () => {
+
+    it('disconnects the queue', async () => {
+      Arnavon.queue.connect = sinon.stub().resolves(true);
+      const disconnectSpy = sinon.stub(Arnavon.queue, 'disconnect').resolves(Arnavon.queue);
+      await server.start();
+      await server.stop();
+      expect(disconnectSpy).to.be.calledOnce;
+    });
+
+    it('stops the internal API server', async () => {
+      Arnavon.queue.connect = sinon.stub().resolves(true);
+      sinon.stub(Arnavon.queue, 'disconnect').resolves(Arnavon.queue);
+      const stopApiSpy = sinon.spy(server, '_stopApi');
+      await server.start();
+      await server.stop();
+      expect(stopApiSpy).to.be.calledOnce;
     });
   });
 });

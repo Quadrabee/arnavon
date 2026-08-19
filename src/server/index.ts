@@ -5,19 +5,24 @@ import { inspect } from '../robust';
 import ArnavonConfig from '../config';
 import Arnavon from '../';
 import { Server as HttpServer } from 'http';
+import promClient from 'prom-client';
+import Queue from '../queue';
 
 export default class Server {
 
   #api;
   #server?: HttpServer;
   #dispatcher;
+  #queue: Queue;
 
-  constructor(config: ArnavonConfig) {
+  constructor(config: ArnavonConfig, registry?: promClient.Registry, queue?: Queue) {
     if (!(config instanceof ArnavonConfig)) {
       throw new Error(`ArnavonConfig expected, got ${inspect(config)}`);
     }
-    this.#dispatcher = new JobDispatcher(config);
-    this.#api = createApi(this.#dispatcher);
+    const reg = registry || Arnavon.registry;
+    this.#queue = queue || Arnavon.queue;
+    this.#dispatcher = new JobDispatcher(config, reg, this.#queue);
+    this.#api = createApi(this.#dispatcher, { registry: reg, queue: this.#queue, config });
   }
 
   _startApi(port: number) {
@@ -36,19 +41,19 @@ export default class Server {
   }
 
   _connectQueue() {
-    Arnavon.queue.on('error', () => {
+    this.#queue.on('error', () => {
       logger.error('Queue errored, quitting');
       process.exit(10);
     });
-    Arnavon.queue.on('close', () => {
+    this.#queue.on('close', () => {
       logger.error('Queue disconnected, quitting');
       process.exit(10);
     });
-    return Arnavon.queue.connect();
+    return this.#queue.connect();
   }
 
   _disconnectQueue() {
-    return Arnavon.queue.disconnect();
+    return this.#queue.disconnect();
   }
 
   start(port = 3000) {

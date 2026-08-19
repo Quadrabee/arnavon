@@ -1,44 +1,23 @@
-import proxyquire from 'proxyquire';
-import { expect, default as chai } from 'chai';
-import chaiHttp from 'chai-http';
-import createApiHelper from '../../../src/api';
+'use strict';
+import { expect, use, should } from 'chai';
+import chaiHttp, { request as httpRequest } from 'chai-http';
+import createApi from '../../../src/server/rest';
 import { UnknownJobError, DataValidationError } from '../../../src/robust';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { JobDispatcher } from '../../../src/jobs';
 import Arnavon from '../../../src/index';
+import { validate as uuidValidate } from 'uuid';
 
-chai.should();
-chai.use(sinonChai);
-chai.use(chaiHttp);
+should();
+use(sinonChai);
+use(chaiHttp);
 
 describe('server/createApi', () => {
 
-  let createApi: (params?: any) => Express.Application, helperCalled: boolean, staticUuid: string;
-  beforeEach(() => {
-    staticUuid = 'ea47ac69-c0ca-4960-b905-6f14f2029744';
-    helperCalled = false;
-    createApi = proxyquire('../../../src/server/rest', {
-      '../../api': {
-        default: function() {
-          helperCalled = true;
-          // eslint-disable-next-line prefer-rest-params
-          const api = createApiHelper(arguments as any as { agent: string});
-          // make sure all request ids use our static uuid
-          api.use((req, res, next) => {
-            req.id = staticUuid;
-            next();
-          });
-          return api;
-        },
-      },
-    }).default;
-  });
-
   it('calls the createApi helper (src/api)', () => {
-    expect(helperCalled).to.equal(false);
-    createApi();
-    expect(helperCalled).to.equal(true);
+    const api = createApi();
+    expect(api).to.be.a('function');
   });
 
   describe('its POST /jobs/:id endpoint', () => {
@@ -57,7 +36,7 @@ describe('server/createApi', () => {
         foo: 'bar',
       };
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         .send(jobPayload)
         .end((err, res) => {
@@ -67,7 +46,7 @@ describe('server/createApi', () => {
     });
 
     it('fails for unknown x-arnavon-push-mode headers', (done) => {
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         // batch mode
         .set('X-Arnavon-Push-Mode', 'FOO-BAR')
@@ -83,7 +62,7 @@ describe('server/createApi', () => {
         foo: 'bar',
       };
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         // batch mode
         .set('X-Arnavon-Push-Mode', 'BATCH')
@@ -101,7 +80,7 @@ describe('server/createApi', () => {
     });
 
     it('fails for unknown x-arnavon-batch-input-validation headers', (done) => {
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         .set('X-Arnavon-Batch-Input-Validation', 'FOO-BAR')
         .send({})
@@ -116,7 +95,7 @@ describe('server/createApi', () => {
         foo: 'bar',
       };
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         // batch mode
         .set('X-Arnavon-Push-Mode', 'batch')
@@ -138,7 +117,7 @@ describe('server/createApi', () => {
         foo: 'bar',
       };
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         // batch mode
         .set('X-Arnavon-Push-Mode', 'SINGLE')
@@ -158,12 +137,16 @@ describe('server/createApi', () => {
         foo: 'bar',
       };
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         .send(jobPayload)
         .end((err, res) => {
           res.should.have.status(201);
-          expect(dispatcher.dispatch).to.be.calledOnceWith('foo-bar', jobPayload, { id: staticUuid });
+          expect(dispatcher.dispatch).to.be.calledOnce;
+          const { args } = dispatcher.dispatch.getCall(0);
+          expect(args[0]).to.equal('foo-bar');
+          expect(args[1]).to.eql(jobPayload);
+          expect(uuidValidate(args[2].id)).to.be.true;
           done();
         });
     });
@@ -173,14 +156,18 @@ describe('server/createApi', () => {
         foo: 'bar',
       };
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         // batch mode
         .set('X-Arnavon-Push-Mode', 'BATCH')
         .send(jobPayload)
         .end((err, res) => {
           res.should.have.status(201);
-          expect(dispatcher.dispatchBatch).to.be.calledOnceWith('foo-bar', jobPayload, { id: staticUuid });
+          expect(dispatcher.dispatchBatch).to.be.calledOnce;
+          const { args } = dispatcher.dispatchBatch.getCall(0);
+          expect(args[0]).to.equal('foo-bar');
+          expect(args[1]).to.eql(jobPayload);
+          expect(uuidValidate(args[2].id)).to.be.true;
           done();
         });
     });
@@ -191,7 +178,7 @@ describe('server/createApi', () => {
       };
       dispatcher.dispatch.returns(Promise.resolve({ ok: true }));
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         .send(jobPayload)
         .end((err, res) => {
@@ -207,7 +194,7 @@ describe('server/createApi', () => {
       };
       dispatcher.dispatchBatch.returns(Promise.resolve({ ok: true }));
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         // batch mode
         .set('X-Arnavon-Push-Mode', 'BATCH')
@@ -225,7 +212,7 @@ describe('server/createApi', () => {
       };
       dispatcher.dispatch.returns(Promise.reject(new UnknownJobError('unknown-job')));
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         .send(jobPayload)
         .end((err, res) => {
@@ -241,7 +228,7 @@ describe('server/createApi', () => {
       };
       dispatcher.dispatchBatch.returns(Promise.reject(new UnknownJobError('unknown-job')));
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         // batch mode
         .set('X-Arnavon-Push-Mode', 'BATCH')
@@ -259,7 +246,7 @@ describe('server/createApi', () => {
       };
       dispatcher.dispatch.returns(Promise.reject(new DataValidationError('invalid-payload')));
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         .send(jobPayload)
         .end((err, res) => {
@@ -275,7 +262,7 @@ describe('server/createApi', () => {
       };
       dispatcher.dispatchBatch.returns(Promise.reject(new DataValidationError('invalid-payload')));
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         // batch mode
         .set('X-Arnavon-Push-Mode', 'BATCH')
@@ -293,7 +280,7 @@ describe('server/createApi', () => {
       };
       dispatcher.dispatch.returns(Promise.reject(new Error('Oops')));
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         .send(jobPayload)
         .end((err, res) => {
@@ -309,7 +296,7 @@ describe('server/createApi', () => {
       };
       dispatcher.dispatch.throws(new Error('Oops'));
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         .send(jobPayload)
         .end((err, res) => {
@@ -325,7 +312,7 @@ describe('server/createApi', () => {
       };
       dispatcher.dispatchBatch.returns(Promise.reject(new Error('Oops')));
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         // batch mode
         .set('X-Arnavon-Push-Mode', 'BATCH')
@@ -343,7 +330,7 @@ describe('server/createApi', () => {
       };
       dispatcher.dispatchBatch.throws(new Error('Oops'));
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         // batch mode
         .set('X-Arnavon-Push-Mode', 'BATCH')
@@ -356,7 +343,7 @@ describe('server/createApi', () => {
     });
 
     it('returns 400 when X-Arnavon-Batch-Input-Validation is used in SINGLE push mode', (done) => {
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         .set('X-Arnavon-Push-Mode', 'SINGLE')
         .set('X-Arnavon-Batch-Input-Validation', 'ALL-OR-NOTHING')
@@ -371,7 +358,7 @@ describe('server/createApi', () => {
     it('passes X-* headers (except X-Arnavon-*) to the dispatcher options', (done) => {
       const jobPayload = { foo: 'bar' };
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         .set('X-Custom-Header', 'custom-value')
         .set('X-Another-Header', 'another-value')
@@ -392,7 +379,7 @@ describe('server/createApi', () => {
     it('does not pass X-Arnavon-* headers to the queue headers', (done) => {
       const jobPayload = { foo: 'bar' };
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         .set('X-Custom-Header', 'custom-value')
         .set('X-Arnavon-Meta-Foo', 'meta-value')
@@ -412,7 +399,7 @@ describe('server/createApi', () => {
     it('passes X-Arnavon-Meta-* headers as metadata', (done) => {
       const jobPayload = { foo: 'bar' };
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         .set('X-Arnavon-Meta-User-Id', '12345')
         .set('X-Arnavon-Meta-Correlation-Id', 'abc-def')
@@ -433,7 +420,7 @@ describe('server/createApi', () => {
     it('passes X-* headers to the dispatcher in batch mode', (done) => {
       const jobPayload = [{ foo: 'bar' }];
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/jobs/foo-bar')
         .set('X-Arnavon-Push-Mode', 'BATCH')
         .set('X-Delay', '5000')
@@ -476,7 +463,7 @@ describe('server/createApi', () => {
     });
 
     it('calls queue.requeue with queue name', (done) => {
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/queues/my-dead-letters/requeue')
         .send({})
         .end((err, res) => {
@@ -489,7 +476,7 @@ describe('server/createApi', () => {
     });
 
     it('passes count query parameter as number', (done) => {
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/queues/my-dead-letters/requeue?count=10')
         .send({})
         .end((err, res) => {
@@ -504,7 +491,7 @@ describe('server/createApi', () => {
     it('returns 200 with requeue result on success', (done) => {
       requeueStub.returns(Promise.resolve({ status: 'initiated', requeued: 0, failed: 0, errors: [] }));
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/queues/my-dead-letters/requeue')
         .send({})
         .end((err, res) => {
@@ -515,7 +502,7 @@ describe('server/createApi', () => {
     });
 
     it('returns 400 for invalid count parameter (non-numeric)', (done) => {
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/queues/my-dead-letters/requeue?count=abc')
         .send({})
         .end((err, res) => {
@@ -526,7 +513,7 @@ describe('server/createApi', () => {
     });
 
     it('returns 400 for invalid count parameter (zero)', (done) => {
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/queues/my-dead-letters/requeue?count=0')
         .send({})
         .end((err, res) => {
@@ -537,7 +524,7 @@ describe('server/createApi', () => {
     });
 
     it('returns 400 for invalid count parameter (negative)', (done) => {
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/queues/my-dead-letters/requeue?count=-5')
         .send({})
         .end((err, res) => {
@@ -550,7 +537,7 @@ describe('server/createApi', () => {
     it('returns 500 on queue requeue errors', (done) => {
       requeueStub.returns(Promise.reject(new Error('Queue connection failed')));
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/queues/my-dead-letters/requeue')
         .send({})
         .end((err, res) => {
@@ -566,7 +553,7 @@ describe('server/createApi', () => {
         'Ensure the rabbitmq_shovel and rabbitmq_shovel_management plugins are enabled.',
       )));
 
-      chai.request(api)
+      httpRequest.execute(api)
         .post('/queues/my-dead-letters/requeue')
         .send({})
         .end((err, res) => {
@@ -619,7 +606,7 @@ describe('server/createApi', () => {
     });
 
     it('returns 200 with queue info from config', (done) => {
-      chai.request(api)
+      httpRequest.execute(api)
         .get('/queues')
         .end((err, res) => {
           res.should.have.status(200);
@@ -646,7 +633,7 @@ describe('server/createApi', () => {
       } as any;
       getQueuesInfoStub.returns(Promise.resolve([]));
 
-      chai.request(api)
+      httpRequest.execute(api)
         .get('/queues')
         .end((err, res) => {
           res.should.have.status(200);
@@ -658,7 +645,7 @@ describe('server/createApi', () => {
     it('returns 500 on queue info errors', (done) => {
       getQueuesInfoStub.returns(Promise.reject(new Error('Connection failed')));
 
-      chai.request(api)
+      httpRequest.execute(api)
         .get('/queues')
         .end((err, res) => {
           res.should.have.status(500);

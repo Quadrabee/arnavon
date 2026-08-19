@@ -32,8 +32,8 @@ class InvalidRunError extends ArnavonError {
 }
 
 class InvalidBatch extends DataValidationError {
-  public valids: unknown[]
-  public invalids: unknown[]
+  public valids: unknown[];
+  public invalids: unknown[];
   constructor(message: string, invalids: unknown[], valids: unknown[]) {
     super(message);
     this.valids = valids;

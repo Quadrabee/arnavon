@@ -4,6 +4,9 @@ import { JobDispatcher } from '../../jobs';
 import { ArnavonError, UnknownJobError, DataValidationError } from '../../robust';
 import logger from '../../logger';
 import Arnavon from '../../index';
+import promClient from 'prom-client';
+import Queue from '../../queue';
+import ArnavonConfig from '../../config';
 
 // Valid x-arnavon-push-modes
 const PUSH_MODES = ['SINGLE', 'BATCH'];
@@ -11,8 +14,17 @@ const PUSH_MODES = ['SINGLE', 'BATCH'];
 // Valid x-arnavon-batch-input-validation
 const VALIDATION_MODES = ['ALL-OR-NOTHING', 'BEST-EFFORT'];
 
-export default (dispatcher: JobDispatcher) => {
-  const api = createApi();
+type RestApiOptions = {
+  registry?: promClient.Registry,
+  queue?: Queue,
+  config?: ArnavonConfig,
+}
+
+export default (dispatcher?: JobDispatcher, options: RestApiOptions = {}) => {
+  const { registry, queue, config } = options;
+  const q = queue || Arnavon.queue;
+  const cfg = config || Arnavon.config;
+  const api = createApi({ registry });
 
   api.post('/jobs/:id', (req, res, next) => {
     // Check X-Arnavon-Push-Mode:
@@ -87,10 +99,10 @@ export default (dispatcher: JobDispatcher) => {
   api.get('/queues', async (req, res, next) => {
     try {
       // Get queue names from config topology
-      const config = Arnavon.config.queue.config as { topology?: { queues?: Array<{ name: string }> } };
-      const queueNames = config.topology?.queues?.map(q => q.name) || [];
+      const queueConfig = cfg.queue.config as { topology?: { queues?: Array<{ name: string }> } };
+      const queueNames = queueConfig.topology?.queues?.map(q => q.name) || [];
 
-      const queues = await Arnavon.queue.getQueuesInfo(queueNames);
+      const queues = await q.getQueuesInfo(queueNames);
       return res.status(200).send({ queues });
     } catch (err) {
       next(err);
@@ -109,7 +121,7 @@ export default (dispatcher: JobDispatcher) => {
     }
 
     try {
-      const result = await Arnavon.queue.requeue(queueName, { count });
+      const result = await q.requeue(queueName, { count });
       return res.status(200).send(result);
     } catch (err) {
       next(err);

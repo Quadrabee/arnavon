@@ -1,8 +1,12 @@
 {
-  "extension": ["ts"],
+  "extension": [
+    "ts"
+  ],
   "recursive": true,
   "spec": "tests/**/*.spec.*",
-  "require": "tests/babel-register.js",
+  "node-option": [
+    "import=tsx"
+  ],
   "reporter-options": {
     "mochaFile": "tests/test-results.xml"
   }

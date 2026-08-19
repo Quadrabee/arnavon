@@ -1,13 +1,14 @@
+'use strict';
+import { expect, use, should } from 'chai';
 import NodeJSRunner from '../../../src/jobs/runners/nodejs';
-import { expect, default as chai } from 'chai';
 import Job from '../../../src/jobs/job';
 import Arnavon from '../../../src';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
-chai.should();
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
+should();
+use(sinonChai);
+use(chaiAsPromised);
 
 describe('NodeJSRunner', () => {
 
@@ -50,11 +51,18 @@ describe('NodeJSRunner', () => {
 
   describe('#run', () => {
 
-    describe.skip('when used in raw mode', () => {
-      it('should pass the raw message to the node module', () => {
-        runner.run(testJob);
+    describe('when used in raw mode', () => {
+      let rawRunner;
+      beforeEach(() => {
+        rawRunner = new NodeJSRunner({ module: './dummy.runner', mode: 'raw' });
+        dummy.runner.reset();
+      });
+
+      it('should pass the raw message to the node module unchanged', () => {
+        const rawMessage = { some: 'raw data' };
+        rawRunner.run(rawMessage);
         expect(dummy.runner.calls).to.have.length(1);
-        expect(dummy.runner.calls[0]).to.equal(testJob);
+        expect(dummy.runner.calls[0]).to.equal(rawMessage);
       });
     });
 

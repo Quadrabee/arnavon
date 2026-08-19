@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
     "rootDir": "src",
-    "target": "es2016",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
-    "module": "commonjs",                                /* Specify what module code is generated. */
+    "target": "es2022",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
+    "module": "node16",
+    "moduleResolution": "node16",                                /* Specify what module code is generated. */
     "declaration": true,                              /* Generate .d.ts files from TypeScript and JavaScript files in your project. */
     "declarationMap": true,                           /* Create sourcemaps for d.ts files. */
     "emitDeclarationOnly": false,                      /* Only output d.ts files and not JavaScript files. */
@@ -12,7 +13,8 @@
     "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */
     "forceConsistentCasingInFileNames": true,            /* Ensure that casing is correct in imports. */
     "resolveJsonModule": true,
-    "strict": false,                                      /* Enable all strict type-checking options. */
+    "strict": false,
+    "alwaysStrict": true,                                      /* Enable all strict type-checking options. */
     "skipLibCheck": true,                                 /* Skip type checking all .d.ts files. */
     "types": [
       "mocha",

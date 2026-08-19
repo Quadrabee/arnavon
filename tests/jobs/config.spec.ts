@@ -1,12 +1,12 @@
+'use strict';
+import { expect, use, should } from 'chai';
 import Finitio from 'finitio';
 import JobConfig from '../../src/jobs/config';
-import { expect } from 'chai';
 import sinon from 'sinon';
-import chai from 'chai';
 import sinonChai from 'sinon-chai';
 
-chai.should();
-chai.use(sinonChai);
+should();
+use(sinonChai);
 
 describe('JobConfig', () => {
 
@@ -87,7 +87,7 @@ describe('JobConfig', () => {
       }
       `;
       // correct
-      const jobConfig = new JobConfig({ name: 'foo', inputSchema: schema }, system);
+      new JobConfig({ name: 'foo', inputSchema: schema }, system);
       expect(spy).to.be.calledOnceWith(schema);
     });
 

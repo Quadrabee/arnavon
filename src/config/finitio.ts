@@ -1,3 +1,4 @@
+import { requireUserModule } from '../user-module';
 import fs from 'fs';
 import Finitio from 'finitio';
 import YAML from 'yaml';
@@ -22,7 +23,7 @@ try {
   system = Finitio.system(schema, { JsTypes: baseWorld });
 } catch (err) {
   console.error(err);
-  throw new Error(`Invalid finitio schema: ${err.message}`);
+  throw new Error(`Invalid finitio schema: ${err.message}`, { cause: err });
 }
 
 const dressFromFile = (path: string, type: FinitioType, baseSystem: unknown) => {
@@ -30,7 +31,7 @@ const dressFromFile = (path: string, type: FinitioType, baseSystem: unknown) => 
   if (/.*\.ya?ml/.test(path)) {
     config = YAML.parse(fs.readFileSync(path).toString());
   } else {
-    config = require(path);
+    config = requireUserModule(path);
   }
   try {
     config = type.dress(config, baseSystem);

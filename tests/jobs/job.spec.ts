@@ -1,11 +1,11 @@
+'use strict';
+import { expect, use, should } from 'chai';
 import Job from '../../src/jobs/job';
-import { expect } from 'chai';
 import { v4 as uuid, validate } from 'uuid';
-import chai from 'chai';
 import sinonChai from 'sinon-chai';
 
-chai.should();
-chai.use(sinonChai);
+should();
+use(sinonChai);
 
 describe('Job', () => {
 
@@ -61,12 +61,12 @@ describe('Job', () => {
 
       try {
         (job as any).payload = { changed: true };
-      } catch (e) {
+      } catch (_e) {
         // expected in strict mode
       }
       try {
         (job as any).meta = { id: 'changed' };
-      } catch (e) {
+      } catch (_e) {
         // expected in strict mode
       }
 
