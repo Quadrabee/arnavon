@@ -1,3 +1,7 @@
+## 1.4.0 - 2026-10-23
+
+* Docker image now runs on Node 24 LTS instead of end-of-life Node 20
+
 ## 1.3.3 - 2026-10-23
 
 * Publish to npm from CI via trusted publishing (1.3.2 was not published on npm)
