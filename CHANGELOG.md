@@ -1,3 +1,7 @@
+## 1.3.3 - 2026-10-23
+
+* Publish to npm from CI via trusted publishing (1.3.2 was not published on npm)
+
 ## 1.3.2 - 2026-10-23
 
 * Retry the AMQP setup while the broker is restarting, instead of exiting
