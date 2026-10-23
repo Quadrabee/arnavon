@@ -67,9 +67,6 @@ jobs:
       - name: Push package
         id: push-package
         run: npm publish --access public
-        env:
-          # Only used as a fallback if trusted publishing is not configured
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - uses: act10ns/slack@v1
         with:

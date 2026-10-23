@@ -16,6 +16,10 @@
     "/src"
   ],
   "bugs": "https://github.com/quadrabee/arnavon/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Quadrabee/arnavon.git"
+  },
   "scripts": {
     "test": "mocha tests",
     "test:watch": "mocha --watch tests",
