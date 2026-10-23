@@ -40,26 +40,35 @@ jobs:
   npm:
     needs: tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing (OIDC)
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - uses: act10ns/slack@v1
         with:
           status: starting
           channel: '#opensource-cicd'
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v2
+      # Trusted publishing requires npm >= 11.5.1, shipped with node 24
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '24.x'
           registry-url: 'https://registry.npmjs.org'
-          always-auth: true
 
-      - run: make package
+      - name: Check tag matches package.json version
+        run: test "${GITHUB_REF_NAME}" = "$(node -p 'require("./package.json").version')"
+
+      - run: npm ci
 
       - name: Push package
         id: push-package
-        run: npm publish --access-public
+        run: npm publish --access public
         env:
+          # Only used as a fallback if trusted publishing is not configured
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - uses: act10ns/slack@v1
