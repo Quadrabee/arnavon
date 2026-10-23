@@ -148,65 +148,92 @@ class AmqpQueue extends Queue {
       .then(createBindings);
   }
 
-  _connectWithRetries(attemptsLeft: number, waitTime = 10): Promise<amqplib.ChannelModel> {
-    return amqplib
-    // Connect
-      .connect(this.url)
-      .catch((err) => {
-        if (this.#disconnecting) {
-          throw new Error('Connection canceled');
-        }
-        if (attemptsLeft <= 0) {
-          logger.error('Unable to connect to rabbitmq... Giving up.');
-          throw err;
-        }
-        logger.warn(`Unable to connect to rabbitmq. ${attemptsLeft} attempts left. Trying again in ${waitTime}ms`);
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            // double the reconnect delay every time it fails
-            resolve(this._connectWithRetries(attemptsLeft - 1, waitTime * 2));
-          }, waitTime);
-        });
-      });
+  // Replies no retry can fix: wrong credentials or vhost, a topology
+  // contradicting what the broker already holds, or a feature the broker
+  // refuses (e.g. transient non-exclusive queues on RabbitMQ >= 4.3).
+  static FATAL_REPLY_CODES = [403, 406, 530, 540, 541];
+  static RETRY_DELAY_MS = 1000;
+  static MAX_RETRY_DELAY_MS = 30000;
+
+  /**
+   * Whether `err` is worth retrying. A broker restarting answers with
+   * refused connections, resets and, for a durable queue whose node is
+   * down or still starting, 404 NOT_FOUND: all of these go away by
+   * themselves. amqplib only sets `code` on errors raised once the
+   * connection is open, hence the fallback on the handshake message.
+   */
+  static isRetryable(err: unknown): boolean {
+    const { code, message } = (err || {}) as { code?: unknown, message?: string };
+    const replyCode = typeof code === 'number'
+      ? code
+      : Number((/: (\d{3}) \(/.exec(message || '') || [])[1]);
+    return !AmqpQueue.FATAL_REPLY_CODES.includes(replyCode);
   }
 
-  _connect() {
-    return this._connectWithRetries(this.#connectRetries)
-      .then(conn => {
-        this.#conn = conn;
-        // Propagate errors
-        this.#conn.on('close', (err: Error) => {
-          logger.error('Connection to queue closed', { err });
-          this.emit('close', err);
-        });
-        this.#conn.on('error', (err: Error) => {
-          logger.error('Connection error', { err });
-          this.emit('error', err);
-        });
-        // Create channel
-        return conn.createConfirmChannel();
-      })
-      .then((channel) => {
-        channel.prefetch(this.#prefetchCount);
-        this.#channel = channel;
-        // Install topology
-        // Propagate errors
-        this.#channel.on('close', (err: Error) => {
-          logger.error('Channel closed', err);
-          this.emit('close', err);
-        });
-        this.#channel.on('error', (err: Error) => {
-          logger.error('Channel error', err);
-          this.emit('error', err);
-        });
-        // Ensure topology exists
-        return this._installTopology();
-      })
-      .then(() => this)
-      .catch((err) => {
-        this.emit('error', err);
+  async _setup() {
+    const conn = await amqplib.connect(this.url);
+    // Setup failures surface as rejected promises; this only keeps amqplib's
+    // 'error' events from crashing the process meanwhile. When the broker
+    // closes the whole connection, pending calls only reject with a generic
+    // "Channel ended": keep the connection error, which carries the reply code.
+    const ignore = () => undefined;
+    let connError: Error | undefined;
+    const keepConnError = (err: Error) => {
+      connError = err;
+    };
+    conn.on('error', keepConnError);
+    let channel: amqplib.ConfirmChannel;
+    try {
+      channel = await conn.createConfirmChannel();
+      channel.on('error', ignore);
+      await channel.prefetch(this.#prefetchCount);
+      this.#channel = channel;
+      await this._installTopology();
+    } catch (err) {
+      this.#channel = undefined;
+      await conn.close().catch(ignore);
+      throw connError || err;
+    }
+    this.#conn = conn;
+    // Propagate errors
+    conn.on('close', (err: Error) => {
+      logger.error('Connection to queue closed', { err });
+      this.emit('close', err);
+    });
+    conn.on('error', (err: Error) => {
+      logger.error('Connection error', { err });
+      this.emit('error', err);
+    });
+    channel.on('close', (err: Error) => {
+      logger.error('Channel closed', err);
+      this.emit('close', err);
+    });
+    channel.on('error', (err: Error) => {
+      logger.error('Channel error', err);
+      this.emit('error', err);
+    });
+    conn.off('error', keepConnError);
+    channel.off('error', ignore);
+  }
+
+  async _connect() {
+    let delay = AmqpQueue.RETRY_DELAY_MS;
+    for (let attemptsLeft = this.#connectRetries; ; attemptsLeft--) {
+      try {
+        await this._setup();
         return this;
-      });
+      } catch (err) {
+        if (this.#disconnecting || attemptsLeft <= 0 || !AmqpQueue.isRetryable(err)) {
+          logger.error(err, 'Unable to connect to rabbitmq... Giving up.');
+          this.emit('error', err);
+          return this;
+        }
+        const { message, code } = err as { message?: string, code?: unknown };
+        logger.warn(`Unable to connect to rabbitmq (${message || code}). ${attemptsLeft} attempts left. Trying again in ${delay}ms`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        delay = Math.min(delay * 2, AmqpQueue.MAX_RETRY_DELAY_MS);
+      }
+    }
   }
 
   async _disconnect() {
@@ -241,9 +268,12 @@ class AmqpQueue extends Queue {
     }
     const channel = this.#channel as ConfirmChannel;
     return channel.consume(queueName, (msg) => {
-      // AMQP informs us that the consumption is over (are we quitting, for instance?)
+      // The broker cancelled the consumer (queue deleted, or its node went
+      // down): nothing would ever be delivered again.
       if (msg === null) {
-        logger.info(`${this.constructor.name}: AMQP informs consumption is over`);
+        if (!this.#disconnecting) {
+          this.emit('error', new Error(`Consumer of queue ${queueName} cancelled by the broker`));
+        }
         return;
       }
       let payload;
