@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import chai from 'chai';
+import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import AmqpQueue from '../../../src/queue/drivers/amqp';
 import Config from '../../../src/config';
@@ -76,6 +77,72 @@ describe('AmqpQueue', () => {
       const queue = new AmqpQueue(configWithDefaults);
       expect(queue).to.be.an.instanceof(AmqpQueue);
       // Default values should be applied internally
+    });
+  });
+
+  describe('.isRetryable', () => {
+    const replyError = (code: number) => Object.assign(new Error(`Channel closed by server: ${code}`), { code });
+
+    it('retries what a restarting broker answers', () => {
+      expect(AmqpQueue.isRetryable(Object.assign(new Error('connect ECONNREFUSED'), { code: 'ECONNREFUSED' }))).to.equal(true);
+      expect(AmqpQueue.isRetryable(replyError(404))).to.equal(true);
+      expect(AmqpQueue.isRetryable(replyError(320))).to.equal(true);
+      expect(AmqpQueue.isRetryable(new Error('Socket closed abruptly during opening handshake'))).to.equal(true);
+    });
+
+    it('gives up on configuration errors', () => {
+      expect(AmqpQueue.isRetryable(replyError(406))).to.equal(false);
+      expect(AmqpQueue.isRetryable(replyError(403))).to.equal(false);
+      expect(AmqpQueue.isRetryable(new Error('Handshake terminated by server: 403 (ACCESS-REFUSED) with message "ACCESS_REFUSED"'))).to.equal(false);
+      expect(AmqpQueue.isRetryable(new Error('Handshake terminated by server: 530 (NOT-ALLOWED) with message "NOT_ALLOWED - vhost x not found"'))).to.equal(false);
+      expect(AmqpQueue.isRetryable(replyError(541))).to.equal(false);
+    });
+  });
+
+  describe('#_connect', () => {
+    const notFound = Object.assign(new Error('NOT_FOUND - queue \'q\' in vhost \'/\' process is stopped by supervisor'), { code: 404 });
+    let retryDelay: number;
+
+    beforeEach(() => {
+      retryDelay = AmqpQueue.RETRY_DELAY_MS;
+      AmqpQueue.RETRY_DELAY_MS = 1;
+    });
+
+    afterEach(() => {
+      AmqpQueue.RETRY_DELAY_MS = retryDelay;
+    });
+
+    it('retries the setup until the broker is ready', async () => {
+      const queue = new AmqpQueue(config.queue.config);
+      const setup = sinon.stub(queue, '_setup');
+      setup.onFirstCall().rejects(notFound);
+      setup.onSecondCall().resolves();
+      const errored = sinon.spy();
+      queue.on('error', errored);
+      await queue._connect();
+      expect(setup).to.be.calledTwice;
+      expect(errored).not.to.be.called;
+    });
+
+    it('emits an error once out of retries', async () => {
+      const queue = new AmqpQueue({ ...config.queue.config, connectRetries: 2 });
+      const setup = sinon.stub(queue, '_setup').rejects(notFound);
+      const errored = sinon.spy();
+      queue.on('error', errored);
+      await queue._connect();
+      expect(setup).to.be.calledThrice;
+      expect(errored).to.be.calledOnceWith(notFound);
+    });
+
+    it('does not retry configuration errors', async () => {
+      const queue = new AmqpQueue(config.queue.config);
+      const mismatch = Object.assign(new Error('PRECONDITION_FAILED'), { code: 406 });
+      const setup = sinon.stub(queue, '_setup').rejects(mismatch);
+      const errored = sinon.spy();
+      queue.on('error', errored);
+      await queue._connect();
+      expect(setup).to.be.calledOnce;
+      expect(errored).to.be.calledOnceWith(mismatch);
     });
   });
 

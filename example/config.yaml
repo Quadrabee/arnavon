@@ -30,7 +30,7 @@ queue:
               exchange: example-arnavon
         - name: send-email-via-binary
           options:
-            durable: false
+            durable: true
           bindings:
             - routingKey: send-email-via-binary
               exchange: example-arnavon
